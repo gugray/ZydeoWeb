@@ -1,0 +1,18 @@
+﻿# Misc
+DefaultTitle					CHDICT - Nyílt, bárki által szerkeszthető kínai-magyar szótár
+
+# Application menu
+TopMenuEdit						Szerkeszt
+TopMenuRead						Olvas
+TopMenuDownload					Letölt
+SMEditNew						Új szócikk
+SMEditHistory					Változások
+SMEditExisting					Módosítás
+SMReadAbout						A szótárról
+SMReadArticles					Írások
+SMReadEtc						Apróbetűs
+SMDownload						A CHDICT letöltése
+
+# Search page
+HintSearchField					Hanzi, pinyin vagy magyar szó
+TitleSearchZho					{0} magyar fordítása - CHDICT - Nyílt, bárki által szerkeszthető kínai-magyar szótár

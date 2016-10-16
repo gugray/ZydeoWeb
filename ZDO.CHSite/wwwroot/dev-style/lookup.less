@@ -1,0 +1,334 @@
+﻿@import "defines.less";
+
+/* ------------------------------- WELCOME SCREEN ------------------------------- */
+
+#welcomeScreen {
+  text-align: center;
+  margin-bottom: 5em;
+  font-size: 150%;
+}
+
+#img-welcome {
+  width: 20%;
+  margin-top: -1.5em;
+  margin-bottom: -2em;
+}
+
+#welcomeScreen h1 {
+  font-family: Neuton;
+  font-size: 200%;
+  color: @clrStrong;
+  margin-bottom: 0.3em;
+  margin-top: 0;
+}
+
+#welcomeScreen p {
+  font-size: 70%;
+}
+
+#welcomeScreen p.welcomenotice {
+  color: @clrStrongAccent;
+}
+
+#welcomeScreen p.tagline1 {
+  font-size: 60%;
+  margin-bottom: 0;
+}
+
+#welcomeScreen p.tagline2 {
+  font-size: 80%;
+  font-weight: bold;
+  margin-top: 0;
+}
+
+/* ------------------------------- NOTICE (ANNOTATION MODE, ETC.) ------------------------------- */
+
+#topNotice {
+  display: none;
+  float: left;
+  width: 100%;
+  clear: right;
+  background-color: #c7d9b3;
+  border-radius: 0.3em;
+  -moz-border-radius: 0.3em;
+  -webkit-border-radius: 0.3em;
+  padding: 0;
+  margin-bottom: 10pt;
+  margin-top: 5pt;
+  color: @clrBodyText;
+}
+
+.tnTitle {
+  text-align: center;
+  font-size: 120%;
+  font-weight: bold;
+  margin: 5pt 0 0 0;
+}
+
+.tnMessage {
+  text-align: center;
+  font-size: 90%;
+  margin: 5pt 10pt 10pt 10pt;
+}
+
+/* ------------------------------- LOOKUP RESULTS ------------------------------- */
+
+.resultSep {
+  position: relative;
+  float: left;
+  clear: both;
+  margin-bottom: 0.8em;
+  padding-top: 0.3em;
+  width: 100%;
+  border-bottom: 1px dashed @clrBodyText;
+}
+
+/* ------------------------------- STROKE ORDER ANIMATION ------------------------------- */
+
+#soaBox {
+  position: absolute;
+  width: 19em;
+  height: 22em;
+  background-color: #fafafa;
+  border: 0.1em solid @clrMedium;
+  box-shadow: 0 0 0.3em rgba(0, 0, 0, .7);
+  cursor: default;
+  display: none;
+}
+
+#soaBoxTail {
+  display: block;
+  position: absolute;
+  left: -0.9em;
+  top: 0.8em;
+  width: 1.6em;
+  height: 1.6em;
+  border-color: @clrMedium;
+  border-width: 0.1em;
+  border-style: none none solid solid;
+  background-color: #fafafa;
+  transform: rotate(45deg);
+  -webkit-transform: rotate(45deg);
+  -moz-transform: rotate(45deg);
+}
+
+.soaBoxLeft #soaBoxTail {
+  left: 18.25em;
+  border-style: solid solid none none;
+}
+
+#soaHead {
+  font-family: Ubuntu;
+  position: relative;
+  float: left;
+  width: 100%;
+  background-color: @clrMedium;
+  border-bottom: 1px solid @clrMedium;
+  color: #fafafa;
+  font-size: 1.4em;
+}
+
+#soaTitle {
+  padding-left: 0.4em;
+  position: relative;
+  float: left;
+  height: 1.3em;
+}
+
+#soaClose {
+  position: relative;
+  float: right;
+  width: 1.4em;
+  height: 1.4em;
+  background-color: @clrLight;
+  text-align: center;
+  color: @clrMedium;
+  -webkit-transition: all 0.5s ease;
+  transition: all 0.5s ease;
+  z-index: 2;
+}
+
+#soaClose:hover {
+  background-color: @clrLightLight;
+}
+
+#soaGraphics {
+  position: relative;
+  z-index: 1;
+}
+
+#strokeAnimSVG {
+  margin-top: 0.5em;
+  margin-left: 0.5em;
+  width: 18em;
+  height: 18em;
+}
+
+#soaError {
+  position: absolute;
+  top: 9em;
+  width: 100%;
+  display: none;
+}
+
+#soaErrorContent {
+  background-color: @clrLightAccent;
+  max-width: 13em;
+  min-height: 3em;
+  border-radius: 0.2em;
+  padding: 1em;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  vertical-align: middle;
+}
+
+#soaFooter {
+  text-align: right;
+  font-style: italic;
+  font-size: 0.8em;
+  padding-right: 0.6em;
+}
+
+#soaFooter a,
+#soaFooter a:hover,
+#soaFooter a:visited {
+  color: @clrStrong;
+  text-decoration: none;
+}
+
+
+#results {
+  position: relative;
+  color: @clrBodyText;
+  width: 100%;
+}
+
+#results h1 {
+  margin: 0 0 10pt 0;
+  font-family: Neuton, serif;
+  font-size: 24pt;
+  font-weight: bold;
+}
+
+/* ------------------------------- SEARCH OPTIONS POPUP ------------------------------- */
+
+#searchOptionsBox {
+  display: none;
+  position: fixed;
+  z-index: 3;
+  background: @clrDefBg;
+  top: 5.5em;
+  left: 28.5em;
+  left: 0;
+  border: 1pt solid @clrMedium;
+  width: 35em;
+  box-shadow: 0 0 0.3em rgba(0, 0, 0, .7);
+}
+
+#searchOptionsBox.visible {
+  display: block;
+}
+
+#searchOptions {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 80%;
+  padding: 0 1em 0 1em;
+}
+
+#optionsTail {
+  display: block;
+  position: absolute;
+  top: -0.8em;
+  left: 26.36em;
+  width: 1.6em;
+  height: 1.6em;
+  border-color: @clrMedium;
+  border-width: 0.1em;
+  border-style: none none solid solid;
+  background-color: @clrMedium;
+  transform: rotate(45deg);
+  -webkit-transform: rotate(45deg);
+  -moz-transform: rotate(45deg);
+}
+
+#optionsHeader {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  background-color: @clrMedium;
+  font-size: 150%;
+  font-family: Ubuntu;
+  color: @clrDefBg;
+  padding: 0;
+  height: 1.6em;
+}
+
+#optionsTitle {
+  display: inline-block;
+  position: absolute;
+  margin-left: 0.5em;
+  margin-top: 0.15em;
+  left: 0;
+}
+
+#optionsClose {
+  display: inline-block;
+  position: relative;
+  float: right;
+  box-sizing: border-box;
+  background-color: @clrLight;
+  width: 1.6em;
+  height: 1.6em;
+  padding-top: 0.15em;
+  text-align: center;
+  color: @clrMedium;
+  border-bottom: 1pt solid @clrMedium;
+  cursor: default;
+  transition: background-color 0.5s ease;
+}
+
+#optionsClose:hover {
+  background-color: @clrLightLight;
+}
+
+.optionHead {
+  width: 100%;
+  position: relative;
+  float: left;
+  clear: left;
+  text-align: center;
+  font-family: Ubuntu;
+  font-size: 2.5em;
+  margin-top: 0.5em;
+  border-bottom: 4pt solid @clrMediumAccent;
+}
+
+.optionBody {
+  display: table;
+  width: 100%;
+  margin-bottom: 10pt;
+}
+
+.optionItem {
+  display: table-cell;
+  text-align: center;
+  padding: 5pt 0 5pt 0;
+  font-size: 1.5em;
+  cursor: default;
+}
+
+.optionItem .optionExampleHan:before {
+  content: '\A';
+  white-space: pre;
+}
+
+.optionItem .optionExampleHan {
+  font-size: 1.5em;
+}
+
+.optionItem.selected {
+  background-color: @clrLightAccent;
+}
+

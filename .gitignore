@@ -1,0 +1,23 @@
+# Special folders (deployment, runtime data etc.)
+ProdData
+_deploy
+
+# Data and content
+**/files/data
+**/files/content
+
+# Visual Studio / .NET Core generic
+node_modules/
+.vs/
+obj/
+bin/
+prod-js/
+prod-style/
+**/dev-style/*.css
+project.lock.json
+*.user
+/*.tar.gz
+**/html/cont-*.html
+**/sitemap.txt
+
+

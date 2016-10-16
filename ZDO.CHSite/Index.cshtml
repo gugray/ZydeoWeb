@@ -1,0 +1,101 @@
+﻿@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@model ZDO.CHSite.Controllers.IndexModel
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0" />
+  <title>@Model.PR.Title</title>
+  <meta name="keywords" content="@Model.PR.Keywords" />
+  <meta name="description" content="@Model.PR.Description" />
+  <meta name="google" content="notranslate">
+  <link href='https://fonts.googleapis.com/css?family=Noto+Sans:400,400italic&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Neuton&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Ubuntu:700&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Ubuntu&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css">
+  <environment names="Development">
+    <link rel="stylesheet" href="/dev-style/tooltipster.css">
+    <link rel="stylesheet" href="/dev-style/page.css">
+    <link rel="stylesheet" href="/dev-style/forms.css">
+    <link rel="stylesheet" href="/dev-style/entry.css">
+    <link rel="stylesheet" href="/dev-style/newentry.css">
+    <link rel="stylesheet" href="/dev-style/history.css">
+    <link rel="stylesheet" href="/dev-style/lookup.css">
+    <link rel="stylesheet" href="/dev-style/diagnostics.css">
+  </environment>
+  <environment names="Staging,Production">
+    <link rel="stylesheet" href="/prod-style/app.min.css">
+  </environment>
+</head>
+<body id="theBody" class="pt16">
+  <div id="thePage" style="visibility: hidden;">
+    <div id="headerstick">
+      <div id="headerHome"><span id="hdrHomeLatin">CHDICT</span><span id="hdrHomeZho">汉匈词典</span></div>
+      <div id="header">
+        <div id="hdrSearch" class="hdrAlt on">
+          <div id="searchBox">
+            <input type="text" id="txtSearch" placeholder="@Model.Str("HintSearchField")" autofocus/>
+            <i id="btn-write" class="fa fa-paint-brush" aria-hidden="true"></i>
+            <i id="btn-settings" class="fa fa-cog" aria-hidden="true"></i>
+            <i id="btn-search" class="fa fa-search" aria-hidden="true"></i>
+          </div>
+          <i id="toMenu" class="fa fa-chevron-left" aria-hidden="true"></i>
+        </div>
+        <div id="hdrMenu" class="hdrAlt">
+          <a class="topMenu ajax" id="topMenuSearch" href="/@Model.Lang"><i class="fa fa-search" aria-hidden="true"></i></a>
+          <a class="topMenu ajax" id="topMenuEdit" href="/@Model.Lang/edit/new">@Model.Str("TopMenuEdit")</a>
+          <a class="topMenu ajax" id="topMenuRead" href="/@Model.Lang/read/about">@Model.Str("TopMenuRead")</a>
+          <a class="topMenu ajax" id="topMenuDownload" href="/@Model.Lang/download">@Model.Str("TopMenuDownload")</a>
+          <div id="hdrMenuRight">
+            <span class="loginIcon"><i class="fa fa-user" aria-hidden="true"></i></span>
+            <a class="langSel on" id="langSelHu" href="/hu/@Model.Rel">HU</a>
+            <a class="langSel first" id="langSelEn" href="/en/@Model.Rel">EN</a>
+          </div>
+        </div>
+      </div>
+      <div id="subHeader">
+        <div class="subMenu" id="subMenuEdit">
+          <span id="smEditNew"><a class="ajax" href="/@Model.Lang/edit/new">@Model.Str("SMEditNew")</a></span>
+          <span id="smEditHistory"><a class="ajax" href="/@Model.Lang/edit/history">@Model.Str("SMEditHistory")</a></span>
+          <span id="smEditExisting"><a class="ajax" href="/@Model.Lang/edit/existing">@Model.Str("SMEditExisting")</a></span>
+        </div>
+        <div class="subMenu" id="subMenuRead">
+          <span id="smReadAbout"><a class="ajax" href="/@Model.Lang/read/about">@Model.Str("SMReadAbout")</a></span>
+          <span id="smReadArticles"><a class="ajax" href="/@Model.Lang/read/articles">@Model.Str("SMReadArticles")</a></span>
+          <span id="smReadEtc"><a class="ajax" href="/@Model.Lang/read/etc">@Model.Str("SMReadEtc")</a></span>
+        </div>
+        <div class="subMenu" id="subMenuDownload">
+          <span id="smDownload"><span>@Model.Str("SMDownload")</span></span>
+        </div>
+      </div>
+      <div id="searchOptionsBox"></div>
+    </div>
+    <div id="headermask">&nbsp;</div>
+    <div id="dynPage" class="nosubmenu"></div>
+    <div id='bottomSpacer'>&nbsp;</div>
+  </div>
+
+  <div id="debug"></div>
+  <div id="emMeasure">mmmmmmmmmm</div>
+
+  <environment names="Development">
+    <script src="/lib/history.min.js"></script>
+    <script src="/lib/jquery-2.1.4.min.js"></script>
+    <script src="/lib/jquery.color-2.1.2.min.js"></script>
+    <script src="/lib/jquery.tooltipster.min.js"></script>
+    <script src="/dev-js/strings-hu.js"></script>
+    <script src="/dev-js/strings-en.js"></script>
+    <script src="/dev-js/page.js"></script>
+    <script src="/dev-js/newentry.js"></script>
+    <script src="/dev-js/strokeanim.js"></script>
+    <script src="/dev-js/lookup.js"></script>
+    <script src="/dev-js/history.js"></script>
+    <script src="/dev-js/diagnostics.js"></script>
+  </environment>
+  <environment names="Staging,Production">
+    <script src="/prod-js/app.min.js"></script>
+  </environment>
+</body>
+</html>
