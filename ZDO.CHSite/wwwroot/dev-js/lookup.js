@@ -6,51 +6,13 @@
 /// <reference path="strokeanim.js" />
 
 var zdLookup = (function () {
+  "use strict";
+
   var clrSel = "#ffe4cc"; // Same as background-color of .optionItem.selected in CSS
   var clrEmph = "#ffc898"; // Same as border-bottom of .optionHead in CSS
 
   var optScript = "both";
   var optTones = "pleco";
-
-  var optionsTemplate =
-    '<div id="optionsTail">&nbsp;</div>\n' +
-    '<div id="optionsHeader">\n' +
-    '  <span id="optionsTitle">{{options-title}}</span>\n' +
-    '  <span id="optionsClose">X</span>\n' +
-    '</div>\n' +
-    '<div id="searchOptions">\n' +
-    '  <div class="optionHead">{{options-script}}</div>\n' +
-    '  <div class="optionBody">\n' +
-    '    <div class="optionItem" id="optScriptSimplified">\n' +
-    '      <span class="optionLabel">{{options-simplified}}</span>\n' +
-    '      <span class="optionExampleHan">汉语</span>\n' +
-    '    </div>\n' +
-    '    <div class="optionItem" id="optScriptTraditional">\n' +
-    '      <span class="optionLabel">{{options-traditional}}</span>\n' +
-    '      <span class="optionExampleHan">漢語</span>\n' +
-    '    </div>\n' +
-    '    <div class="optionItem" id="optScriptBoth">\n' +
-    '      <span class="optionLabel">{{options-bothscripts}}</span>\n' +
-    '      <span class="optionExampleHan">汉语 • 漢語</span>\n' +
-    '    </div>\n' +
-    '  </div>\n' +
-    '  <div class="optionHead">{{options-tonecolors}}</div>\n' +
-    '  <div class="optionBody">\n' +
-    '    <div class="optionItem toneColorsNone" id="optToneColorsNone">\n' +
-    '      <span class="optionLabel">{{options-nocolors}}</span>\n' +
-    '      <span class="optionExampleHan"><span class="tone1">天</span><span class="tone2">人</span><span class="tone3">很</span><span class="tone4">大</span>了</span>\n' +
-    '    </div>\n' +
-    '    <div class="optionItem toneColorsPleco" id="optToneColorsPleco">\n' +
-    '      <span class="optionLabel">{{options-pleco}}</span>\n' +
-    '      <span class="optionExampleHan"><span class="tone1">天</span><span class="tone2">人</span><span class="tone3">很</span><span class="tone4">大</span>了</span>\n' +
-    '    </div>\n' +
-    '    <div class="optionItem toneColorsDummitt" id="optToneColorsDummitt">\n' +
-    '      <span class="optionLabel">{{options-dummitt}}</span>\n' +
-    '      <span class="optionExampleHan"><span class="tone1">天</span><span class="tone2">人</span><span class="tone3">很</span><span class="tone4">大</span>了</span>\n' +
-    '    </div>\n' +
-    '  </div>\n' +
-    '</div>\n';
-
 
   zdPage.globalInit(globalInit);
 
@@ -124,7 +86,7 @@ var zdLookup = (function () {
   // Show the search settings popup (generate from template; event wireup; position).
   function showSettings(event) {
     // Render HTML from template
-    var html = optionsTemplate;
+    var html = zdSnippets["lookup.options"];
     html = html.replace("{{options-title}}", uiStrings["options-title"]);
     html = html.replace("{{options-script}}", uiStrings["options-script"]);
     html = html.replace("{{options-simplified}}", uiStrings["options-simplified"]);

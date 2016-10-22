@@ -7,6 +7,7 @@ var plumber = require('gulp-plumber');
 var uglify = require('gulp-uglify');
 var minifyCSS = require('gulp-minify-css');
 var del = require('del');
+var htmltojson = require('gulp-html-to-json');
 
 // Compile all .less files to .css
 gulp.task('less', function () {
@@ -23,10 +24,20 @@ gulp.task('clean', function () {
   return del(['./wwwroot/dev-style/*.css', './wwwroot/prod-style/*', './wwwroot/prod-js/*']);
 });
 
+gulp.task('snippets', function () {
+  return gulp.src('./wwwroot/dev-snippets/_snippets.js')
+    .pipe(htmltojson({
+      filename: "zdSnippets",
+      useAsVariable: true
+    }))
+    .pipe(gulp.dest('./wwwroot/dev-js'));
+});
+
 // Minify and bundle JS files
-gulp.task('scripts', function () {
+gulp.task('scripts', ['snippets'], function () {
   return gulp.src([
     './wwwroot/lib/*.js',
+    './wwwroot/dev-js/zdSnippets.js',
     './wwwroot/dev-js/strings*.js',
     './wwwroot/dev-js/page.js',
     './wwwroot/dev-js/newentry.js',
@@ -53,5 +64,6 @@ gulp.task('default', ['clean', 'scripts', 'styles'], function () { });
 
 // Watch: recompile less on changes
 gulp.task('watch', function () {
+  gulp.watch(['./wwwroot/dev-snippets/*.html'], ['snippets']);
   gulp.watch(['./wwwroot/dev-style/*.less'], ['less']);
 });

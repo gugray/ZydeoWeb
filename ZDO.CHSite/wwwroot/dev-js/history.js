@@ -5,11 +5,7 @@
 /// <reference path="page.js" />
 
 var zdHistory = (function () {
-
-  var addCommentTemplate =
-    '<i class="fa fa-commenting-o" aria-hidden="true"></i>' +
-    '<textarea id="txtHistComment" placeholder="{{hint}}"></textarea>';
-
+  "use strict";
 
   $(document).ready(function () {
     zdPage.registerInitScript("edit/history", init);
@@ -39,7 +35,7 @@ var zdHistory = (function () {
     while (!elm.hasClass("historyItem")) elm = elm.parent();
     var entryId = elm.data("entryid");
     // Prepare modal window content
-    var bodyHtml = addCommentTemplate;
+    var bodyHtml = zdSnippets["history.addComment"];
     bodyHtml = bodyHtml.replace("{{hint}}", uiStrings["history-commententry-hint"]);
     var params = {
       id: "dlgHistComment",

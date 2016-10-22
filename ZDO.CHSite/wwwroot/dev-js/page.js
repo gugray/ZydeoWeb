@@ -40,34 +40,6 @@ var zdPage = (function () {
 
   // Incremented for subsequent alerts, so we can correctly animate new one shown before old one has expired.
   var alertId = 0;
-
-  var alertTemplate =
-    '<div class="alertBar" id="alertBarId">' +
-    '  <div class="alert" id="alertId">' +
-    '    <div class="alertMessage"><span class="alertTitle" /><span class="alertBody" /></div>' +
-    '    <div class="alertClose"><img src="/static/close.svg" alt="" /></div>' +
-    '  </div>' +
-    '</div>';
-
-  var modalPopupTemplate =
-    '<div class="modalPopup" id="{{id}}">' +
-    '  <div class="modalPopupInner1">' +
-    '    <div class="modalPopupInner2">' +
-    '      <div class="modalPopupHeader">' +
-    '        <span class="modalPopupTitle">{{title}}</span>' +
-    '        <span class="modalPopupClose">X</span>' +
-    '      </div>' +
-    '      <div class="modalPopupBody">' +
-    '        {{body}}' +
-    '      </div>' +
-    '      <div class="modalPopupButtons">' +
-    '        <span class="modalPopupButton modalPopupButtonCancel">{{Cancel}}</span>' +
-    '        <span class="modalPopupButton modalPopupButtonOK">{{OK}}</span>' +
-    '      </div>' +
-    '    </div>' +
-    '  </div>' +
-    '</div>';
-
  
   // Parse full path, language, and relative path from URL
   function parseLocation() {
@@ -408,7 +380,7 @@ var zdPage = (function () {
       if (activeModalCloser != null) activeModalCloser();
       activeModalCloser = null;
       // Build popup's HTML
-      var html = modalPopupTemplate;
+      var html = zdSnippets["modalPopup"];
       html = html.replace("{{id}}", params.id);
       html = html.replace("{{title}}", escapeHTML(params.title));
       html = html.replace("{{body}}", params.body);
@@ -435,7 +407,7 @@ var zdPage = (function () {
       ++alertId;
       var currBarId = "alertbar" + alertId;
       var currAlertId = "alert" + alertId;
-      var templ = alertTemplate.replace("alertBarId", currBarId);
+      var templ = zdSnippets["alert"].replace("alertBarId", currBarId);
       templ = templ.replace("alertId", currAlertId);
       var elm = $(templ);
       $("body").append(elm);
