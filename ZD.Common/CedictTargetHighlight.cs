@@ -16,11 +16,6 @@ namespace ZD.Common
         public readonly int SenseIx;
 
         /// <summary>
-        /// Index of (Latin) text run in equiv of sense that contains the highlight.
-        /// </summary>
-        public readonly int RunIx;
-
-        /// <summary>
         /// Start of highlight in Latin text run.
         /// </summary>
         public readonly int HiliteStart;
@@ -33,10 +28,9 @@ namespace ZD.Common
         /// <summary>
         /// Ctor: init immutable instance.
         /// </summary>
-        public CedictTargetHighlight(int senseIx, int runIx, int hlStart, int hlLength)
+        public CedictTargetHighlight(int senseIx, int hlStart, int hlLength)
         {
             SenseIx = senseIx;
-            RunIx = runIx;
             HiliteStart = hlStart;
             HiliteLength = hlLength;
         }

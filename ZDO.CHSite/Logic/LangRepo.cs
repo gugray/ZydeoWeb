@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 using ZD.Common;
-using ZD.CedictEngine;
+using ZD.LangUtils;
 
 namespace ZDO.CHSite.Logic
 {
     public class LangRepo
     {
-        private IHeadwordInfo hwInfo;
-        public IHeadwordInfo HWInfo { get { return hwInfo; } }
+        private HeadwordInfo hwInfo;
+        public HeadwordInfo HWInfo { get { return hwInfo; } }
 
         public LangRepo()
         {

@@ -1,6 +1,7 @@
 # Special folders (deployment, runtime data etc.)
 ProdData
 _deploy
+_work
 
 # Data and content
 **/files/data

@@ -6,7 +6,6 @@ using System.Text;
 using MySql.Data.MySqlClient;
 
 using ZD.Common;
-using ZD.CedictEngine;
 using ZDO.CHSite.Entities;
 
 namespace ZDO.CHSite.Logic

@@ -299,9 +299,9 @@ namespace ZDO.CHSite.Renderers
             sb.Append(" ");
 
             bool needToSplit = true;
-            string domain = sense.Domain.GetPlainText();
-            string equiv = sense.Equiv.GetPlainText();
-            string note = sense.Note.GetPlainText();
+            string domain = sense.Domain;
+            string equiv = sense.Equiv;
+            string note = sense.Note;
             if (domain != string.Empty)
             {
                 sb.Append("<span class='sense-meta'>");
@@ -351,54 +351,39 @@ namespace ZDO.CHSite.Renderers
             sb.Append("</span>"); // <span class="sense">
         }
 
-        private class HybridTextConsumer
+        private class TextConsumer
         {
-            private readonly HybridText txt;
+            private readonly string txt;
             private readonly CedictTargetHighlight hl;
-            private int runIX = 0;
-            private int runPos = 0;
-            private string runTxt;
-            public HybridTextConsumer(HybridText txt, CedictTargetHighlight hl)
+            private int pos = 0;
+            public TextConsumer(string txt, CedictTargetHighlight hl)
             {
                 this.txt = txt;
                 this.hl = hl;
-                runTxt = txt.GetRunAt(0).GetPlainText();
             }
             public void GetNext(out char c, out bool inHL)
             {
-                if (runPos >= runTxt.Length)
-                {
-                    ++runIX;
-                    runPos = 0;
-                    if (runIX < txt.RunCount) runTxt = txt.GetRunAt(runIX).GetPlainText();
-                    else runTxt = null;
-                }
-                if (runTxt == null)
-                {
-                    c = (char)0;
-                    inHL = false;
-                    return;
-                }
-                c = runTxt[runPos];
-                if (hl == null || hl.RunIx != runIX) inHL = false;
-                else inHL = runPos >= hl.HiliteStart && runPos < hl.HiliteStart + hl.HiliteLength;
-                ++runPos;
+                if (pos == txt.Length) { c = (char)0; inHL = hl.HiliteStart + hl.HiliteLength >= txt.Length; }
+                c = txt[pos];
+                if (hl == null) inHL = false;
+                else inHL = pos >= hl.HiliteStart && pos < hl.HiliteStart + hl.HiliteLength;
+                ++pos;
             }
             public bool IsNextSpaceInHilite()
             {
                 int nextSpaceIX = -1;
-                for (int i = runIX; i < runTxt.Length; ++i)
+                for (int i = pos; i < txt.Length; ++i)
                 {
-                    if (runTxt[i] == ' ') { nextSpaceIX = i; break; }
+                    if (txt[i] == ' ') { nextSpaceIX = i; break; }
                 }
                 if (nextSpaceIX == -1) return false;
                 return nextSpaceIX >= hl.HiliteStart && nextSpaceIX < hl.HiliteStart + hl.HiliteLength;
             }
         }
 
-        private void renderEquiv(StringBuilder sb, HybridText equiv, CedictTargetHighlight hl, bool nobr)
+        private void renderEquiv(StringBuilder sb, string equiv, CedictTargetHighlight hl, bool nobr)
         {
-            HybridTextConsumer htc = new HybridTextConsumer(equiv, hl);
+            TextConsumer htc = new TextConsumer(equiv, hl);
             bool firstWordOver = false;
             bool hlOn = false;
             char c;

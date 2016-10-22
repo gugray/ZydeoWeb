@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "ZD.Tool": {
+      "commandName": "Project",
+      "commandLineArgs": "--examine handedict.u8 hdd-diag.txt hdd-trip.txt",
+      "workingDirectory": "D:\\Development\\ZydeoWeb\\_work"
+    }
+  }
+}

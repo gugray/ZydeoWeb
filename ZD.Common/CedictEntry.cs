@@ -22,6 +22,11 @@ namespace ZD.Common
         private readonly CedictSense[] senses;
 
         /// <summary>
+        /// Recognized embedded Chinese throughout the senses, or null.
+        /// </summary>
+        private readonly ZhoEmbedding[] zhoEmbeds;
+
+        /// <summary>
         /// For each Hanzi, contains index of corresponding pinyin syllable, or -1.
         /// </summary>
         private readonly short[] hanziPinyinMap;
@@ -155,6 +160,27 @@ namespace ZD.Common
         }
 
         /// <summary>
+        /// Empty embeddings array.
+        /// </summary>
+        private static readonly ZhoEmbedding[] emptyEmbeds = new ZhoEmbedding[0];
+
+        /// <summary>
+        /// Gets enumerator to embedded Chinese ranges across the senses.
+        /// </summary>
+        public IEnumerable<ZhoEmbedding> ZhoEmbeddings
+        {
+            get { return zhoEmbeds == null ? emptyEmbeds : zhoEmbeds; }
+        }
+
+        /// <summary>
+        /// Get count of embedded Chinese ranges across senses.
+        /// </summary>
+        public int EmbeddingCount
+        {
+            get { return zhoEmbeds == null ? 0 : zhoEmbeds.Length; }
+        }
+
+        /// <summary>
         /// Compares headword's pinyin to other headword to get lexicographical ordering.
         /// </summary>
         public int PinyinCompare(CedictEntry other)
@@ -176,7 +202,7 @@ namespace ZD.Common
         public CedictEntry(string chSimpl, string chTrad,
             ReadOnlyCollection<PinyinSyllable> pinyin,
             ReadOnlyCollection<CedictSense> senses,
-            short[] hanziPinyinMap)
+            short[] hanziPinyinMap, ZhoEmbedding[] zhoEmbeds)
         {
             if (chSimpl.Length != chTrad.Length)
                 throw new ArgumentException("Different number of simplified and traditional hanzi.");
@@ -187,6 +213,7 @@ namespace ZD.Common
             for (int i = 0; i != pinyin.Count; ++i) this.pinyin[i] = pinyin[i];
             this.senses = new CedictSense[senses.Count];
             for (int i = 0; i != senses.Count; ++i) this.senses[i] = senses[i];
+            this.zhoEmbeds = zhoEmbeds;
             if (hanziPinyinMap != null)
             {
                 if (hanziPinyinMap.Length != ChSimpl.Length)
@@ -199,37 +226,6 @@ namespace ZD.Common
                 for (int i = 0; i != this.hanziPinyinMap.Length; ++i)
                     this.hanziPinyinMap[i] = -1;
             }
-        }
-
-        /// <summary>
-        /// Gets entry in the CEDICT format.
-        /// </summary>
-        /// <param name="head"></param>
-        /// <param name="trg"></param>
-        public void GetCedict(out string head, out string trg)
-        {
-            StringBuilder sbHead = new StringBuilder();
-            StringBuilder sbTrg = new StringBuilder();
-            sbHead.Append(ChTrad);
-            sbHead.Append(' ');
-            sbHead.Append(ChSimpl);
-            sbHead.Append(" [");
-            bool first = true;
-            foreach (PinyinSyllable syll in pinyin)
-            {
-                if (!first) sbHead.Append(' ');
-                else first = false;
-                sbHead.Append(syll.GetDisplayString(false));
-            }
-            sbHead.Append(']');
-            sbTrg.Append('/');
-            foreach (CedictSense sense in senses)
-            {
-                sbTrg.Append(sense.GetCedict());
-                sbTrg.Append('/');
-            }
-            head = sbHead.ToString();
-            trg = sbTrg.ToString();
         }
 
         /// <summary>
@@ -268,6 +264,13 @@ namespace ZD.Common
             ChTrad = br.ReadString();
             senses = br.ReadArray(brr => new CedictSense(brr));
             hanziPinyinMap = br.ReadArray(brr => brr.ReadShort());
+            short cnt = br.ReadShort();
+            if (cnt == 0) zhoEmbeds = null;
+            else
+            {
+                zhoEmbeds = new ZhoEmbedding[cnt];
+                for (int i = 0; i != cnt; ++i) zhoEmbeds[i] = new ZhoEmbedding(br);
+            }
         }
 
         /// <summary>
@@ -280,6 +283,12 @@ namespace ZD.Common
             bw.WriteString(ChTrad);
             bw.WriteArray(senses);
             bw.WriteArray(hanziPinyinMap, (x, bwr) => bwr.WriteShort(x));
+            if (zhoEmbeds == null) bw.WriteShort(0);
+            else
+            {
+                bw.WriteShort((short)zhoEmbeds.Length);
+                for (int i = 0; i != zhoEmbeds.Length; ++i) zhoEmbeds[i].Serialize(bw);
+            }
         }
     }
 }

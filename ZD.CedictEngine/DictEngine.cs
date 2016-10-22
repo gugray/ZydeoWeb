@@ -551,6 +551,36 @@ namespace ZD.CedictEngine
         }
 
         /// <summary>
+        /// Split string into possible multiple pinyin syllables, or return as whole if not possible.
+        /// </summary>
+        private static List<string> doPinyinSplitSyllables(string str)
+        {
+            List<string> res = new List<string>();
+            // Sanity check
+            if (str == string.Empty) return res;
+            // Ending positions of syllables
+            List<int> ends = new List<int>();
+            // Recursive matching
+            doMatchSylls(str, 0, ends);
+            // Failed to match: return original string in one
+            if (ends.Count == 0)
+            {
+                res.Add(str);
+                return res;
+            }
+            // Split
+            int pos = 0;
+            foreach (int i in ends)
+            {
+                string part = str.Substring(pos, i - pos);
+                res.Add(part);
+                pos = i;
+            }
+            // Done.
+            return res;
+        }
+
+        /// <summary>
         /// Parses a pinyin query string into normalized syllables.
         /// </summary>
         public static List<PinyinSyllable> ParsePinyinQuery(string query)

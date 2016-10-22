@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 using ZD.Common;
-using ZD.CedictEngine;
+using ZD.LangUtils;
 
 namespace ZDO.CHSite.Logic
 {
@@ -45,7 +45,8 @@ namespace ZDO.CHSite.Logic
             }
             can += "] /";
             foreach (string str in senses) can += str + "/";
-            return CedictCompiler.ParseEntry(can, 0, null, null);
+            CedictParser parser = new CedictParser();
+            return parser.ParseEntry(can, 0, null);
         }
     }
 }

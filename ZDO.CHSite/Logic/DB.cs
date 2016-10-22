@@ -5,7 +5,6 @@ using System.IO;
 using System.Reflection;
 using MySql.Data.MySqlClient;
 
-using ZD.CedictEngine;
 using ZD.Common;
 
 namespace ZDO.CHSite.Logic

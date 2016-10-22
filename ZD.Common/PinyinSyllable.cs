@@ -29,8 +29,8 @@ namespace ZD.Common
         /// </summary>
         public PinyinSyllable(string text, int tone)
         {
-            if (string.IsNullOrEmpty(text)) throw new ArgumentException("text");
-            if (tone < -1 || tone > 4) throw new ArgumentException("tone");
+            if (string.IsNullOrEmpty(text)) throw new ArgumentException("Invalid Pinyin syllable text");
+            if (tone < -1 || tone > 4) throw new ArgumentException("Invalid Pinyin syllable tone");
             Text = text;
             Tone = tone;
         }

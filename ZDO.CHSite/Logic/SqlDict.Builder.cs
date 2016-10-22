@@ -7,7 +7,7 @@ using System.Data;
 using MySql.Data.MySqlClient;
 
 using ZD.Common;
-using ZD.CedictEngine;
+using ZD.LangUtils;
 
 namespace ZDO.CHSite.Logic
 {
@@ -222,7 +222,7 @@ namespace ZDO.CHSite.Logic
             {
                 tr = conn.BeginTransaction();
                 string head, trg;
-                entry.GetCedict(out head, out trg);
+                CedictWriter.Write(entry, out head, out trg);
                 // Check restrictions - can end up dropped entry
                 checkRestrictions(entry.ChSimpl, trg);
                 // Check for duplicate
@@ -383,10 +383,13 @@ namespace ZDO.CHSite.Logic
                     tr = conn.BeginTransaction();
                 }
                 // Parse line from CEDICT format
-                CedictEntry entry = CedictCompiler.ParseEntry(line, lineNum, swLog, swDropped);
+                // TO-DO: Make parser a member to avoid constantly recreating (costly)
+                // TO-DO: Get rid of swDropped
+                CedictParser parser = new CedictParser();
+                CedictEntry entry = parser.ParseEntry(line, lineNum, swLog);
                 if (entry == null) return;
                 string head, trg;
-                entry.GetCedict(out head, out trg);
+                CedictWriter.Write(entry, out head, out trg);
                 // Check restrictions - can end up dropped entry
                 try { checkRestrictions(entry.ChSimpl, trg); }
                 catch { return; }
