@@ -14,30 +14,34 @@ namespace ZD.Tool
         {
             Console.WriteLine("Invalid arguments. Usage:");
             Console.WriteLine();
-            Console.WriteLine("--examine <dict-file> <out-diag-file> <failed-roundtrip-file>");
-            Console.WriteLine("  Parses dictionary in CEDICT format, logs anomalies.");
+            Console.WriteLine("--examine");
+            Console.WriteLine("  Parses dictionary in CEDICT format, logs anomalies and stats.");
+            Console.WriteLine("  Input name fixed: handedict.u8");
+            Console.WriteLine("--10-prepare");
+            Console.WriteLine("  Converts original HanDeDict file into enriched format, dropping entries with errors.");
+            Console.WriteLine("  Input name fixed: handedict.u8");
+            Console.WriteLine("--20-cleanse");
+            Console.WriteLine("  Cleanses HDD data");
+            Console.WriteLine("  Input name fixed: x-10-handedict.txt");
             Console.WriteLine();
         }
 
         private static object parseArgs(string[] args)
         {
-            if (args[0] == "--examine")
-            {
-                if (args.Length != 4) return null;
-                OptExamine opt = new OptExamine
-                {
-                    DictFileName = args[1],
-                    DiagFileName = args[2],
-                    RoundtripFileName = args[3],
-                };
-                return opt;
-            }
+            if (args[0] == "--examine") return args[0];
+            if (args[0] == "--10-prepare") return args[0];
+            if (args[0] == "--20-cleanse") return args[0];
             return null;
         }
 
         private static IWorker createWorker(object opt)
         {
-            if (opt is OptExamine) return new WrkExamine(opt as OptExamine);
+            if (opt is string)
+            {
+                if (opt as string == "--examine") return new WrkExamine();
+                if (opt as string == "--10-prepare") return new Wrk10Prepare();
+                if (opt as string == "--20-cleanse") return new Wrk20Cleanse();
+            }
             throw new Exception(opt.GetType().ToString() + " is not recognized as an options type.");
         }
 

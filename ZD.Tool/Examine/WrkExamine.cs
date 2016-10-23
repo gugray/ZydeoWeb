@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.IO;
+using System.Text.RegularExpressions;
 
 using ZD.Common;
 using ZD.LangUtils;
@@ -11,12 +10,6 @@ namespace ZD.Tool.Examine
 {
     public class WrkExamine : IWorker
     {
-        private readonly OptExamine opt;
-        public WrkExamine(OptExamine opt)
-        {
-            this.opt = opt;
-        }
-
         private FileStream fsDict = null;
         private StreamReader srDict = null;
         private FileStream fsDiag = null;
@@ -28,11 +21,11 @@ namespace ZD.Tool.Examine
 
         public void Init()
         {
-            fsDict = new FileStream(opt.DictFileName, FileMode.Open, FileAccess.Read);
+            fsDict = new FileStream("handedict.u8", FileMode.Open, FileAccess.Read);
             srDict = new StreamReader(fsDict);
-            fsDiag = new FileStream(opt.DiagFileName, FileMode.Create, FileAccess.ReadWrite);
+            fsDiag = new FileStream("hdd-diag.txt", FileMode.Create, FileAccess.ReadWrite);
             swDiag = new StreamWriter(fsDiag);
-            fsTrip = new FileStream(opt.RoundtripFileName, FileMode.Create, FileAccess.ReadWrite);
+            fsTrip = new FileStream("hdd-trip.txt", FileMode.Create, FileAccess.ReadWrite);
             swTrip = new StreamWriter(fsTrip);
         }
 
@@ -53,11 +46,6 @@ namespace ZD.Tool.Examine
             {
                 ++lineNum;
                 if (line.StartsWith("#")) continue;
-                //// DBG
-                //if (line.StartsWith("阿巴多 阿巴多 [a1 ba1 duo1] / Abadol"))
-                //{
-                //    int iii = 0;
-                //}
                 CedictEntry entry = parser.ParseEntry(line, lineNum, swDiag);
                 if (entry != null)
                 {
@@ -67,7 +55,52 @@ namespace ZD.Tool.Examine
                         swTrip.WriteLine(line);
                         swTrip.WriteLine(trippedLine);
                     }
+                    countTags(line);
                 }
+            }
+            List<TC> tlst = new List<TC>();
+            foreach (var x in tags) tlst.Add(new TC { Tag = x.Key, Count = x.Value });
+            tlst.Sort((x, y) => y.Count.CompareTo(x.Count));
+            using (FileStream fsTags = new FileStream("hdd-tags.txt", FileMode.Create, FileAccess.ReadWrite))
+            using (StreamWriter sw = new StreamWriter(fsTags))
+            {
+                foreach (var x in tlst) sw.WriteLine(x.Count + "\t" + x.Tag);
+            }
+        }
+
+        private class TC
+        {
+            public string Tag;
+            public int Count;
+        }
+
+        private Dictionary<string, int> tags = new Dictionary<string, int>();
+        private Regex reTag1 = new Regex(@"\(([^\)]+)\)");
+        private Regex reTag2 = new Regex(@"<([^>]+)>");
+
+        private void incTag(string tag)
+        {
+            if (!tags.ContainsKey(tag)) tags[tag] = 1;
+            else ++tags[tag];
+        }
+
+        private void countTags(string line)
+        {
+            line = line.Replace("&gt", ">");
+            line = line.Replace("(u.E.)", "");
+            var mc = reTag1.Matches(line);
+            foreach (Match m in mc)
+            {
+                string[] parts = m.Groups[1].Value.Split(',');
+                for (int i = 0; i != parts.Length; ++i) parts[i] = parts[i].Trim();
+                foreach (string t in parts) incTag("(" + t + ")");
+            }
+            mc = reTag2.Matches(line);
+            foreach (Match m in mc)
+            {
+                string[] parts = m.Groups[1].Value.Split(',');
+                for (int i = 0; i != parts.Length; ++i) parts[i] = parts[i].Trim();
+                foreach (string t in parts) incTag("<" + t + ">");
             }
         }
 
