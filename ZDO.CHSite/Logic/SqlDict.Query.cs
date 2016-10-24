@@ -28,23 +28,6 @@ namespace ZDO.CHSite.Logic
             private MySqlCommand cmdSelHanziInstances;
             // ---------------
 
-            private class EntryProvider : ICedictEntryProvider
-            {
-                private readonly Dictionary<int, CedictEntry> entryDict = new Dictionary<int, CedictEntry>();
-
-                public void AddEntry(int entryId, CedictEntry entry)
-                {
-                    entryDict[entryId] = entry;
-                }
-
-                public CedictEntry GetEntry(int entryId)
-                {
-                    return entryDict[entryId];
-                }
-
-                public void Dispose() { }
-            }
-
             /// <summary>
             /// A lookup result with its loaded entry; needed to be able to sort results before throwing away entry itself.
             /// </summary>
@@ -439,7 +422,7 @@ namespace ZDO.CHSite.Logic
                     if (syllStart == -1) continue;
 
                     // Keeper!
-                    CedictResult cres = new CedictResult(blobId, entry.HanziPinyinMap, syllStart, qsylls.Count);
+                    CedictResult cres = new CedictResult(entry, entry.HanziPinyinMap, syllStart, qsylls.Count);
                     ResWithEntry resWE = new ResWithEntry(cres, entry);
                     resList.Add(resWE);
                 }
@@ -458,8 +441,7 @@ namespace ZDO.CHSite.Logic
                 return a.Entry.PinyinCompare(b.Entry);
             }
 
-            private void lookupPinyin(string query,
-                EntryProvider ep, List<CedictResult> res)
+            private void lookupPinyin(string query, List<CedictResult> res)
             {
                 // Interpret query string
                 List<PinyinSyllable> qsylls, qnorm;
@@ -478,7 +460,6 @@ namespace ZDO.CHSite.Logic
                 {
                     ResWithEntry rwe = rl[i];
                     res.Add(rwe.Res);
-                    ep.AddEntry(rwe.Res.EntryId, rwe.Entry);
                 }
             }
 
@@ -561,7 +542,7 @@ namespace ZDO.CHSite.Logic
                     if (hiliteLength != 0)
                     {
                         CedictResult res = new CedictResult(CedictResult.SimpTradWarning.None,
-                            blobId, entry.HanziPinyinMap,
+                            entry, entry.HanziPinyinMap,
                             hiliteStart, hiliteLength);
                         ResWithEntry resWE = new ResWithEntry(res, entry);
                         resList.Add(resWE);
@@ -593,8 +574,7 @@ namespace ZDO.CHSite.Logic
                 //return a.Entry.PinyinCompare(b.Entry);
             }
 
-            private void lookupHanzi(string query, EntryProvider ep,
-                List<CedictResult> res, List<CedictAnnotation> anns)
+            private void lookupHanzi(string query, List<CedictResult> res, List<CedictAnnotation> anns)
             {
                 // Distinct Hanzi
                 query = query.ToUpperInvariant();
@@ -627,7 +607,6 @@ namespace ZDO.CHSite.Logic
                 {
                     ResWithEntry rwe = rl[i];
                     res.Add(rwe.Res);
-                    ep.AddEntry(rwe.Res.EntryId, rwe.Entry);
                 }
             }
 
@@ -642,19 +621,18 @@ namespace ZDO.CHSite.Logic
             public CedictLookupResult Lookup(string query)
             {
                 // Prepare
-                EntryProvider ep = new EntryProvider();
                 List<CedictResult> res = new List<CedictResult>();
                 List<CedictAnnotation> anns = new List<CedictAnnotation>();
                 SearchLang sl = SearchLang.Chinese;
 
-                if (hasHanzi(query)) lookupHanzi(query, ep, res, anns);
+                if (hasHanzi(query)) lookupHanzi(query, res, anns);
                 else
                 {
-                    lookupPinyin(query, ep, res);
+                    lookupPinyin(query, res);
                 }
 
                 // Done
-                return new CedictLookupResult(ep, query, res, anns, sl);
+                return new CedictLookupResult(query, res, anns, sl);
             }
         }
     }

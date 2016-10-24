@@ -17,11 +17,6 @@ namespace ZD.Common
         public readonly string Query;
 
         /// <summary>
-        /// Entry provider for retrieving actual dictionary entries. Caller owns it (must dispose it).
-        /// </summary>
-        public readonly ICedictEntryProvider EntryProvider;
-
-        /// <summary>
         /// Results of the dictionary query.
         /// </summary>
         public readonly ReadOnlyCollection<CedictResult> Results;
@@ -40,11 +35,10 @@ namespace ZD.Common
         /// <summary>
         /// Ctor: intialize immutable object.
         /// </summary>
-        public CedictLookupResult(ICedictEntryProvider entryProvider, string query,
-            List<CedictResult> results, List<CedictAnnotation> annotations, SearchLang actualSearchLang)
+        public CedictLookupResult(string query, List<CedictResult> results, List<CedictAnnotation> annotations, 
+            SearchLang actualSearchLang)
         {
             Query = query;
-            EntryProvider = entryProvider;
             Results = new ReadOnlyCollection<CedictResult>(results);
             Annotations = new ReadOnlyCollection<CedictAnnotation>(annotations);
             ActualSearchLang = actualSearchLang;

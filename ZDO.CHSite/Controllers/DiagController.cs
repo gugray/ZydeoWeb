@@ -61,7 +61,7 @@ namespace ZDO.CHSite.Controllers
         private void funIndexHDD(object o)
         {
             indexLineCount = 0;
-            string hddPath = "files/data/handedict_nb_sani03.u8";
+            string hddPath = "files/data/x-20-handedict.txt";
             using (SqlDict.BulkBuilder imp = new SqlDict.BulkBuilder(workingFolder, 0, "Importing stuff.", false))
             using (FileStream fs = new FileStream(hddPath, FileMode.Open, FileAccess.Read))
             using (StreamReader sr = new StreamReader(fs))
@@ -69,6 +69,7 @@ namespace ZDO.CHSite.Controllers
                 string line;
                 while ((line = sr.ReadLine()) != null)
                 {
+                    if (line == "" || line.StartsWith("#")) continue;
                     imp.AddEntry(line);
                     ++indexLineCount;
                 }

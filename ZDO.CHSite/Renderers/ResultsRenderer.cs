@@ -23,14 +23,12 @@ namespace ZDO.CHSite.Renderers
 
         public void Render(StringBuilder sb)
         {
-            var prov = lr.EntryProvider;
-
             sb.AppendLine("<div id='results'>");
             int max = Math.Min(lr.Results.Count, 256);
             for (int i = 0; i != max; ++i)
             {
                 var lres = lr.Results[i];
-                EntryRenderer er = new EntryRenderer(lres, prov, uiScript, uiTones);
+                EntryRenderer er = new EntryRenderer(lres, uiScript, uiTones);
                 er.OneLineHanziLimit = 9;
                 er.Render(sb);
                 if (i != max - 1) sb.AppendLine("<div class='resultSep'></div>");

@@ -4,8 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Diagnostics;
 
-using ZD.Tool.Examine;
-
 namespace ZD.Tool
 {
     class Program
@@ -23,6 +21,10 @@ namespace ZD.Tool
             Console.WriteLine("--20-cleanse");
             Console.WriteLine("  Cleanses HDD data");
             Console.WriteLine("  Input name fixed: x-10-handedict.txt");
+            Console.WriteLine("--compile-hwinfo");
+            Console.WriteLine("  Compiles headword info file");
+            Console.WriteLine("  Fixed inputs: Unihan_Readings.txt; Unihan_Variants.txt; cedict_ts.u8; handedict.u8");
+            Console.WriteLine("  Outputs unihanzi.bin");
             Console.WriteLine();
         }
 
@@ -31,6 +33,7 @@ namespace ZD.Tool
             if (args[0] == "--examine") return args[0];
             if (args[0] == "--10-prepare") return args[0];
             if (args[0] == "--20-cleanse") return args[0];
+            if (args[0] == "--compile-hwinfo") return args[0];
             return null;
         }
 
@@ -41,6 +44,7 @@ namespace ZD.Tool
                 if (opt as string == "--examine") return new WrkExamine();
                 if (opt as string == "--10-prepare") return new Wrk10Prepare();
                 if (opt as string == "--20-cleanse") return new Wrk20Cleanse();
+                if (opt as string == "--compile-hwinfo") return new WrkUnihanzi();
             }
             throw new Exception(opt.GetType().ToString() + " is not recognized as an options type.");
         }

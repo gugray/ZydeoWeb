@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Encodings.Web;
 
 using ZD.Common;
+using ZD.LangUtils;
 using ZDO.CHSite.Entities;
 using ZDO.CHSite.Logic;
 
@@ -11,6 +12,7 @@ namespace ZDO.CHSite.Renderers
 {
     public class HistoryRenderer
     {
+        private readonly CedictParser parser = new CedictParser();
         private readonly string lang;
         private readonly int histPageSize;
         private readonly int histPageIX;
@@ -92,7 +94,7 @@ namespace ZDO.CHSite.Renderers
             sb.Append("<i class='opHistFlag fa fa-flag-o' />");
             sb.Append("</div>"); // <div class='histEntryOps'>
 
-            CedictEntry entry = Utils.BuildEntry(ci.EntryHead, ci.EntryBody);
+            CedictEntry entry = parser.ParseEntry(ci.EntryHead + " " + ci.EntryBody, 0, null);
             EntryRenderer er = new EntryRenderer(entry);
             er.OneLineHanziLimit = 12;
             er.Render(sb);

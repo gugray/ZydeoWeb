@@ -46,7 +46,7 @@ namespace ZD.LangUtils
         /// <summary>
         /// Decomposes headword: hanzi and pinyin.
         /// </summary>
-        private Regex reHead = new Regex(@"^([^ ]+) ([^ ]+) \[([^\]]+)\] $");
+        private Regex reHead = new Regex(@"^([^ ]+) ([^ ]+) \[([^\]]+)\]$");
 
         /// <summary>
         /// Parses an entry (line) that has been separated into headword and rest.
@@ -105,26 +105,25 @@ namespace ZD.LangUtils
                 return null;
             }
             // Split meanings by slash
-            string[] senses = strBody.Split(new char[] { '/' });
+            if (strBody.Length < 3 || strBody[0] != '/' || strBody[strBody.Length - 1] != '/')
+            {
+                string msg = "Line {0}: ERROR: Invalid body (too short, or has no trailing/ending slash): {1}";
+                msg = string.Format(msg, lineNum, strBody);
+                if (logStream != null) logStream.WriteLine(msg);
+                return null;
+            }
+            string[] senses = strBody.Substring(1, strBody.Length - 2).Split(new char[] { '/' });
             bool hasEmptySense = false;
-            for (int i = 0; i < senses.Length - 1; ++i) if (senses[i] == "") hasEmptySense = true;
+            for (int i = 0; i != senses.Length; ++i) if (senses[i] == "") hasEmptySense = true;
             if (hasEmptySense)
             {
                 string msg = "Line {0}: Warning: Empty sense in entry: {1}";
                 msg = string.Format(msg, lineNum, strBody);
                 if (logStream != null) logStream.WriteLine(msg);
             }
-            // At least one meaning!
-            if (senses.Length == 1)
-            {
-                string msg = "Line {0}: ERROR: No sense: {1}";
-                msg = string.Format(msg, lineNum, strBody);
-                if (logStream != null) logStream.WriteLine(msg);
-                return null;
-            }
             // Separate domain, equiv and note in each sense
             List<CedictSense> cedictSenses = new List<CedictSense>();
-            for (int i = 0; i < senses.Length - 1; ++i)
+            for (int i = 0; i != senses.Length; ++i)
             {
                 string s = senses[i];
                 string domain, equiv, note;
@@ -263,22 +262,6 @@ namespace ZD.LangUtils
         }
 
         /// <summary>
-        /// Split line into head and body.
-        /// </summary>
-        private static void sanitizeAndSplit(string line, out string strHead, out string strBody)
-        {
-            //// Comments, empty lines, some basic normalization
-            //line = line.Replace(' ', ' '); // NBSP
-            //line = line.Replace('“', '"'); // Curly quote
-            //line = line.Replace('”', '"'); // Curly quote
-
-            // Initial split: header vs body
-            int firstSlash = line.IndexOf('/');
-            strHead = line.Substring(0, firstSlash);
-            strBody = line.Substring(firstSlash + 1);
-        }
-
-        /// <summary>
         /// <para>Parses one sense, to separate domain, equivalent, and note.</para>
         /// <para>In input, sense comes like this, with domain/note optional:</para>
         /// <para>(domain) (domain) equiv, equiv, equiv (note) (note)</para>
@@ -370,7 +353,10 @@ namespace ZD.LangUtils
             if (!surrogateCheck(line, swLog, lineNum)) return null;
             // Sanitization and initial split
             string strHead, strBody;
-            sanitizeAndSplit(line, out strHead, out strBody);
+            // Initial split: header vs body
+            int firstSlash = line.IndexOf('/');
+            strHead = line.Substring(0, firstSlash - 1);
+            strBody = line.Substring(firstSlash);
             // Parse entry. If failed > null.
             CedictEntry entry = null;
             try { entry = parseEntry(strHead, strBody, swLog, lineNum); }

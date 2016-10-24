@@ -14,7 +14,6 @@ namespace ZDO.CHSite.Renderers
         private readonly string query;
         private readonly CedictResult res;
         private readonly CedictAnnotation ann;
-        private readonly ICedictEntryProvider prov;
         private readonly UiScript script;
         private readonly UiTones tones;
         private readonly CedictEntry entryToRender;
@@ -63,11 +62,9 @@ namespace ZDO.CHSite.Renderers
         /// <summary>
         /// Ctor: regular lookup result
         /// </summary>
-        public EntryRenderer(CedictResult res, ICedictEntryProvider prov,
-            UiScript script, UiTones tones)
+        public EntryRenderer(CedictResult res, UiScript script, UiTones tones)
         {
             this.res = res;
-            this.prov = prov;
             this.script = script;
             this.tones = tones;
             this.hanim = true;
@@ -77,12 +74,10 @@ namespace ZDO.CHSite.Renderers
         /// <summary>
         /// Ctor: annotated Hanzi
         /// </summary>
-        public EntryRenderer(string query, CedictAnnotation ann, ICedictEntryProvider prov,
-            UiTones tones)
+        public EntryRenderer(string query, CedictAnnotation ann, UiTones tones)
         {
             this.query = query;
             this.ann = ann;
-            this.prov = prov;
             this.tones = tones;
             this.hanim = true;
         }
@@ -95,7 +90,7 @@ namespace ZDO.CHSite.Renderers
 
         private void renderAnnotation(StringBuilder sb)
         {
-            CedictEntry entry = prov.GetEntry(ann.EntryId);
+            CedictEntry entry = ann.Entry;
             string entryClass = "entry";
             if (tones == UiTones.Pleco) entryClass += " toneColorsPleco";
             else if (tones == UiTones.Dummitt) entryClass += " toneColorsDummitt";
@@ -165,7 +160,7 @@ namespace ZDO.CHSite.Renderers
         private void renderResult(StringBuilder sb)
         {
             CedictEntry entry = entryToRender;
-            if (entry == null) entry = prov.GetEntry(res.EntryId);
+            if (entry == null) entry = res.Entry;
 
             Dictionary<int, CedictTargetHighlight> senseHLs = new Dictionary<int, CedictTargetHighlight>();
             if (res != null)
@@ -363,7 +358,13 @@ namespace ZDO.CHSite.Renderers
             }
             public void GetNext(out char c, out bool inHL)
             {
-                if (pos == txt.Length) { c = (char)0; inHL = hl.HiliteStart + hl.HiliteLength >= txt.Length; }
+                if (pos == txt.Length)
+                {
+                    c = (char)0;
+                    if (hl == null) inHL = false;
+                    else inHL = hl.HiliteStart + hl.HiliteLength >= txt.Length;
+                    return;
+                }
                 c = txt[pos];
                 if (hl == null) inHL = false;
                 else inHL = pos >= hl.HiliteStart && pos < hl.HiliteStart + hl.HiliteLength;

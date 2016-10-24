@@ -45,6 +45,11 @@ namespace ZD.Common
             return reader.ReadInt64();
         }
 
+        public ulong ReadULong()
+        {
+            return reader.ReadUInt64();
+        }
+
         public int ReadInt()
         {
             return reader.ReadInt32();

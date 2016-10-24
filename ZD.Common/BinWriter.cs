@@ -50,6 +50,11 @@ namespace ZD.Common
             writer.Write(l);
         }
 
+        public void WriteULong(ulong ul)
+        {
+            writer.Write(ul);
+        }
+
         public void WriteInt(int i)
         {
             writer.Write(i);

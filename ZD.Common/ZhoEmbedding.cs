@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace ZD.Common
 {
+    /// <summary>
+    /// Part of a sense.
+    /// </summary>
     public enum SensePart
     {
         Domain = 0,
@@ -13,77 +16,84 @@ namespace ZD.Common
     }
 
     /// <summary>
+    /// Type of Chinese embedding.
+    /// </summary>
+    public enum ZhoEmbedType
+    {
+        /// <summary>
+        /// Trad|Simp[Pinyin]
+        /// </summary>
+        TSP = 0,
+        /// <summary>
+        /// Hanzi[Pinyin]
+        /// </summary>
+        HP = 1,
+        /// <summary>
+        /// Trad|Simp
+        /// </summary>
+        TS = 2,
+        /// <summary>
+        /// Hanzi
+        /// </summary>
+        H = 3,
+        /// <summary>
+        /// [Pinyin]
+        /// </summary>
+        P = 4,
+    }
+
+    /// <summary>
     /// Describes one Chinese embedding within a sense's Latin text.
     /// </summary>
     public struct ZhoEmbedding
     {
         /// <summary>
+        /// Value field 1; not for direct consumption.
+        /// </summary>
+        public ulong Val;
+        /// <summary>
         /// Index of sense within the entry.
         /// </summary>
-        public short SenseIx;
+        public byte SenseIx { get { return (byte)(Val & 0xff); } }
         /// <summary>
         /// Which part of the sense the embedding is in (domain, equiv, note).
         /// </summary>
-        public SensePart SensePart;
+        public SensePart SensePart { get { return (SensePart)((Val >> 8) & 0xff); } }
+        /// <summary>
+        /// Type of the embedding.
+        /// </summary>
+        public ZhoEmbedType EmbedType { get { return (ZhoEmbedType)((Val >> 16) & 0xff); } }
         /// <summary>
         /// Start of embedding within sense part.
         /// </summary>
-        public short Start;
+        public ushort Start { get { return (ushort)((Val >> 24) & 0xffff); } }
         /// <summary>
-        /// Length of embedding withi sense part.
+        /// Length of embedding within sense part.
         /// </summary>
-        public short Length;
-        /// <summary>
-        /// Start of simplified Hanzi within sense part, or -1.
-        /// </summary>
-        public short SimpStart;
-        /// <summary>
-        /// Length of simplified Hanzi within sense part, or -1.
-        /// </summary>
-        public short SimpLength;
-        /// <summary>
-        /// Start of traditional Hanzi within sense part, or -1.
-        /// </summary>
-        public short TradStart;
-        /// <summary>
-        /// Length of traditional Hanzi within sense part, or 0.
-        /// </summary>
-        public short TradLength;
-        /// <summary>
-        /// Start of Pinyin within sense part, or -1. Excludes opening square bracket.
-        /// </summary>
-        public short PinyinStart;
-        /// <summary>
-        /// Length of Pinyin within sense part, or 0. Excludes closing square bracket.
-        /// </summary>
-        public short PinyinLength;
+        public ushort Length { get { return (ushort)((Val >> 40) & 0xffff); } }
+
+        public ZhoEmbedding(byte senseIx, SensePart sensePart, ZhoEmbedType embedType, ushort start, ushort length)
+        {
+            ulong val = senseIx;
+            val <<= 8;
+            val += (byte)sensePart;
+            val <<= 8;
+            val += (byte)embedType;
+            val <<= 16;
+            val += start;
+            val <<= 16;
+            val += length;
+            Val = val;
+        }
 
         public ZhoEmbedding(BinReader br)
         {
-            SenseIx = br.ReadShort();
-            SensePart = (SensePart)br.ReadByte();
-            Start = br.ReadShort();
-            Length = br.ReadShort();
-            SimpStart = br.ReadShort();
-            SimpLength = br.ReadShort();
-            TradStart = br.ReadShort();
-            TradLength = br.ReadShort();
-            PinyinStart = br.ReadShort();
-            PinyinLength = br.ReadShort();
+            Val = br.ReadULong();
         }
 
         public void Serialize(BinWriter bw)
         {
-            bw.WriteShort(SenseIx);
-            bw.WriteByte((byte)SensePart);
-            bw.WriteShort(Start);
-            bw.WriteShort(Length);
-            bw.WriteShort(SimpStart);
-            bw.WriteShort(SimpLength);
-            bw.WriteShort(TradStart);
-            bw.WriteShort(TradLength);
-            bw.WriteShort(PinyinStart);
-            bw.WriteShort(PinyinLength);
+            bw.WriteULong(Val);
         }
     }
 }

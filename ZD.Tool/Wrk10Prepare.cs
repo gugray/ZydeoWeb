@@ -6,7 +6,7 @@ using System.IO;
 using ZD.Common;
 using ZD.LangUtils;
 
-namespace ZD.Tool.Examine
+namespace ZD.Tool
 {
     public class Wrk10Prepare : IWorker
     {

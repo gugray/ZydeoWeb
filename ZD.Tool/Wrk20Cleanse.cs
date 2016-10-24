@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 using ZD.Common;
 using ZD.LangUtils;
 
-namespace ZD.Tool.Examine
+namespace ZD.Tool
 {
     public class Wrk20Cleanse : IWorker
     {

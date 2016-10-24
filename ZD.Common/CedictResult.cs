@@ -36,9 +36,9 @@ namespace ZD.Common
         public readonly SimpTradWarning HanziWarning;
 
         /// <summary>
-        /// ID of the CEDICT entry.
+        /// The entry itself.
         /// </summary>
-        public readonly int EntryId;
+        public readonly CedictEntry Entry;
 
         /// <summary>
         /// Start of search term in entry's headword (Hanzi), or -1.
@@ -76,7 +76,7 @@ namespace ZD.Common
         /// <summary>
         /// Ctor: init immutable instance - result of target lookup.
         /// </summary>
-        public CedictResult(int entryId, ReadOnlyCollection<CedictTargetHighlight> targetHilites)
+        public CedictResult(CedictEntry entry, ReadOnlyCollection<CedictTargetHighlight> targetHilites)
         {
             if (targetHilites == null) throw new ArgumentNullException("targetHilites");
 
@@ -87,7 +87,7 @@ namespace ZD.Common
                 this.targetHilites[i] = targetHilites[i];
             }
             HanziWarning = SimpTradWarning.None;
-            EntryId = entryId;
+            Entry = entry;
             HanziHiliteStart = -1;
             HanziHiliteLength = 0;
             PinyinHiliteStart = -1;
@@ -97,12 +97,12 @@ namespace ZD.Common
         /// <summary>
         /// Ctor: init immutable instance - result of hanzi lookup.
         /// </summary>
-        public CedictResult(SimpTradWarning hanziWarning, int entryId, ReadOnlyCollection<short> hanziPinyinMap,
+        public CedictResult(SimpTradWarning hanziWarning, CedictEntry entry, ReadOnlyCollection<short> hanziPinyinMap,
             int hanziHiliteStart, int hanziHiliteLength)
         {
             targetHilites = new CedictTargetHighlight[0];
             HanziWarning = hanziWarning;
-            EntryId = entryId;
+            Entry = entry;
             HanziHiliteStart = hanziHiliteStart;
             HanziHiliteLength = hanziHiliteLength;
             calculatePinyinHighlights(hanziPinyinMap, out PinyinHiliteStart, out PinyinHiliteLength);
@@ -111,12 +111,12 @@ namespace ZD.Common
         /// <summary>
         /// Ctor: init immutable instance - result of pinyin lookup.
         /// </summary>
-        public CedictResult(int entryId, ReadOnlyCollection<short> hanziPinyinMap,
+        public CedictResult(CedictEntry entry, ReadOnlyCollection<short> hanziPinyinMap,
             int pinyinHiliteStart, int pinyinHiliteLength)
         {
             targetHilites = new CedictTargetHighlight[0];
             HanziWarning = SimpTradWarning.None;
-            EntryId = entryId;
+            Entry = entry;
             PinyinHiliteStart = pinyinHiliteStart;
             PinyinHiliteLength = pinyinHiliteLength;
             calculateHanziHighlights(hanziPinyinMap, out HanziHiliteStart, out HanziHiliteLength);
