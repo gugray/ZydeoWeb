@@ -10,6 +10,8 @@ namespace ZDO.CHSite.Renderers
 {
     public class ResultsRenderer
     {
+        private const int maxResults = 0;
+
         private readonly CedictLookupResult lr;
         private readonly UiScript uiScript;
         private readonly UiTones uiTones;
@@ -24,7 +26,8 @@ namespace ZDO.CHSite.Renderers
         public void Render(StringBuilder sb)
         {
             sb.AppendLine("<div id='results'>");
-            int max = Math.Min(lr.Results.Count, 256);
+            int max = lr.Results.Count;
+            if (maxResults > 0) max = Math.Min(lr.Results.Count, maxResults);
             for (int i = 0; i != max; ++i)
             {
                 var lres = lr.Results[i];

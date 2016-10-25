@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Collections.Generic;
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
@@ -23,13 +24,22 @@ namespace ZDO.CHSite.Controllers
         private readonly PageProvider pageProvider;
 
         /// <summary>
+        /// SQL dictionary engine.
+        /// </summary>
+        private readonly SqlDict dict;
+
+        /// <summary>
         /// Configuration.
         /// </summary>
         private readonly IConfiguration config;
 
-        public DynpageController(PageProvider pageProvider, IConfiguration config)
+        /// <summary>
+        /// Ctor: init controller within app environment.
+        /// </summary>
+        public DynpageController(PageProvider pageProvider, SqlDict dict, IConfiguration config)
         {
             this.pageProvider = pageProvider;
+            this.dict = dict;
             this.config = config;
         }
 
@@ -45,7 +55,12 @@ namespace ZDO.CHSite.Controllers
             if (rel.StartsWith("search/")) return doSearch(rel, lang, searchScript, searchTones);
             if (rel.StartsWith("edit/history")) return doHistory(rel, lang);
             PageResult pr = pageProvider.GetPage(lang, rel, false);
-            if (pr == null) pr = pageProvider.GetPage(lang, "404", false);
+            if (pr == null)
+            {
+                pr = pageProvider.GetPage(lang, "404", false);
+                // DBG
+                GC.Collect();
+            }
             return pr;
         }
 
@@ -98,11 +113,8 @@ namespace ZDO.CHSite.Controllers
 
             // Perform query
             string query = rel.Replace("search/", "");
-            CedictLookupResult lr;
-            using (SqlDict.Query q = new SqlDict.Query())
-            {
-                lr = q.Lookup(query);
-            }
+            query = WebUtility.UrlDecode(query);
+            CedictLookupResult lr = dict.Lookup(query);
             // No results
             if (lr.Results.Count == 0 && lr.Annotations.Count == 0)
                 return pageProvider.GetPage(lang, "/?noresults", false);

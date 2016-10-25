@@ -21,6 +21,11 @@ namespace ZDO.CHSite.Logic
         public class Builder : IDisposable
         {
             /// <summary>
+            /// Reference to the singleton's in-memory index.
+            /// </summary>
+            protected readonly Index index;
+
+            /// <summary>
             /// DB ID of user perpetrating this change.
             /// </summary>
             protected readonly int userId;
@@ -38,25 +43,40 @@ namespace ZDO.CHSite.Logic
             // Reused commands
             private MySqlCommand cmdInsBinaryEntry;
             private MySqlCommand cmdInsHanziInstance;
-            private MySqlCommand cmdInsPinyinInstance;
             private MySqlCommand cmdInsEntry;
             protected MySqlCommand cmdUpdLastModif;
             protected MySqlCommand cmdInsModifNew;
+            // Reused commands owned for the index module
+            protected Index.StorageCommands indexCommands = new Index.StorageCommands();
             // ---------------
 
             /// <summary>
             /// Ctor: init DB connection; shared builder resources.
             /// </summary>
-            protected Builder(int userId)
+            protected Builder(Index index, int userId)
             {
-                this.userId = userId;
-                conn = DB.GetConn();
-                cmdInsBinaryEntry = DB.GetCmd(conn, "InsBinaryEntry");
-                cmdInsHanziInstance = DB.GetCmd(conn, "InsHanziInstance");
-                cmdInsPinyinInstance = DB.GetCmd(conn, "InsPinyinInstance");
-                cmdInsEntry = DB.GetCmd(conn, "InsEntry");
-                cmdUpdLastModif = DB.GetCmd(conn, "UpdLastModif");
-                cmdInsModifNew = DB.GetCmd(conn, "InsModifNew");
+                if (!index.Lock.TryEnterWriteLock(15000))
+                    throw new Exception("Write lock timeout.");
+                try
+                {
+                    this.index = index;
+                    this.userId = userId;
+                    conn = DB.GetConn();
+                    // Shared builder commands, owned here in base class
+                    cmdInsBinaryEntry = DB.GetCmd(conn, "InsBinaryEntry");
+                    cmdInsHanziInstance = DB.GetCmd(conn, "InsHanziInstance");
+                    cmdInsEntry = DB.GetCmd(conn, "InsEntry");
+                    cmdUpdLastModif = DB.GetCmd(conn, "UpdLastModif");
+                    cmdInsModifNew = DB.GetCmd(conn, "InsModifNew");
+                    // Commands owned for the index module
+                    indexCommands.CmdDelEntryHanziInstances = DB.GetCmd(conn, "DelEntryHanziInstances");
+                    indexCommands.CmdInsHanziInstance = DB.GetCmd(conn, "InsHanziInstance");
+                }
+                catch
+                {
+                    index.Lock.ExitWriteLock();
+                    throw;
+                }
             }
 
             /// <summary>
@@ -64,15 +84,21 @@ namespace ZDO.CHSite.Logic
             /// </summary>
             protected virtual void DoDispose()
             {
-                if (tr != null) { tr.Rollback(); tr.Dispose(); tr = null; }
+                try
+                {
+                    if (tr != null) { tr.Rollback(); tr.Dispose(); tr = null; }
 
-                if (cmdInsModifNew != null) cmdInsModifNew.Dispose();
-                if (cmdUpdLastModif != null) cmdUpdLastModif.Dispose();
-                if (cmdInsEntry != null) cmdInsEntry.Dispose();
-                if (cmdInsPinyinInstance != null) cmdInsPinyinInstance.Dispose();
-                if (cmdInsHanziInstance != null) cmdInsHanziInstance.Dispose();
-                if (cmdInsBinaryEntry != null) cmdInsBinaryEntry.Dispose();
-                if (conn != null) conn.Dispose();
+                    if (indexCommands.CmdInsHanziInstance != null) indexCommands.CmdInsHanziInstance.Dispose();
+                    if (indexCommands.CmdDelEntryHanziInstances != null) indexCommands.CmdDelEntryHanziInstances.Dispose();
+
+                    if (cmdInsModifNew != null) cmdInsModifNew.Dispose();
+                    if (cmdUpdLastModif != null) cmdUpdLastModif.Dispose();
+                    if (cmdInsEntry != null) cmdInsEntry.Dispose();
+                    if (cmdInsHanziInstance != null) cmdInsHanziInstance.Dispose();
+                    if (cmdInsBinaryEntry != null) cmdInsBinaryEntry.Dispose();
+                    if (conn != null) conn.Dispose();
+                }
+                finally { index.Lock.ExitWriteLock(); }
             }
 
             /// <summary>
@@ -112,38 +138,7 @@ namespace ZDO.CHSite.Logic
                 int binId = (int)cmdInsBinaryEntry.LastInsertedId;
                 // Index different parts of the entry
                 indexHanzi(entry, binId);
-                indexPinyin(entry, binId);
                 return binId;
-            }
-
-            /// <summary>
-            /// Add Pinyin to DB's index/instance tables.
-            /// </summary>
-            private void indexPinyin(CedictEntry entry, int entryId)
-            {
-                // Count only one occurrence
-                List<PinyinSyllable> uniqueList = new List<PinyinSyllable>();
-                foreach (PinyinSyllable ps in entry.Pinyin)
-                {
-                    // Normalize to lower case
-                    PinyinSyllable normps = new PinyinSyllable(ps.Text.ToLowerInvariant(), ps.Tone);
-                    // Add one instance
-                    bool onList = false;
-                    foreach (PinyinSyllable x in uniqueList)
-                        if (x.Text == normps.Text && x.Tone == normps.Tone)
-                        { onList = true; break; }
-                    if (!onList) uniqueList.Add(normps);
-                }
-                // Index each item we have on unique list
-                cmdInsPinyinInstance.Parameters["@syll_count"].Value = uniqueList.Count;
-                cmdInsPinyinInstance.Parameters["@blob_id"].Value = entryId;
-                foreach (PinyinSyllable ps in uniqueList)
-                {
-                    int hash = CedictEntry.Hash(ps.Text);
-                    cmdInsPinyinInstance.Parameters["@pinyin_hash"].Value = hash;
-                    cmdInsPinyinInstance.Parameters["@tone"].Value = ps.Tone;
-                    cmdInsPinyinInstance.ExecuteNonQuery();
-                }
             }
 
             /// <summary>
@@ -160,38 +155,11 @@ namespace ZDO.CHSite.Logic
                 int tradCount = tradSet.Count;
                 // Extract intersection
                 HashSet<char> cmnSet = new HashSet<char>();
-                List<char> toRem = new List<char>();
                 foreach (char c in simpSet)
-                {
-                    if (tradSet.Contains(c))
-                    {
-                        cmnSet.Add(c);
-                        toRem.Add(c);
-                    }
-                }
-                foreach (char c in toRem) { simpSet.Remove(c); tradSet.Remove(c); }
-                // Index each Hanzi
-                cmdInsHanziInstance.Parameters["@simp_count"].Value = simpCount;
-                cmdInsHanziInstance.Parameters["@trad_count"].Value = tradCount;
-                cmdInsHanziInstance.Parameters["@blob_id"].Value = entryId;
-                foreach (char c in simpSet)
-                {
-                    cmdInsHanziInstance.Parameters["@hanzi"].Value = (int)c;
-                    cmdInsHanziInstance.Parameters["@simptrad"].Value = (byte)1;
-                    cmdInsHanziInstance.ExecuteNonQuery();
-                }
-                foreach (char c in tradSet)
-                {
-                    cmdInsHanziInstance.Parameters["@hanzi"].Value = (int)c;
-                    cmdInsHanziInstance.Parameters["@simptrad"].Value = (byte)2;
-                    cmdInsHanziInstance.ExecuteNonQuery();
-                }
-                foreach (char c in cmnSet)
-                {
-                    cmdInsHanziInstance.Parameters["@hanzi"].Value = (int)c;
-                    cmdInsHanziInstance.Parameters["@simptrad"].Value = (byte)3;
-                    cmdInsHanziInstance.ExecuteNonQuery();
-                }
+                    if (tradSet.Contains(c)) cmnSet.Add(c);
+                foreach (char c in cmnSet) { simpSet.Remove(c); tradSet.Remove(c); }
+                // File to index
+                index.FileToIndex(entryId, simpSet, tradSet, cmnSet);
             }
         }
 
@@ -204,8 +172,8 @@ namespace ZDO.CHSite.Logic
             // Reused commands
             // ---------------
 
-            public SimpleBuilder(int userId)
-                : base(userId)
+            public SimpleBuilder(Index index, int userId)
+                : base(index, userId)
             {
             }
 
@@ -230,6 +198,9 @@ namespace ZDO.CHSite.Logic
 
                 // Serialize, store in DB, index
                 int binId = indexEntry(entry);
+                // Have index commit filed change
+                index.ApplyChanges(indexCommands);
+
                 // Populate entries table
                 int entryId = storeEntry(entry.ChSimpl, head, trg, binId);
                 // Record change
@@ -312,8 +283,8 @@ namespace ZDO.CHSite.Logic
             /// <summary>
             /// Ctor: initialize bulk builder resources.
             /// </summary>
-            public BulkBuilder(string workingFolder, int userId, string note, bool foldHistory)
-                : base(userId)
+            public BulkBuilder(Index index, string workingFolder, int userId, string note, bool foldHistory)
+                : base(index, userId)
             {
                 this.note = note;
                 this.foldHistory = foldHistory;
@@ -379,6 +350,9 @@ namespace ZDO.CHSite.Logic
                 // Cycle through transactions
                 if (lineNum % 3000 == 0)
                 {
+                    // Make index apply changes
+                    index.ApplyChanges(indexCommands);
+                    // Commit to DB; start new transaction
                     tr.Commit(); tr.Dispose(); tr = null;
                     tr = conn.BeginTransaction();
                 }
@@ -428,6 +402,9 @@ namespace ZDO.CHSite.Logic
             /// </summary>
             public void CommitRest()
             {
+                // Make index apply changes
+                index.ApplyChanges(indexCommands);
+                // Finish transaction
                 tr.Commit(); tr.Dispose(); tr = null;
             }
         }

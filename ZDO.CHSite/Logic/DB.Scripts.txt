@@ -8,22 +8,13 @@ CREATE TABLE binary_entries(
 DROP TABLE IF EXISTS hanzi_instances;
 CREATE TABLE hanzi_instances(
 	hanzi			INT,			-- The Hanzi, as a 32-bit integer
-	simptrad		TINYINT,		-- 1 if Hanzi occurs in simplified HW; 2 for traditional; 3 for both
-	simp_count		INT,			-- Count of (different) Hanzi in simplified HW
-	trad_count		INT,			-- Count of (different) Hanzi in traditional HW
+	flags			TINYINT,		-- 1: Hanzi occurs in simplified HW; 2: Hanzi occurs in traditional HW
+	                                -- 4: Hanzi occurs at start of simplified HW; 8: start of traditional HW
+	simp_count		INT,			-- Count of (different) simplified Hanzi in HW
+	trad_count		INT,			-- Count of (different) traditional Hanzi in HW
 	blob_id			INT				-- binary_entries.id
 ) ENGINE=InnoDB CHARACTER SET=utf8 COLLATE utf8_general_ci;
-CREATE INDEX idx_hanzi_instances_hanzi ON hanzi_instances(hanzi);
-
-DROP TABLE IF EXISTS pinyin_instances;
-CREATE TABLE pinyin_instances(
-	pinyin_hash		INT,			-- Hash of syllable w/o tone. Unique for true pinyin syllables.
-	tone			INT,			-- Tone; -1 for weird ones; 0 for neutral; 1-4.
-	syll_count		INT,			-- Count of distinct pinyin syallables in headword
-	blob_id			INT				-- binary_entries.id
-) ENGINE=InnoDB CHARACTER SET=utf8 COLLATE utf8_general_ci;
-CREATE INDEX idx_pinyin_instances_pinyin_hash ON pinyin_instances(pinyin_hash);
-CREATE INDEX idx_pinyin_instances_pinyin_hash_tone ON pinyin_instances(pinyin_hash, tone);
+CREATE INDEX idx_hanzi_instances_blob_id ON hanzi_instances(blob_id);
 
 DROP TABLE IF EXISTS entries;
 CREATE TABLE entries(
@@ -31,7 +22,7 @@ CREATE TABLE entries(
 	hw				VARCHAR(256),	-- trad, simp and pinyin in one (as in CEDICT format)
 	trg				VARCHAR(3072),	-- translations (as in CEDICT format)
 	simp_hash		INT,			-- hash of simplified headword
-	status			TINYINT,		-- 0: neutral; 1: approved; 2: flagged
+	status			TINYINT,		-- 0: neutral/new; 1: approved; 2: flagged
 	deleted			TINYINT,		-- 0: not deleted; 1: deleted
 	last_modif_id	INT,			-- modifs.id; "skips over" bulk modifs!
 	bin_id			INT				-- binary_entries.id
@@ -64,23 +55,14 @@ CREATE INDEX idx_bulk_modifs_modif_id ON bulk_modifs(modif_id);
 CREATE INDEX idx_bulk_modifs_entry_id ON bulk_modifs(entry_id);
 # End
 
-# Script InsPinyinInstance
-# @pinyin_hash INT
-# @tone INT
-# @syll_count INT
-# @blob_id INT
-INSERT INTO pinyin_instances (pinyin_hash, tone, syll_count, blob_id)
-VALUES (@pinyin_hash, @tone, @syll_count, @blob_id);
-# End
-
 # Script InsHanziInstance
 # @hanzi INT
-# @simptrad TINYINT
+# @flags TINYINT
 # @simp_count INT
 # @trad_count INT
 # @blob_id INT
-INSERT INTO hanzi_instances (hanzi, simptrad, simp_count, trad_count, blob_id)
-VALUES (@hanzi, @simptrad, @simp_count, @trad_count, @blob_id);
+INSERT INTO hanzi_instances (hanzi, flags, simp_count, trad_count, blob_id)
+VALUES (@hanzi, @flags, @simp_count, @trad_count, @blob_id);
 # End
 
 # Script InsBinaryEntry
@@ -165,8 +147,26 @@ ORDER BY E.last_modif_id DESC;
 SELECT data FROM binary_entries WHERE id=@blob_id;
 # End
 
+# Script SelBinaryEntry10
+# @id0 INT
+# @id1 INT
+# @id2 INT
+# @id3 INT
+# @id4 INT
+# @id5 INT
+# @id6 INT
+# @id7 INT
+# @id8 INT
+# @id9 INT
+SELECT data FROM binary_entries WHERE id=@id0 OR id=@id1 OR id=@id2 OR id=@id3 OR id=@id4 OR id=@id5 OR id=@id6 OR id=@id7 OR id=@id8 OR id=@id9;
+# End
+
 # Script SelHanziInstances
-# @hanzi INT
-SELECT simptrad, blob_id FROM hanzi_instances WHERE hanzi=@hanzi;
+SELECT hanzi, flags, simp_count, trad_count, blob_id FROM hanzi_instances;
+# End
+
+# Script DelEntryHanziInstances
+# @blob_id INT
+DELETE from hanzi_instances WHERE blob_id=@blob_id;
 # End
 

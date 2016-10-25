@@ -80,6 +80,7 @@ namespace ZDO.CHSite
             // Application-specific singletons.
             services.AddSingleton(new PageProvider(loggerFactory, env.IsDevelopment()));
             services.AddSingleton(new LangRepo());
+            services.AddSingleton(new SqlDict(loggerFactory));
             // MVC for serving pages and REST
             services.AddMvc();
             // Configuration singleton

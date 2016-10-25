@@ -15,15 +15,18 @@ namespace ZDO.CHSite.Controllers
     public class DiagController : Controller
     {
         private readonly string workingFolder;
+        private readonly SqlDict dict;
 
-        public DiagController(IConfiguration config)
+        public DiagController(IConfiguration config, SqlDict dict)
         {
             workingFolder = config["workingFolder"];
+            this.dict = dict;
         }
 
         public IActionResult RecreateDB()
         {
             DB.CreateTables();
+            dict.ReloadIndex();
             return StatusCode(200, "Database tables created.");
         }
 
@@ -62,7 +65,7 @@ namespace ZDO.CHSite.Controllers
         {
             indexLineCount = 0;
             string hddPath = "files/data/x-20-handedict.txt";
-            using (SqlDict.BulkBuilder imp = new SqlDict.BulkBuilder(workingFolder, 0, "Importing stuff.", false))
+            using (SqlDict.BulkBuilder imp = dict.GetBulkBuilder(workingFolder, 0, "Importing stuff.", false))
             using (FileStream fs = new FileStream(hddPath, FileMode.Open, FileAccess.Read))
             using (StreamReader sr = new StreamReader(fs))
             {

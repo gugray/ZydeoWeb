@@ -24,9 +24,9 @@ namespace ZDO.CHSite.Controllers
         /// Ctor: infuse dependencies.
         /// </summary>
 
-        public IndexController(PageProvider pageProvider, IConfiguration config)
+        public IndexController(PageProvider pageProvider, SqlDict dict, IConfiguration config)
         {
-            dpc = new DynpageController(pageProvider, config);
+            dpc = new DynpageController(pageProvider, dict, config);
             gaCode = config["gaCode"];
         }
 

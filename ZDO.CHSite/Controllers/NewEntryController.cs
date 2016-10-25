@@ -24,11 +24,13 @@ namespace ZDO.CHSite.Controllers
         private static readonly string errNotSimp = "Nem egyszerűsített írásjegy:";
 
 
-        private LangRepo langRepo;
+        private readonly LangRepo langRepo;
+        private readonly SqlDict dict;
 
-        public NewEntryController(LangRepo langRepo)
+        public NewEntryController(LangRepo langRepo, SqlDict dict)
         {
             this.langRepo = langRepo;
+            this.dict = dict;
         }
 
         private static void addIfNew(List<string> lst, string item)
@@ -365,7 +367,7 @@ namespace ZDO.CHSite.Controllers
             SqlDict.SimpleBuilder builder = null;
             try
             {
-                builder = new SqlDict.SimpleBuilder(0);
+                builder = dict.GetSimpleBuilder(0);
                 CedictEntry entry = Utils.BuildEntry(simp, trad, pinyin, trg);
                 builder.NewEntry(entry, note);
             }
