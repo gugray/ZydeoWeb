@@ -26,6 +26,11 @@ namespace ZDO.CHSite.Logic
             protected readonly Index index;
 
             /// <summary>
+            /// Tokenizer for target language.
+            /// </summary>
+            protected readonly Tokenizer tokenizer;
+
+            /// <summary>
             /// DB ID of user perpetrating this change.
             /// </summary>
             protected readonly int userId;
@@ -61,6 +66,7 @@ namespace ZDO.CHSite.Logic
                 {
                     this.index = index;
                     this.userId = userId;
+                    tokenizer = new Tokenizer();
                     conn = DB.GetConn();
                     // Shared builder commands, owned here in base class
                     cmdInsBinaryEntry = DB.GetCmd(conn, "InsBinaryEntry");
@@ -71,6 +77,9 @@ namespace ZDO.CHSite.Logic
                     // Commands owned for the index module
                     indexCommands.CmdDelEntryHanziInstances = DB.GetCmd(conn, "DelEntryHanziInstances");
                     indexCommands.CmdInsHanziInstance = DB.GetCmd(conn, "InsHanziInstance");
+                    indexCommands.CmdDelEntryTrgInstances = DB.GetCmd(conn, "DelEntryTrgInstances");
+                    indexCommands.CmdInsNormWord = DB.GetCmd(conn, "InsNormWord");
+                    indexCommands.CmdInsTrgInstance = DB.GetCmd(conn, "InsTrgInstance");
                 }
                 catch
                 {
@@ -88,6 +97,9 @@ namespace ZDO.CHSite.Logic
                 {
                     if (tr != null) { tr.Rollback(); tr.Dispose(); tr = null; }
 
+                    if (indexCommands.CmdInsTrgInstance != null) indexCommands.CmdInsTrgInstance.Dispose();
+                    if (indexCommands.CmdInsNormWord != null) indexCommands.CmdInsNormWord.Dispose();
+                    if (indexCommands.CmdDelEntryTrgInstances != null) indexCommands.CmdDelEntryTrgInstances.Dispose();
                     if (indexCommands.CmdInsHanziInstance != null) indexCommands.CmdInsHanziInstance.Dispose();
                     if (indexCommands.CmdDelEntryHanziInstances != null) indexCommands.CmdDelEntryHanziInstances.Dispose();
 
@@ -112,6 +124,7 @@ namespace ZDO.CHSite.Logic
             protected static void checkRestrictions(string simp, string trg)
             {
                 // TO-DO: anything else
+                // Data type size restrictions: number and length of senses, ...
                 if (simp.Length > 16) throw new Exception("Headword must not exceed 16 syllables.");
                 if (trg.Length > 1024) throw new Exception("Translation, in CEDICT format, must not exceed 1024 characters.");
             }
@@ -138,12 +151,25 @@ namespace ZDO.CHSite.Logic
                 int binId = (int)cmdInsBinaryEntry.LastInsertedId;
                 // Index different parts of the entry
                 indexHanzi(entry, binId);
+                indexSenses(entry, binId);
                 return binId;
             }
 
-            /// <summary>
-            /// Add Hanzi to DB's index/instance tables.
-            /// </summary>
+            private void indexSenses(CedictEntry entry, int entryId)
+            {
+                for (int i = 0;  i != entry.SenseCount; ++i)
+                {
+                    CedictSense sense = entry.GetSenseAt(i);
+                    List<Token> toks = tokenizer.Tokenize(sense.Equiv);
+                    // TO-DO: Exclude tokens that fall within any Chinese embeddings (Pinyin can show up)
+                    HashSet<Token> tokSet = new HashSet<Token>();
+                    foreach (Token tok in toks)
+                        if (tok.Norm != Token.Num)
+                            tokSet.Add(tok);
+                    index.FileToIndex(entryId, (byte)i, tokSet);
+                }
+            }
+
             private void indexHanzi(CedictEntry entry, int entryId)
             {
                 // Distinct Hanzi in simplified and traditional HW

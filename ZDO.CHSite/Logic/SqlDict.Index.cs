@@ -15,10 +15,68 @@ namespace ZDO.CHSite.Logic
         public class Index
         {
             /// <summary>
+            /// One target-lookup candidate: Entry ID plus Sense IX.
+            /// </summary>
+            public struct TrgCandidate
+            {
+                public int EntryId;
+                public int SenseIx;
+            }
+
+            /// <summary>
+            /// One item in list of senses that contain a target-language word.
+            /// </summary>
+            private struct TrgEntryPtr
+            {
+                /// <summary>
+                /// Pointer: 3 bytes for entry ID, 1 byte (lowest) for sense index.
+                /// </summary>
+                public uint Ptr;
+                /// <summary>
+                /// Gets entry ID of instance.
+                /// </summary>
+                public int EntryID { get { return (int)(Ptr >> 8); } }
+                /// <summary>
+                /// Gets sense IX of instance.
+                /// </summary>
+                public byte SenseIx { get { return (byte)(Ptr & 0xff); } }
+                /// <summary>
+                /// Makes value from entry ID and sense IX.
+                /// </summary>
+                public static TrgEntryPtr Make(int entryId, byte senseIx)
+                {
+                    if (entryId > 0xffffff) throw new Exception("Entry ID must fit in 3 bytes.");
+                    uint ptr = (uint)entryId;
+                    ptr <<= 8;
+                    ptr += senseIx;
+                    return new TrgEntryPtr { Ptr = ptr };
+                }
+            }
+
+            /// <summary>
+            /// Entry/Sense instances of one normalized word.
+            /// </summary>
+            private struct TrgInstArr
+            {
+                /// <summary>
+                /// Normalized word whose instances are indexed here.
+                /// </summary>
+                public string Norm;
+                /// <summary>
+                /// ID of word in DB's norm_words table.
+                /// </summary>
+                public int WordId;
+                /// <summary>
+                /// EntryId+SenseIx instances of normalized word.
+                /// </summary>
+                public TrgEntryPtr[] Instances;
+            }
+
+            /// <summary>
             /// One item in list of headwords that contain a Hanzi.
             /// </summary>
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct IdeoEntryPtr
+            private struct IdeoEntryPtr
             {
                 /// <summary>
                 /// Index/position of the entry.
@@ -60,7 +118,13 @@ namespace ZDO.CHSite.Logic
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             private struct IdeoInstArr
             {
+                /// <summary>
+                /// The Hanzi whose instances are indexed here.
+                /// </summary>
                 public char Hanzi;
+                /// <summary>
+                /// Entries where Hanzi occurs in HW (simp/trad/both).
+                /// </summary>
                 public IdeoEntryPtr[] Instances;
             }
 
@@ -81,6 +145,29 @@ namespace ZDO.CHSite.Logic
             /// Hanzi comparer instance. Coz we need one, C# syntax be damned here.
             /// </summary>
             private static readonly HanziCmp hanziCmp = new HanziCmp();
+
+            /// <summary>
+            /// Each normalized target word's instance lists; sorted by string hash.
+            /// </summary>
+            private TrgInstArr[] trg = new TrgInstArr[0];
+
+            /// <summary>
+            /// Empty target instance array.
+            /// </summary>
+            private static readonly TrgEntryPtr[] emptyTrgInstances = new TrgEntryPtr[0];
+
+            /// <summary>
+            /// Compararer for target word binary search.
+            /// </summary>
+            private class TrgCmp : IComparer<TrgInstArr>
+            {
+                public int Compare(TrgInstArr x, TrgInstArr y) { return x.Norm.GetHashCode().CompareTo(y.Norm.GetHashCode()); }
+            }
+
+            /// <summary>
+            /// Target word comparer instance. C# syntax be damned.
+            /// </summary>
+            private static readonly TrgCmp trgCmp = new TrgCmp();
 
             /// <summary>
             /// RW lock protecting index. Caller must acquire before invoking any function on index.
@@ -106,11 +193,73 @@ namespace ZDO.CHSite.Logic
                     // Compact into sorted arrays
                     // Separately for each index component so we keep excess memory usage low
                     loadHanzi(conn);
+                    loadTrg(conn);
                 }
 
                 // Ugly, but this is one place where it's justified: collect our garbage from temporary index construction
                 // Only done once, at startup; better burn this time right now
                 GC.Collect();
+            }
+
+            /// <summary>
+            /// Mirrors <see cref="TrgInstArr"/> at load time; less compact, more manageable.
+            /// </summary>
+            private class TrgInstList
+            {
+                public readonly string Norm;
+                public readonly int WordId;
+                public readonly List<TrgEntryPtr> Instances = new List<TrgEntryPtr>();
+                public TrgInstList(string norm, int wordId) { Norm = norm; WordId = wordId; }
+            }
+
+            /// <summary>
+            /// Load target-word index from DB.
+            /// </summary>
+            private void loadTrg(MySqlConnection conn)
+            {
+                Dictionary<string, TrgInstList> tmpTrg = new Dictionary<string, TrgInstList>();
+                // First, select all normalized words. We must have them all in memory, and know their ID
+                // Even if some entries got unindexed and no sense uses a normalized word anymore
+                // The words themselves never go away; if they're missing from memory, we'd attempt to add them again to DB
+                using (var cmdSelNormWords = DB.GetCmd(conn, "SelNormWords"))
+                using (var rdr = cmdSelNormWords.ExecuteReader())
+                {
+                    while (rdr.Read())
+                    {
+                        int id = rdr.GetInt32("id");
+                        string norm = rdr.GetString("word");
+                        tmpTrg[norm] = new TrgInstList(norm, id);
+                    }
+                }
+                // Populate instance lists
+                using (var cmdSelTrgInstances = DB.GetCmd(conn, "SelTrgInstances"))
+                using (var rdr = cmdSelTrgInstances.ExecuteReader())
+                {
+                    while (rdr.Read())
+                    {
+                        string norm = rdr.GetString("word");
+                        int id = rdr.GetInt32("norm_word_id");
+                        int entryId = rdr.GetInt32("blob_id");
+                        byte senseIx = rdr.GetByte("sense_ix");
+                        tmpTrg[norm].Instances.Add(TrgEntryPtr.Make(entryId, senseIx));
+                    }
+                }
+                // Sort lists; copy to actual index
+                trg = new TrgInstArr[tmpTrg.Count];
+                int i = 0;
+                foreach (var x in tmpTrg)
+                {
+                    x.Value.Instances.Sort((a, b) => a.Ptr.CompareTo(b.Ptr));
+                    TrgInstArr tia = new TrgInstArr
+                    {
+                        Norm = x.Value.Norm,
+                        WordId = x.Value.WordId,
+                        Instances = x.Value.Instances.ToArray(),
+                    };
+                    trg[i] = tia;
+                    ++i;
+                }
+                Array.Sort(trg, trgCmp);
             }
 
             /// <summary>
@@ -175,14 +324,49 @@ namespace ZDO.CHSite.Logic
                 hanzi = lstHanzi.ToArray();
             }
 
+            /// <summary>
+            /// Gets normalized word's index in trg array, or -1.
+            /// </summary>
+            private int getNormWordIx(string norm)
+            {
+                TrgInstArr val = new TrgInstArr { Norm = norm, WordId = -1, Instances = emptyTrgInstances };
+                // We can have multiple identical hashes in array.
+                // This will get only one index, not necessarily the first.
+                int ix = Array.BinarySearch(trg, val, trgCmp);
+                if (ix < 0) return -1;
+                // Hit already? This will most often be the case.
+                if (trg[ix].Norm == norm) return ix;
+                // Go down
+                int realIx = ix - 1;
+                while (realIx >= 0 && trg[realIx].Norm.GetHashCode() == norm.GetHashCode())
+                {
+                    if (trg[realIx].Norm == norm) return realIx;
+                    --realIx;
+                }
+                // Nah, go up
+                realIx = ix + 1;
+                while (realIx < trg.Length && trg[realIx].Norm.GetHashCode() == norm.GetHashCode())
+                {
+                    if (trg[realIx].Norm == norm) return realIx;
+                    ++realIx;
+                }
+                // No joy at all, hash collision of unknown word with something in our array.
+                return -1;
+            }
+
             private readonly Dictionary<char, List<IdeoEntryPtr>> hanziToIndex = new Dictionary<char, List<IdeoEntryPtr>>();
+            private readonly Dictionary<string, List<TrgEntryPtr>> trgToIndex = new Dictionary<string, List<TrgEntryPtr>>();
             private readonly HashSet<int> entriesToUnindex = new HashSet<int>();
             private readonly HashSet<char> hanziToUnindex = new HashSet<char>();
+            private readonly HashSet<string> trgToUnindex = new HashSet<string>();
 
             public class StorageCommands
             {
                 public MySqlCommand CmdDelEntryHanziInstances;
                 public MySqlCommand CmdInsHanziInstance;
+                public MySqlCommand CmdDelEntryTrgInstances;
+                public MySqlCommand CmdInsNormWord;
+                public MySqlCommand CmdInsTrgInstance;
             }
 
             /// <summary>
@@ -211,10 +395,9 @@ namespace ZDO.CHSite.Logic
             }
 
             /// <summary>
-            /// Files an entry for indexing, pending <see cref="ApplyChanges"/>.
+            /// Files an entry for indexing (Hanzi), pending <see cref="ApplyChanges"/>.
             /// </summary>
-            public void FileToIndex(int entryId,
-                HashSet<char> hSimp, HashSet<char> hTrad, HashSet<char> hBoth)
+            public void FileToIndex(int entryId, HashSet<char> hSimp, HashSet<char> hTrad, HashSet<char> hBoth)
             {
                 byte simpCount = (byte)hSimp.Count;
                 byte tradCount = (byte)hTrad.Count;
@@ -224,12 +407,43 @@ namespace ZDO.CHSite.Logic
             }
 
             /// <summary>
+            /// Helper to append to key's list, adding key if not present yet.
+            /// </summary>
+            private static void append(string norm, Dictionary<string, List<TrgEntryPtr>> dict, int entryId, byte senseIx)
+            {
+                List<TrgEntryPtr> lst;
+                if (!dict.ContainsKey(norm))
+                {
+                    lst = new List<TrgEntryPtr>();
+                    dict[norm] = lst;
+                }
+                else lst = dict[norm];
+                TrgEntryPtr tep = TrgEntryPtr.Make(entryId, senseIx);
+                // Verify ID growth
+                if (lst.Count > 0 && lst[lst.Count - 1].Ptr > tep.Ptr)
+                    throw new Exception("IDs of newly indexed entries must be larger than all previously indexed entry ID.");
+                lst.Add(tep);
+            }
+
+            /// <summary>
+            /// Files an entry for indexing (target), pending <see cref="ApplyChanges"/>.
+            /// </summary>
+            public void FileToIndex(int entryId, byte senseIx, HashSet<Token> toks)
+            {
+                foreach (var tok in toks) append(tok.Norm, trgToIndex, entryId, senseIx);
+            }
+
+            /// <summary>
             /// Files an entry for unindexing, pending <see cref="ApplyChanges"/>.
             /// </summary>
-            public void FileToUnindex(int entryId, HashSet<char> hAll)
+            /// <param name="entryId">ID of entry to unindex.</param>
+            /// <param name="hAll">All hanzi from HW (simplified and traditional)</param>
+            /// <param name="toks">All tokens from all senses.</param>
+            public void FileToUnindex(int entryId, HashSet<char> hAll, HashSet<Token> toks)
             {
                 entriesToUnindex.Add(entryId);
                 foreach (char c in hAll) hanziToUnindex.Add(c);
+                foreach (Token tok in toks) trgToUnindex.Add(tok.Norm);
             }
 
             /// <summary>
@@ -323,14 +537,90 @@ namespace ZDO.CHSite.Logic
             }
 
             /// <summary>
+            /// Removes filed items from DB as well as in-memory index.
+            /// </summary>
+            private void applyUnindexTrg(StorageCommands sc)
+            {
+                // Unindex in DB: simple: just fire off deletes for collected entry IDs
+                foreach (int entryId in entriesToUnindex)
+                {
+                    sc.CmdDelEntryHanziInstances.Parameters["@blob_id"].Value = entryId;
+                    sc.CmdDelEntryHanziInstances.ExecuteNonQuery();
+                }
+                // In memory: from all affected normwords' instances, remove all items for unindexed entries
+                foreach (string norm in trgToUnindex)
+                {
+                    int ix = getNormWordIx(norm);
+                    TrgInstArr tia = trg[ix];
+                    List<TrgEntryPtr> lst = new List<TrgEntryPtr>(tia.Instances.Length);
+                    foreach (TrgEntryPtr tep in tia.Instances)
+                        if (!entriesToUnindex.Contains(tep.EntryID))
+                            lst.Add(tep);
+                    tia.Instances = lst.ToArray();
+                    trg[ix] = tia;
+                }
+            }
+
+            /// <summary>
+            /// Adds filed target items to DB as well as in-memory index.
+            /// </summary>
+            private void applyIndexTrg(StorageCommands sc)
+            {
+                // Find which normalized words are new. We must add them to DB.
+                // Then create slots in-memory, with new DB ID; re-sort array.
+                HashSet<string> newWords = new HashSet<string>();
+                foreach (var x in trgToIndex)
+                {
+                    int tix = getNormWordIx(x.Key);
+                    if (tix < 0) newWords.Add(x.Key);
+                }
+                TrgInstArr[] newTrg = new TrgInstArr[trg.Length + newWords.Count];
+                trg.CopyTo(newTrg, 0);
+                int i = trg.Length;
+                trg = newTrg;
+                foreach (string newWord in newWords)
+                {
+                    sc.CmdInsNormWord.Parameters["@word"].Value = newWord;
+                    sc.CmdInsNormWord.ExecuteNonQuery();
+                    int newId = (int)sc.CmdInsNormWord.LastInsertedId;
+                    trg[i] = new TrgInstArr { Norm = newWord, WordId = newId, Instances = emptyTrgInstances };
+                    ++i;
+                }
+                Array.Sort(trg, trgCmp);
+                // Append to instance vectors. Just verify ID growth.
+                // And while we're at it, store in DB too.
+                foreach (var x in trgToIndex)
+                {
+                    int tix = getNormWordIx(x.Key);
+                    TrgInstArr tia = trg[tix];
+                    if (tia.Instances.Length > 0 && tia.Instances[tia.Instances.Length - 1].Ptr > x.Value[0].Ptr)
+                        throw new Exception("IDs of newly indexed entries must be larger than all previously indexed entry ID.");
+                    TrgEntryPtr[] newArr = new TrgEntryPtr[tia.Instances.Length + x.Value.Count];
+                    tia.Instances.CopyTo(newArr, 0);
+                    x.Value.CopyTo(newArr, tia.Instances.Length);
+                    tia.Instances = newArr;
+                    trg[tix] = tia;
+                    foreach (TrgEntryPtr tep in x.Value)
+                    {
+                        sc.CmdInsTrgInstance.Parameters["@norm_word_id"].Value = tia.WordId;
+                        sc.CmdInsTrgInstance.Parameters["@blob_id"].Value = tep.EntryID;
+                        sc.CmdInsTrgInstance.Parameters["@sense_ix"].Value = tep.SenseIx;
+                        sc.CmdInsTrgInstance.ExecuteNonQuery();
+                    }
+                }
+            }
+
+            /// <summary>
             /// Clears all filed index/unindex items.
             /// </summary>
             private void clearFiledWork()
             {
                 // Clear all filed work
-                hanziToIndex.Clear();
                 entriesToUnindex.Clear();
+                hanziToIndex.Clear();
                 hanziToUnindex.Clear();
+                trgToIndex.Clear();
+                trgToUnindex.Clear();
             }
 
             /// <summary>
@@ -341,13 +631,15 @@ namespace ZDO.CHSite.Logic
                 applyHanziDB(sc);
                 applyUnindexHanzi();
                 applyIndexHanzi();
+                applyUnindexTrg(sc);
+                applyIndexTrg(sc);
                 clearFiledWork();
             }
 
             /// <summary>
             /// Intersects two ordered instance lists during Hanzi candidate retriaval.
             /// </summary>
-            private static void intersect(List<int> a, IdeoEntryPtr[] b, List<int> trg, bool simp)
+            private static void intersect(List<int> a, IdeoEntryPtr[] b, List<int> isect, bool simp)
             {
                 int ixa = 0, ixb = 0;
                 while (ixa < a.Count && ixb < b.Length)
@@ -358,11 +650,80 @@ namespace ZDO.CHSite.Logic
                     else if (comp > 0) ++ixb;
                     else
                     {
-                        trg.Add(a[ixa]);
+                        isect.Add(a[ixa]);
                         ++ixa;
                         ++ixb;
                     }
                 }
+            }
+
+            /// <summary>
+            /// Intersects two ordered instance lists during target candidate retriaval.
+            /// </summary>
+            private static void intersect(List<TrgEntryPtr> a, TrgEntryPtr[] b, List<TrgEntryPtr> isect)
+            {
+                int ixa = 0, ixb = 0;
+                while (ixa < a.Count && ixb < b.Length)
+                {
+                    var comp = a[ixa].Ptr.CompareTo(b[ixb].Ptr);
+                    if (comp < 0) ++ixa;
+                    else if (comp > 0) ++ixb;
+                    else
+                    {
+                        isect.Add(a[ixa]);
+                        ++ixa;
+                        ++ixb;
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Returns candidates (EntryId+SenseIx) that contain all the queried target-language tokens.
+            /// </summary>
+            public HashSet<TrgCandidate> GetTrgCandidates(HashSet<Token> query)
+            {
+                List<string> norms = new List<string>(query.Count);
+                foreach (Token tok in query) norms.Add(tok.Norm);
+                HashSet<TrgCandidate> res = new HashSet<TrgCandidate>();
+                if (norms.Count == 0) return res;
+
+                // Only one token
+                if (norms.Count == 1)
+                {
+                    int tix = getNormWordIx(norms[0]);
+                    if (tix < 0) return res;
+                    TrgInstArr tia = trg[tix];
+                    foreach (var inst in tia.Instances)
+                        res.Add(new TrgCandidate { EntryId = inst.EntryID, SenseIx = inst.SenseIx });
+                    return res;
+                }
+                // Get intersection of instance vectors; algo relies on sortedness.
+                // OPT: Start with shorter instance vectors
+                // OPT: Reuse lists for intersection instead of constantly reallocating
+                List<TrgEntryPtr> cands = null;
+                foreach (string norm in norms)
+                {
+                    int tix = getNormWordIx(norm);
+                    if (tix < 0) return res;
+                    TrgInstArr tia = trg[tix];
+                    // Very first character: initialize intersection lists.
+                    if (cands == null)
+                    {
+                        cands = new List<TrgEntryPtr>(tia.Instances.Length);
+                        foreach (var x in tia.Instances) cands.Add(x);
+                        continue;
+                    }
+                    // Intersect with current character's lists
+                    List<TrgEntryPtr> isect = new List<TrgEntryPtr>(Math.Min(cands.Count, tia.Instances.Length));
+                    intersect(cands, tia.Instances, isect);
+                    // List are now the intesections
+                    cands = isect;
+                    // We can cut it short if we're sure there won't be matches
+                    if (cands.Count == 0) return res;
+                }
+                foreach (TrgEntryPtr tep in cands)
+                    res.Add(new TrgCandidate { EntryId = tep.EntryID, SenseIx = tep.SenseIx });
+                return res;
             }
 
             /// <summary>

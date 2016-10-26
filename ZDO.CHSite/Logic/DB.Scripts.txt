@@ -16,6 +16,20 @@ CREATE TABLE hanzi_instances(
 ) ENGINE=InnoDB CHARACTER SET=utf8 COLLATE utf8_general_ci;
 CREATE INDEX idx_hanzi_instances_blob_id ON hanzi_instances(blob_id);
 
+DROP TABLE IF EXISTS norm_words;
+CREATE TABLE norm_words(
+	id				INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+	word			VARCHAR(256)	-- The normalized word
+) ENGINE=InnoDB CHARACTER SET=utf8 COLLATE utf8_general_ci;
+
+DROP TABLE IF EXISTS trg_instances;
+CREATE TABLE trg_instances(
+	norm_word_id	INT,			-- norm_words.id
+	blob_id			INT,			-- binary_entries.id
+	sense_ix		TINYINT			-- IX of sense within entry
+) ENGINE=InnoDB CHARACTER SET=utf8 COLLATE utf8_general_ci;
+CREATE INDEX idx_trg_instances_blob_id ON trg_instances(blob_id);
+
 DROP TABLE IF EXISTS entries;
 CREATE TABLE entries(
 	id				INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -158,7 +172,7 @@ SELECT data FROM binary_entries WHERE id=@blob_id;
 # @id7 INT
 # @id8 INT
 # @id9 INT
-SELECT data FROM binary_entries WHERE id=@id0 OR id=@id1 OR id=@id2 OR id=@id3 OR id=@id4 OR id=@id5 OR id=@id6 OR id=@id7 OR id=@id8 OR id=@id9;
+SELECT data, id FROM binary_entries WHERE id=@id0 OR id=@id1 OR id=@id2 OR id=@id3 OR id=@id4 OR id=@id5 OR id=@id6 OR id=@id7 OR id=@id8 OR id=@id9;
 # End
 
 # Script SelHanziInstances
@@ -170,3 +184,27 @@ SELECT hanzi, flags, simp_count, trad_count, blob_id FROM hanzi_instances;
 DELETE from hanzi_instances WHERE blob_id=@blob_id;
 # End
 
+# Script DelEntryTrgInstances
+# @blob_id INT
+DELETE from trg_instances WHERE blob_id=@blob_id;
+# End
+
+# Script SelTrgInstances
+SELECT word, norm_word_id, blob_id, sense_ix FROM norm_words, trg_instances WHERE id=norm_word_id;
+# End
+
+# Script SelNormWords
+SELECT id, word FROM norm_words;
+# End
+
+# Script InsNormWord
+# @word VARCHAR
+INSERT INTO norm_words (word) VALUES (@word);
+# End
+
+# Script InsTrgInstance
+# @norm_word_id INT
+# @blob_id INT
+# @sense_ix TINYINT
+INSERT INTO trg_instances (norm_word_id, blob_id, sense_ix) VALUES (@norm_word_id, @blob_id, @sense_ix);
+# End

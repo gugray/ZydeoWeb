@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.IO;
@@ -40,6 +41,8 @@ namespace ZDO.CHSite.Logic
 
         private void verifyHanzi(CedictEntry entry, string query, List<CedictResult> res)
         {
+            if (entry == null) return;
+
             // Figure out position/length of query string in simplified and traditional headwords
             int hiliteStart = -1;
             int hiliteLength = 0;
@@ -74,14 +77,18 @@ namespace ZDO.CHSite.Logic
             cmdSelBinary10.Parameters["@id7"].Value = batch.Count > 7 ? batch[7] : -1;
             cmdSelBinary10.Parameters["@id8"].Value = batch.Count > 8 ? batch[8] : -1;
             cmdSelBinary10.Parameters["@id9"].Value = batch.Count > 9 ? batch[9] : -1;
+            for (int i = 0; i != batch.Count; ++i) entries.Add(null);
             using (MySqlDataReader rdr = cmdSelBinary10.ExecuteReader())
             {
                 while (rdr.Read())
                 {
                     int len = (int)rdr.GetBytes(0, 0, buf, 0, buf.Length);
+                    int entryId = rdr.GetInt32(1);
                     using (BinReader br = new BinReader(buf, len))
                     {
-                        entries.Add(new CedictEntry(br));
+                        CedictEntry entry = new CedictEntry(br);
+                        int ix = batch.IndexOf(entryId);
+                        entries[ix] = entry;
                     }
                 }
             }
@@ -123,8 +130,9 @@ namespace ZDO.CHSite.Logic
             return lengthCmp;
         }
 
-        private void lookupHanzi(string query, List<CedictResult> res, List<CedictAnnotation> anns)
+        private List<CedictResult> lookupHanzi(string query)
         {
+            List<CedictResult> res = new List<CedictResult>();
             // Normalize query
             query = query.ToUpperInvariant();
             query = query.Replace(" ", "");
@@ -144,23 +152,143 @@ namespace ZDO.CHSite.Logic
             // Sort Hanzi results
             res.Sort((a, b) => hrComp(a, b));
             // Done.
+            return res;
         }
 
+        private static int trgComp(CedictResult a, CedictResult b)
+        {
+            // TO-DO: by frequency
+            // Pinyin lexical compare up to shorter's length
+            int pyComp = a.Entry.PinyinCompare(b.Entry);
+            if (pyComp != 0) return pyComp;
+            // Pinyin is identical: shorter comes first
+            int lengthCmp = a.Entry.ChSimpl.Length.CompareTo(b.Entry.ChSimpl.Length);
+            return lengthCmp;
+        }
+
+        private bool verifyTrg(Tokenizer tokenizer, CedictEntry entry, int senseIx, List<Token> qtoks, List<CedictResult> res)
+        {
+            if (entry == null) return false;
+
+            // Tokenize indicated sense's equiv; see if it matches query
+            string equiv = entry.GetSenseAt(senseIx).Equiv;
+            List<Token> rtoks = tokenizer.Tokenize(equiv);
+            for (int i = 0; i != rtoks.Count; ++i)
+            {
+                int j = 0;
+                for (; j != qtoks.Count; ++j) if (rtoks[i + j].Norm != qtoks[j].Norm) break;
+                if (j != qtoks.Count) continue;
+                // We got a match starting at i!
+                CedictTargetHighlight[] hlarr = new CedictTargetHighlight[1];
+                int start = rtoks[i].Start;
+                int end = rtoks[i + j - 1].Start + rtoks[i + j - 1].Surf.Length;
+                hlarr[0] = new CedictTargetHighlight(senseIx, start, end - start);
+                ReadOnlyCollection<CedictTargetHighlight> hlcoll = new ReadOnlyCollection<CedictTargetHighlight>(hlarr);
+                CedictResult cr = new CedictResult(entry, hlcoll);
+                // Stop right here
+                res.Add(cr);
+                return true;
+            }
+            // Not a match
+            return false;
+        }
+
+        private void retrieveVerifyTarget(Tokenizer tokenizer, HashSet<Index.TrgCandidate> cands, List<Token> toks,
+            List<CedictResult> res)
+        {
+            byte[] buf = new byte[32768];
+            List<CedictEntry> entries = new List<CedictEntry>(10);
+            HashSet<int> resIdSet = new HashSet<int>(); // Makes sure we only retrieve each entry once, even if multiple senses match
+            using (MySqlConnection conn = DB.GetConn())
+            using (MySqlCommand cmdSelBinary10 = DB.GetCmd(conn, "SelBinaryEntry10"))
+            {
+                List<int> batch = new List<int>(10);
+                List<int> senseIxs = new List<int>();
+                foreach (var cand in cands)
+                {
+                    if (batch.Count < 10)
+                    {
+                        if (!resIdSet.Contains(cand.EntryId))
+                        {
+                            batch.Add(cand.EntryId);
+                            senseIxs.Add(cand.SenseIx);
+                        }
+                        continue;
+                    }
+                    retrieveBatch(batch, buf, entries, cmdSelBinary10);
+                    for (int i = 0; i != entries.Count; ++i)
+                    {
+                        if (resIdSet.Contains(batch[i])) continue;
+                        if (verifyTrg(tokenizer, entries[i], senseIxs[i], toks, res)) resIdSet.Add(batch[i]);
+                    }
+                    batch.Clear();
+                    senseIxs.Clear();
+                }
+                if (batch.Count != 0)
+                {
+                    retrieveBatch(batch, buf, entries, cmdSelBinary10);
+                    for (int i = 0; i != entries.Count; ++i)
+                    {
+                        if (resIdSet.Contains(batch[i])) continue;
+                        verifyTrg(tokenizer, entries[i], senseIxs[i], toks, res);
+                    }
+                }
+            }
+        }
+
+        private List<CedictResult> lookupTarget(string query)
+        {
+            List<CedictResult> res = new List<CedictResult>();
+            // Tokenize input
+            Tokenizer tokenizer = new Tokenizer();
+            List<Token> toks = tokenizer.Tokenize(query);
+            // Distinct normalized words
+            HashSet<Token> tokSet = new HashSet<Token>();
+            foreach (var tok in toks) if (tok.Norm != Token.Num) tokSet.Add(tok);
+            if (tokSet.Count == 0) return res;
+            // Candidates
+            Stopwatch watch = new Stopwatch();
+            watch.Restart();
+            var cands = index.GetTrgCandidates(tokSet);
+            Console.WriteLine("Candidates: " + cands.Count + " (" + watch.ElapsedMilliseconds + " msec)");
+            // Retrieve and verify
+            watch.Restart();
+            retrieveVerifyTarget(tokenizer, cands, toks, res);
+            Console.WriteLine("Retrieval: " + res.Count + " (" + watch.ElapsedMilliseconds + " msec)");
+            // Sort
+            res.Sort((a, b) => trgComp(a, b));
+            // Done.
+            return res;
+        }
+
+        /// <summary>
+        /// Searches the dictionary for Hanzi, annotations, pinyin, or target-language terms.
+        /// </summary>
         public CedictLookupResult Lookup(string query)
         {
-            // Prepare
             List<CedictResult> res = new List<CedictResult>();
             List<CedictAnnotation> anns = new List<CedictAnnotation>();
-            SearchLang sl = SearchLang.Chinese;
-
-            if (hasHanzi(query)) lookupHanzi(query, res, anns);
-            else
+            bool gotLock = false;
+            try
             {
-                //lookupPinyin(query, res);
-            }
+                // Acquire index lock first!
+                if (!index.Lock.TryEnterReadLock(5000))
+                    return new CedictLookupResult(query, res, anns, SearchLang.Chinese);
+                gotLock = true;
 
-            // Done
-            return new CedictLookupResult(query, res, anns, sl);
+                // Hanzi > Pinyin > Annotate > Target
+                res = lookupHanzi(query);
+                if (res.Count > 0) return new CedictLookupResult(query, res, anns, SearchLang.Chinese);
+                //anns = doAnnotate(query);
+                //if (anns.Count > 0) return new CedictLookupResult(query, res, anns, SearchLang.Chinese);
+                res = lookupTarget(query);
+                if (res.Count > 0) return new CedictLookupResult(query, res, anns, SearchLang.Target);
+                return new CedictLookupResult(query, res, anns, SearchLang.Chinese);
+            }
+            finally
+            {
+                if (gotLock) index.Lock.ExitReadLock();
+            }
         }
     }
 }
