@@ -8,6 +8,7 @@ var zdDiagnostics = (function () {
     zdPage.registerInitScript("download", function () {
       $("#recreateDB").click(onRecreateDB);
       $("#indexHDD").click(onIndexHDD);
+      $("#importFreq").click(onImportFreq);
       $("#queryPage").click(onQueryPage);
       $("#alertFail").click(onAlertFail);
       $("#alertSucc").click(onAlertSucc);
@@ -66,6 +67,30 @@ var zdDiagnostics = (function () {
     req.done(function (data) {
       $("#progressVal").text(data.progress);
       if (!data.done) setTimeout(getProgressIndexHDD, 500);
+    });
+  }
+
+  function onImportFreq() {
+    $("#progress").css("display", "block");
+    var url = "/api/diag/importfreq";
+    var req = $.ajax({
+      url: url,
+      type: "POST",
+      contentType: "application/x-www-form-urlencoded; charset=UTF-8"
+    });
+    setTimeout(getProgressFreq, 500);
+  }
+
+  function getProgressFreq() {
+    var url = "/api/diag/getfreqprogress";
+    var req = $.ajax({
+      url: url,
+      type: "GET",
+      contentType: "application/x-www-form-urlencoded; charset=UTF-8"
+    });
+    req.done(function (data) {
+      $("#progressVal").text(data.progress);
+      if (!data.done) setTimeout(getProgressFreq, 500);
     });
   }
 

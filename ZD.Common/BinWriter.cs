@@ -65,6 +65,11 @@ namespace ZD.Common
             writer.Write(s);
         }
 
+        public void WriteUShort(ushort us)
+        {
+            writer.Write(us);
+        }
+
         public void WriteByte(byte b)
         {
             writer.Write(b);

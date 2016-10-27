@@ -41,6 +41,11 @@ namespace ZDO.CHSite.Logic
             protected MySqlConnection conn;
 
             /// <summary>
+            /// Chinese word frequency provider.
+            /// </summary>
+            protected Freq freq;
+
+            /// <summary>
             /// Current DB transaction.
             /// </summary>
             protected MySqlTransaction tr = null;
@@ -68,6 +73,7 @@ namespace ZDO.CHSite.Logic
                     this.userId = userId;
                     tokenizer = new Tokenizer();
                     conn = DB.GetConn();
+                    freq = new Freq(conn);
                     // Shared builder commands, owned here in base class
                     cmdInsBinaryEntry = DB.GetCmd(conn, "InsBinaryEntry");
                     cmdInsHanziInstance = DB.GetCmd(conn, "InsHanziInstance");
@@ -110,6 +116,8 @@ namespace ZDO.CHSite.Logic
                     if (cmdInsEntry != null) cmdInsEntry.Dispose();
                     if (cmdInsHanziInstance != null) cmdInsHanziInstance.Dispose();
                     if (cmdInsBinaryEntry != null) cmdInsBinaryEntry.Dispose();
+
+                    if (freq != null) freq.Dispose();
                     if (conn != null) conn.Dispose();
                 }
                 finally { index.Lock.ExitWriteLock(); }
@@ -385,6 +393,12 @@ namespace ZDO.CHSite.Logic
                 CedictParser parser = new CedictParser();
                 CedictEntry entry = parser.ParseEntry(line, lineNum, swLog);
                 if (entry == null) return;
+
+                // Infuse corpus frequency
+                int iFreq = freq.GetFreq(entry.ChSimpl);
+                ushort uFreq = iFreq > ushort.MaxValue ? ushort.MaxValue : (ushort)iFreq;
+                entry.Freq = uFreq;
+
                 string head, trg;
                 CedictWriter.Write(entry, out head, out trg);
                 // Check restrictions - can end up dropped entry

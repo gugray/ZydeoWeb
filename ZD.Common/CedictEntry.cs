@@ -42,6 +42,11 @@ namespace ZD.Common
         public readonly string ChTrad;
 
         /// <summary>
+        /// Chinese word frequency (optional).
+        /// </summary>
+        public ushort Freq = 0;
+
+        /// <summary>
         /// Gets the headword's pinyin syllables.
         /// </summary>
         public ReadOnlyCollection<PinyinSyllable> Pinyin
@@ -262,6 +267,7 @@ namespace ZD.Common
             pinyin = br.ReadArray(brr => new PinyinSyllable(brr));
             ChSimpl = br.ReadString();
             ChTrad = br.ReadString();
+            Freq = br.ReadUShort();
             senses = br.ReadArray(brr => new CedictSense(brr));
             hanziPinyinMap = br.ReadArray(brr => brr.ReadShort());
             short cnt = br.ReadShort();
@@ -281,6 +287,7 @@ namespace ZD.Common
             bw.WriteArray(pinyin, (ps, bwr) => ps.Serialize(bwr));
             bw.WriteString(ChSimpl);
             bw.WriteString(ChTrad);
+            bw.WriteUShort(Freq);
             bw.WriteArray(senses);
             bw.WriteArray(hanziPinyinMap, (x, bwr) => bwr.WriteShort(x));
             if (zhoEmbeds == null) bw.WriteShort(0);

@@ -60,6 +60,11 @@ namespace ZD.Common
             return reader.ReadInt16();
         }
 
+        public ushort ReadUShort()
+        {
+            return reader.ReadUInt16();
+        }
+
         public byte ReadByte()
         {
             return reader.ReadByte();

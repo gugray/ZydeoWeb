@@ -40,6 +40,14 @@ CREATE TABLE prefix_words(
 ) ENGINE=InnoDB CHARACTER SET=utf8 COLLATE utf8_general_ci;
 CREATE INDEX idx_prefix_words_prefix ON prefix_words(prefix);
 
+DROP TABLE IF EXISTS word_freqs;
+CREATE TABLE word_freqs(
+	word			VARCHAR(64) NOT NULL,		-- simplified word
+	freq			INT,						-- corpus frequency
+					UNIQUE KEY word (word(64))	-- word is a key
+) ENGINE=InnoDB CHARACTER SET=utf8 COLLATE utf8_general_ci;
+CREATE INDEX idx_word_freqs_word ON word_freqs(word);
+
 DROP TABLE IF EXISTS entries;
 CREATE TABLE entries(
 	id				INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -232,3 +240,15 @@ ON DUPLICATE KEY UPDATE count = count + @count;
 # @max BIGINT
 SELECT word, count FROM prefix_words WHERE prefix >= @min AND prefix <= @max;
 # End
+
+# Script InsFreq
+# @word VARCHAR
+# @freq INT
+INSERT INTO word_freqs (word, freq) VALUES (@word, @freq);
+# End
+
+# Script SelFreq
+# @word VARCHAR
+SELECT freq FROM word_freqs WHERE word=@word;
+# End
+

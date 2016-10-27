@@ -155,17 +155,6 @@ namespace ZDO.CHSite.Logic
             return res;
         }
 
-        private static int trgComp(CedictResult a, CedictResult b)
-        {
-            // TO-DO: by frequency
-            // Pinyin lexical compare up to shorter's length
-            int pyComp = a.Entry.PinyinCompare(b.Entry);
-            if (pyComp != 0) return pyComp;
-            // Pinyin is identical: shorter comes first
-            int lengthCmp = a.Entry.ChSimpl.Length.CompareTo(b.Entry.ChSimpl.Length);
-            return lengthCmp;
-        }
-
         private bool verifyTrg(Tokenizer tokenizer, CedictEntry entry, int senseIx, List<Token> qtoks, List<CedictResult> res)
         {
             if (entry == null) return false;
@@ -256,7 +245,7 @@ namespace ZDO.CHSite.Logic
             retrieveVerifyTarget(tokenizer, cands, toks, res);
             Console.WriteLine("Retrieval: " + res.Count + " (" + watch.ElapsedMilliseconds + " msec)");
             // Sort
-            res.Sort((a, b) => trgComp(a, b));
+            res.Sort((a, b) => b.Entry.Freq.CompareTo(a.Entry.Freq));
             // Done.
             return res;
         }

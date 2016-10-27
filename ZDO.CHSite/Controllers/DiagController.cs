@@ -17,6 +17,9 @@ namespace ZDO.CHSite.Controllers
         private readonly string workingFolder;
         private readonly SqlDict dict;
 
+        private static int indexLineCount;
+        private static int freqLineCount;
+
         public DiagController(IConfiguration config, SqlDict dict)
         {
             workingFolder = config["workingFolder"];
@@ -30,18 +33,39 @@ namespace ZDO.CHSite.Controllers
             return StatusCode(200, "Database tables created.");
         }
 
-        private static int indexLineCount;
-
         public IActionResult IndexHDD()
         {
             ThreadPool.QueueUserWorkItem(funIndexHDD);
             return StatusCode(200, "Indexing started.");
         }
 
-        public class IndexProgress
+        public IActionResult ImportFreq()
+        {
+            ThreadPool.QueueUserWorkItem(funImportFreq);
+            return StatusCode(200, "Import started.");
+        }
+
+        public class ProgressRes
         {
             public string Progress;
             public bool Done;
+        }
+
+        public IActionResult GetFreqProgress()
+        {
+            string progress;
+            if (freqLineCount > 0)
+            {
+                progress = "Working, {0} word imported.";
+                progress = string.Format(progress, freqLineCount);
+            }
+            else
+            {
+                progress = "Done: {0} words.";
+                progress = string.Format(progress, -freqLineCount);
+            }
+            ProgressRes res = new ProgressRes { Progress = progress, Done = freqLineCount < 0 };
+            return new ObjectResult(res);
         }
 
         public IActionResult GetIndexingProgress()
@@ -57,7 +81,7 @@ namespace ZDO.CHSite.Controllers
                 progress = "Done: {0} lines.";
                 progress = string.Format(progress, -indexLineCount);
             }
-            IndexProgress res = new IndexProgress { Progress = progress, Done = indexLineCount < 0 };
+            ProgressRes res = new ProgressRes { Progress = progress, Done = indexLineCount < 0 };
             return new ObjectResult(res);
         }
 
@@ -79,6 +103,27 @@ namespace ZDO.CHSite.Controllers
                 imp.CommitRest();
             }
             indexLineCount = -indexLineCount;
+        }
+
+        private void funImportFreq(object o)
+        {
+            freqLineCount = 0;
+            string freqPath = "files/data/subtlex-ch.txt";
+            using (SqlDict.Freq freq = new SqlDict.Freq())
+            using (FileStream fs = new FileStream(freqPath, FileMode.Open, FileAccess.Read))
+            using (StreamReader sr = new StreamReader(fs))
+            {
+                string line;
+                while ((line = sr.ReadLine()) != null)
+                {
+                    string[] parts = line.Split('\t');
+                    if (parts.Length != 2) continue;
+                    freq.StoreFreq(parts[0], int.Parse(parts[1]));
+                    ++freqLineCount;
+                }
+                freq.CommitRest();
+            }
+            freqLineCount = -freqLineCount;
         }
     }
 }
