@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Globalization;
 
 using ZD.Common;
 
@@ -20,6 +21,11 @@ namespace ZDO.CHSite.Logic
             /// Placeholder for numbers in the normalized form.
             /// </summary>
             public static readonly string Num = "NNN";
+
+            /// <summary>
+            /// Placeholder for Chinese embeddings in the normalized form.
+            /// </summary>
+            public static readonly string Zho = "ZHO";
 
             /// <summary>
             /// The word's surface form, directly from the sense.
@@ -73,11 +79,12 @@ namespace ZDO.CHSite.Logic
                 List<Token> res = new List<Token>();
                 curr.Clear();
                 int i;
+                bool inHanzi = false;
                 for (i = 0; i != text.Length; ++i)
                 {
                     char c = text[i];
                     // Cannot be in words: whitespace, or any trimmed punctuation; also ignore Hanzi
-                    if (char.IsWhiteSpace(c) || trimPunctChars.Contains(c) || Utils.IsHanzi(c))
+                    if (char.IsWhiteSpace(c) || trimPunctChars.Contains(c))
                     {
                         if (curr.Length != 0)
                         {
@@ -85,8 +92,36 @@ namespace ZDO.CHSite.Logic
                             curr.Clear();
                         }
                     }
-                    // Otherwise, append to current token
-                    else curr.Append(c);
+                    // Character is Hanzi: wrap up previous alfa token, or append to Hanzi embedding
+                    else if (Utils.IsHanzi(c))
+                    {
+                        if (inHanzi) curr.Append(c);
+                        else
+                        {
+                            if (curr.Length != 0)
+                            {
+                                res.Add(makeToken(curr, i));
+                                curr.Clear();
+                            }
+                            curr.Append(c);
+                            inHanzi = true;
+                        }
+                    }
+                    // Otherwise, wrap up previous Hanzi token, or append to current alfa token
+                    else
+                    {
+                        if (!inHanzi) curr.Append(c);
+                        else
+                        {
+                            if (curr.Length != 0)
+                            {
+                                res.Add(makeToken(curr, i));
+                                curr.Clear();
+                            }
+                            curr.Append(c);
+                            inHanzi = false;
+                        }
+                    }
                 }
                 // Last token
                 if (curr.Length != 0) res.Add(makeToken(curr, i));
@@ -101,6 +136,9 @@ namespace ZDO.CHSite.Logic
             {
                 // Surface form as is
                 string surf = curr.ToString();
+                // Token is Hanzi embedding
+                if (Utils.IsHanzi(surf[0]))
+                    return new Token(surf, Token.Zho, (ushort)(i - surf.Length));
                 // Normalize: ß to ss; lower-case
                 curr.Replace("ß", "ss");
                 string norm = curr.ToString().ToLowerInvariant();
@@ -108,6 +146,40 @@ namespace ZDO.CHSite.Logic
                 if (reNumbers.IsMatch(surf)) norm = Token.Num;
                 // Ze token
                 return new Token(surf, norm, (ushort)(i - surf.Length));
+            }
+
+            /// <summary>
+            /// Strips diacritics from string. Used for forgiving prefix suggestions.
+            /// </summary>
+            /// <param name="word"></param>
+            /// <returns></returns>
+            public static string StripDiacritics(string word)
+            {
+                string decomp = word.Normalize(NormalizationForm.FormD);
+                StringBuilder sb = new StringBuilder(word.Length);
+                foreach (char c in decomp)
+                {
+                    UnicodeCategory uc = CharUnicodeInfo.GetUnicodeCategory(c);
+                    if (uc != UnicodeCategory.NonSpacingMark) sb.Append(c);
+                }
+                return sb.ToString().Normalize(NormalizationForm.FormC);
+            }
+
+            /// <summary>
+            /// Returns the word's stripped and lowercased 4-character prefix, encoded as long. First is highest order short.
+            /// </summary>
+            public static long Get4Prefix(string word)
+            {
+                word = word.ToLowerInvariant();
+                string naked = StripDiacritics(word);
+                long res = 0;
+                for (int i = 0; i != 4; ++i)
+                {
+                    short s = (i < naked.Length ? ((short)naked[i]) : (short)0);
+                    res <<= 16;
+                    res += s;
+                }
+                return res;
             }
         }
     }

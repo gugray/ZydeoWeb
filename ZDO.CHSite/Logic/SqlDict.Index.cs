@@ -360,6 +360,8 @@ namespace ZDO.CHSite.Logic
             private readonly HashSet<char> hanziToUnindex = new HashSet<char>();
             private readonly HashSet<string> trgToUnindex = new HashSet<string>();
 
+            private readonly Dictionary<string, int> prefixDiffs = new Dictionary<string, int>();
+
             public class StorageCommands
             {
                 public MySqlCommand CmdDelEntryHanziInstances;
@@ -367,6 +369,7 @@ namespace ZDO.CHSite.Logic
                 public MySqlCommand CmdDelEntryTrgInstances;
                 public MySqlCommand CmdInsNormWord;
                 public MySqlCommand CmdInsTrgInstance;
+                public MySqlCommand CmdInsUpdPrefixWord;
             }
 
             /// <summary>
@@ -428,9 +431,22 @@ namespace ZDO.CHSite.Logic
             /// <summary>
             /// Files an entry for indexing (target), pending <see cref="ApplyChanges"/>.
             /// </summary>
-            public void FileToIndex(int entryId, byte senseIx, HashSet<Token> toks)
+            public void FileToIndex(int entryId, byte senseIx, List<Token> toks)
             {
-                foreach (var tok in toks) append(tok.Norm, trgToIndex, entryId, senseIx);
+                // For indexing, only different normalized words count
+                // For prefix hints, all non-number, non-Chinese surface words count
+                HashSet<string> norms = new HashSet<string>();
+                foreach (var tok in toks)
+                {
+                    if (tok.Norm == Token.Num || tok.Norm == Token.Zho) continue;
+                    // Prefix hints
+                    if (!prefixDiffs.ContainsKey(tok.Surf)) prefixDiffs[tok.Surf] = 1;
+                    else ++prefixDiffs[tok.Surf];
+                    // Indexing
+                    if (norms.Contains(tok.Norm)) continue;
+                    append(tok.Norm, trgToIndex, entryId, senseIx);
+                    norms.Add(tok.Norm);
+                }
             }
 
             /// <summary>
@@ -439,11 +455,17 @@ namespace ZDO.CHSite.Logic
             /// <param name="entryId">ID of entry to unindex.</param>
             /// <param name="hAll">All hanzi from HW (simplified and traditional)</param>
             /// <param name="toks">All tokens from all senses.</param>
-            public void FileToUnindex(int entryId, HashSet<char> hAll, HashSet<Token> toks)
+            public void FileToUnindex(int entryId, HashSet<char> hAll, List<Token> toks)
             {
                 entriesToUnindex.Add(entryId);
                 foreach (char c in hAll) hanziToUnindex.Add(c);
-                foreach (Token tok in toks) trgToUnindex.Add(tok.Norm);
+                foreach (Token tok in toks)
+                {
+                    if (tok.Norm == Token.Num || tok.Norm == Token.Zho) continue;
+                    trgToUnindex.Add(tok.Norm);
+                    if (!prefixDiffs.ContainsKey(tok.Surf)) prefixDiffs[tok.Surf] = -1;
+                    else --prefixDiffs[tok.Surf];
+                }
             }
 
             /// <summary>
@@ -611,6 +633,20 @@ namespace ZDO.CHSite.Logic
             }
 
             /// <summary>
+            /// Adds missing surface words, updates occurrence counts. DB only, this.
+            /// </summary>
+            private void applyPrefixDB(StorageCommands sc)
+            {
+                foreach (var x in prefixDiffs)
+                {
+                    sc.CmdInsUpdPrefixWord.Parameters["@prefix"].Value = Tokenizer.Get4Prefix(x.Key);
+                    sc.CmdInsUpdPrefixWord.Parameters["@word"].Value = x.Key;
+                    sc.CmdInsUpdPrefixWord.Parameters["@count"].Value = x.Value;
+                    sc.CmdInsUpdPrefixWord.ExecuteNonQuery();
+                }
+            }
+
+            /// <summary>
             /// Clears all filed index/unindex items.
             /// </summary>
             private void clearFiledWork()
@@ -621,6 +657,7 @@ namespace ZDO.CHSite.Logic
                 hanziToUnindex.Clear();
                 trgToIndex.Clear();
                 trgToUnindex.Clear();
+                prefixDiffs.Clear();
             }
 
             /// <summary>
@@ -633,6 +670,7 @@ namespace ZDO.CHSite.Logic
                 applyIndexHanzi();
                 applyUnindexTrg(sc);
                 applyIndexTrg(sc);
+                applyPrefixDB(sc);
                 clearFiledWork();
             }
 
@@ -675,6 +713,56 @@ namespace ZDO.CHSite.Logic
                         ++ixb;
                     }
                 }
+            }
+
+            /// <summary>
+            /// One retrieved suggestion from a prefix.
+            /// </summary>
+            public struct PrefixWord
+            {
+                public string Word;
+                public string NakedLo;
+                public int Count;
+            }
+
+            /// <summary>
+            /// Loads a raw list of words that (loosely) match the provided prefix.
+            /// </summary>
+            public List<PrefixWord> LoadWordsForPrefix(string prefix)
+            {
+                List<PrefixWord> res = new List<PrefixWord>();
+                // Integer search range; stripped form for verification
+                string nakedLo = Tokenizer.StripDiacritics(prefix).ToLowerInvariant();
+                long min = Tokenizer.Get4Prefix(prefix);
+                long max;
+                if (prefix.Length >= 4) max = min;
+                else if (prefix.Length == 3) max = min + 0xffff;
+                else if (prefix.Length == 2) max = min + 0xffffffff;
+                else if (prefix.Length == 1) max = min + 0xffffffffffff;
+                else throw new ArgumentException("Empty prefix makes no sense.");
+                // DB lookup
+                // Filter if prefix is longer than 4 characters
+                using (MySqlConnection conn = DB.GetConn())
+                using (MySqlCommand cmd = DB.GetCmd(conn, "SelPrefixWords"))
+                {
+                    cmd.Parameters["@min"].Value = min;
+                    cmd.Parameters["@max"].Value = max;
+                    using (MySqlDataReader rdr = cmd.ExecuteReader())
+                    {
+                        while (rdr.Read())
+                        {
+                            PrefixWord pw = new PrefixWord { Word = rdr.GetString(0), Count = rdr.GetInt32(1) };
+                            // Might no longer be in dictionary
+                            if (pw.Count <= 0) continue;
+                            pw.NakedLo = Tokenizer.StripDiacritics(pw.Word).ToLowerInvariant();
+                            // Verify prefixes longer than 4 chars: numeric query doesn't filter for those
+                            if (nakedLo.Length > 4 && !pw.NakedLo.StartsWith(nakedLo)) continue;
+                            // It's a keeper.
+                            res.Add(pw);
+                        }
+                    }
+                }
+                return res;
             }
 
             /// <summary>

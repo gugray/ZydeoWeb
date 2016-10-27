@@ -10,9 +10,15 @@ var zdLookup = (function () {
 
   var clrSel = "#ffe4cc"; // Same as background-color of .optionItem.selected in CSS
   var clrEmph = "#ffc898"; // Same as border-bottom of .optionHead in CSS
-
   var optScript = "both";
   var optTones = "pleco";
+  // -1 if prefix search suggesions are not shown, and when the list is not being keyboard-navigated.
+  // When list is being keyboard-navigated, index of current item.
+  var prefixActiveIx = -1;
+  // Prefix request ID, to ignore delayed/out-of-order responses.
+  var prefixReqId = 0;
+  // Do *not* trigger prefix query on text change: means the change is b/c we're navigating list, or inserting from list
+  var prefixSuppressTrigger = false;
 
   zdPage.globalInit(globalInit);
 
@@ -59,13 +65,18 @@ var zdLookup = (function () {
     $("#btn-search").click(submitSearch);
     $("#txtSearch").keyup(function (e) {
       if (e.keyCode == 13) {
+        if (prefixActiveIx >= 0) onPrefixKeyUpDown(e, true);
+        // Yes, this way, list insertion with enter immediately triggers lookup too.
         submitSearch();
         return false;
       }
     });
+    $("#txtSearch").keydown(function (e) {
+      onPrefixKeyUpDown(e, false);
+    });
     $("#txtSearch").focus(txtSearchFocus);
-    $("#txtSearch").change(function () {
-      appendNotOverwrite = true;
+    $("#txtSearch").on("input", function () {
+      if (!prefixSuppressTrigger) prefixTrigger();
     });
 
     // Debug: to work on opening screen
@@ -81,6 +92,109 @@ var zdLookup = (function () {
     $("#soaBox").click(function (e) { e.stopPropagation(); });
     $('#txtSearch').val(data.data);
     $('#txtSearch').focus();
+  }
+
+  // Invoked when search text changes; starts prefix query, handles result.
+  function prefixTrigger() {
+    // Show, or maybe hide
+    var query = $('#txtSearch').val();
+    if (query.length < 3) {
+      killPrefixHints();
+      return;
+    }
+    // Query for hints
+    var sentId = ++prefixReqId;
+    var req = $.ajax({
+      url: "/api/smarts/prefixhints",
+      type: "GET",
+      contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+      data: { prefix: query }
+    });
+    req.done(function (data) {
+      if (sentId != prefixReqId) return;
+      // No suggestions: kill box
+      if (data == null || data.length == 0) {
+        killPrefixHints();
+        return;
+      }
+      // Suggestions box
+      $("#searchSuggestions").addClass("visible");
+      $("#searchSuggestions").addClass("pending"); // If already visible, greys out old items while query is in progres
+      var sbOfs = $("#searchBox").offset();
+      var sbWidth = $("#searchBox").width();
+      var ssOfs = $("#searchSuggestions").offset();
+      $("#searchSuggestions").offset({ left: sbOfs.left, top: ssOfs.top });
+      // Modal window management
+      zdPage.modalShown(killPrefixHints);
+      // Content (each suggestion)
+      var toShow = "";
+      for (var i = 0; i != data.length; ++i) {
+        toShow += "<div class='prefix-suggestion'>" + escapeHTML(data[i].suggestion) + "</div>";
+      }
+      $("#searchSuggestions").html(toShow);
+      $("#searchSuggestions").removeClass("pending");
+      // Repopulation clears active item; keyboard navigation must start from zero position
+      prefixActiveIx = -1;
+      // Click event for insertion
+      $(".prefix-suggestion").click(onPrefixClick);
+    });
+    req.fail(function (jqXHR, textStatus, error) {
+      if (sentId != prefixReqId) return;
+      killPrefixHints();
+    });
+  }
+
+  // Handles keyboard up/down navigation of prefix suggestions list
+  function onPrefixKeyUpDown(e, up) {
+    // Nothing to do if suggestions list is not even on screen
+    if (!$("#searchSuggestions").hasClass("visible")) return;
+    // This will get us Tab too
+    var keycode = e.keycode || e.which;
+    // Up/down: navigation
+    if (!up && (keycode == 40 || keycode == 38)) {
+      if (!$("#searchSuggestions").hasClass("visible")) return;
+      var count = $("#searchSuggestions").children().length;
+      if (keycode == 40)++prefixActiveIx;
+      else --prefixActiveIx;
+      if (prefixActiveIx < -1) prefixActiveIx = count - 1;
+      else if (prefixActiveIx == count) prefixActiveIx = -1;
+      // Highlight active item
+      $(".prefix-suggestion").removeClass("active");
+      if (prefixActiveIx >= 0) $("#searchSuggestions").children().eq(prefixActiveIx).addClass("active");
+    }
+    // Tab, Enter, Space all insert active item in different ways
+    else if ((!up && (keycode == 9 || keycode == 32)) || (up && keycode == 13)) {
+      // Only if we're navigating!
+      if (prefixActiveIx < 0) return;
+      prefixSuppressTrigger = true;
+      var newVal = $(".prefix-suggestion.active").text();
+      if (keycode == 32) newVal += " ";
+      $("#txtSearch").val(newVal);
+      $("#txtSearch").focus();
+      prefixSuppressTrigger = false;
+      killPrefixHints();
+      e.preventDefault();
+    }
+    // Esc closes the list
+    else if (!up && keycode == 27) killPrefixHints();
+  }
+
+  // An item in the search suggestions list is clicked.
+  function onPrefixClick(evt) {
+    // *NOT* doing the below. On click, page will call us to hide list: which is precisely what we want.
+    //evt.stopPropagation();
+    prefixSuppressTrigger = true;
+    $("#txtSearch").val($(this).text());
+    $("#txtSearch").focus();
+    prefixSuppressTrigger = false;
+  }
+
+  // Hides prefix search hint element, resets any interactive state to nothing.
+  function killPrefixHints() {
+    zdPage.modalHidden();
+    $("#searchSuggestions").html("");
+    $("#searchSuggestions").removeClass("visible");
+    prefixActiveIx = -1;
   }
 
   // Show the search settings popup (generate from template; event wireup; position).
@@ -298,7 +412,7 @@ var zdLookup = (function () {
   // When the search input field receives focus
   function txtSearchFocus(event) {
     if (zdPage.isMobile()) return;
-    $("#txtSearch").select();
+    if (!prefixSuppressTrigger) $("#txtSearch").select();
   }
 
   // Returns object with search params.
@@ -308,8 +422,8 @@ var zdLookup = (function () {
 
   // Submits a dictionary search as simple GET URL
   function submitSearch() {
-    'use strict';
     var queryStr = $('#txtSearch').val().replace(" ", "+");
+    killPrefixHints();
     zdPage.submitSearch(queryStr);
   }
 

@@ -134,15 +134,20 @@ body.pt16 { font-size: 16pt; }
 }
 
 #searchBox i {
-  color: @clrMedium;
-  height: 1.4em;
-  margin: 0.1em 0 0 0;
-  padding: 0.15em 0.15em 0 0.15em;
-  box-sizing: border-box;
+  color: @clrMedium; height: 1.4em; margin: 0.1em 0 0 0; padding: 0.15em 0.15em 0 0.15em; box-sizing: border-box;
+  &:hover { background-color: @clrLight; }
 }
 
-#searchBox i:hover {
-  background-color: @clrLight;
+#searchSuggestions {
+  display: none; position: fixed; box-sizing: border-box; z-index: 12; top: 3.2em; width: 26.72em; font-size: 150%;
+  height: auto; background-color: white; border: 1pt solid @clrLight; 
+  &.visible { display: block; }
+  &.pending { color: #aaa; }
+  div {
+    position: relative; float: left; clear: both; width: 100%; cursor: default; padding: 0.1em 0 0.1em 0.3em; box-sizing: border-box;
+    &:hover { background-color: @clrLightLight; }
+    &.active { background-color: @clrLight; }
+  }
 }
 
 #toMenu {

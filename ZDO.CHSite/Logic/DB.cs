@@ -80,6 +80,7 @@ namespace ZDO.CHSite.Logic
                         else if (parts[1] == "VARCHAR") dbType = MySqlDbType.VarChar;
                         else if (parts[1] == "DATETIME") dbType = MySqlDbType.DateTime;
                         else if (parts[1] == "INT") dbType = MySqlDbType.Int32;
+                        else if (parts[1] == "BIGINT") dbType = MySqlDbType.Int64;
                         else throw new Exception("Forgotten field type: " + parts[1]);
                         cmd.Params[parts[0]] = dbType;
                     }

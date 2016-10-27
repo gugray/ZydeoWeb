@@ -30,6 +30,16 @@ CREATE TABLE trg_instances(
 ) ENGINE=InnoDB CHARACTER SET=utf8 COLLATE utf8_general_ci;
 CREATE INDEX idx_trg_instances_blob_id ON trg_instances(blob_id);
 
+DROP TABLE IF EXISTS prefix_words;
+CREATE TABLE prefix_words(
+	id				INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+	prefix			BIGINT,						-- first four letters, encoded as 4 x short; last is lowest
+	word			VARCHAR(128) NOT NULL,		-- the word
+	count			INT,						-- occurrence count (so we know when not to offer as hint)
+					UNIQUE KEY word (word(128))	-- word is a key: so we can increment/decrement count efficiently
+) ENGINE=InnoDB CHARACTER SET=utf8 COLLATE utf8_general_ci;
+CREATE INDEX idx_prefix_words_prefix ON prefix_words(prefix);
+
 DROP TABLE IF EXISTS entries;
 CREATE TABLE entries(
 	id				INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -207,4 +217,18 @@ INSERT INTO norm_words (word) VALUES (@word);
 # @blob_id INT
 # @sense_ix TINYINT
 INSERT INTO trg_instances (norm_word_id, blob_id, sense_ix) VALUES (@norm_word_id, @blob_id, @sense_ix);
+# End
+
+# Script InsUpdPrefixWord
+# @prefix BIGINT
+# @word VARCHAR
+# @count INT
+INSERT INTO prefix_words (prefix, word, count) VALUES (@prefix, @word, @count)
+ON DUPLICATE KEY UPDATE count = count + @count;
+# End
+
+# Script SelPrefixWords
+# @min BIGINT
+# @max BIGINT
+SELECT word, count FROM prefix_words WHERE prefix >= @min AND prefix <= @max;
 # End

@@ -80,6 +80,7 @@ namespace ZDO.CHSite.Logic
                     indexCommands.CmdDelEntryTrgInstances = DB.GetCmd(conn, "DelEntryTrgInstances");
                     indexCommands.CmdInsNormWord = DB.GetCmd(conn, "InsNormWord");
                     indexCommands.CmdInsTrgInstance = DB.GetCmd(conn, "InsTrgInstance");
+                    indexCommands.CmdInsUpdPrefixWord = DB.GetCmd(conn, "InsUpdPrefixWord");
                 }
                 catch
                 {
@@ -97,6 +98,7 @@ namespace ZDO.CHSite.Logic
                 {
                     if (tr != null) { tr.Rollback(); tr.Dispose(); tr = null; }
 
+                    if (indexCommands.CmdInsUpdPrefixWord != null) indexCommands.CmdInsUpdPrefixWord.Dispose();
                     if (indexCommands.CmdInsTrgInstance != null) indexCommands.CmdInsTrgInstance.Dispose();
                     if (indexCommands.CmdInsNormWord != null) indexCommands.CmdInsNormWord.Dispose();
                     if (indexCommands.CmdDelEntryTrgInstances != null) indexCommands.CmdDelEntryTrgInstances.Dispose();
@@ -161,12 +163,7 @@ namespace ZDO.CHSite.Logic
                 {
                     CedictSense sense = entry.GetSenseAt(i);
                     List<Token> toks = tokenizer.Tokenize(sense.Equiv);
-                    // TO-DO: Exclude tokens that fall within any Chinese embeddings (Pinyin can show up)
-                    HashSet<Token> tokSet = new HashSet<Token>();
-                    foreach (Token tok in toks)
-                        if (tok.Norm != Token.Num)
-                            tokSet.Add(tok);
-                    index.FileToIndex(entryId, (byte)i, tokSet);
+                    index.FileToIndex(entryId, (byte)i, toks);
                 }
             }
 

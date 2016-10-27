@@ -244,7 +244,7 @@ namespace ZDO.CHSite.Logic
             List<Token> toks = tokenizer.Tokenize(query);
             // Distinct normalized words
             HashSet<Token> tokSet = new HashSet<Token>();
-            foreach (var tok in toks) if (tok.Norm != Token.Num) tokSet.Add(tok);
+            foreach (var tok in toks) if (tok.Norm != Token.Num && tok.Norm != Token.Zho) tokSet.Add(tok);
             if (tokSet.Count == 0) return res;
             // Candidates
             Stopwatch watch = new Stopwatch();
@@ -289,6 +289,54 @@ namespace ZDO.CHSite.Logic
             {
                 if (gotLock) index.Lock.ExitReadLock();
             }
+        }
+
+        /// <summary>
+        /// One search hint for query as prefix.
+        /// </summary>
+        public struct PrefixHint
+        {
+            /// <summary>
+            /// The suggestion.
+            /// </summary>
+            public string Suggestion;
+            /// <summary>
+            /// Length of matching prefix in suggestion.
+            /// </summary>
+            public int PrefixLength;
+        }
+
+        /// <summary>
+        /// Retrieves suggested search terms for prefix; permissive with diacritics.
+        /// </summary>
+        /// <param name="prefix">Prefix of search term entered so far.</param>
+        /// <param name="limit">Maximum number of suggestions to return.</param>
+        public List<PrefixHint> GetWordsForPrefix(string prefix, int limit)
+        {
+            List<PrefixHint> res = new List<PrefixHint>();
+            Tokenizer tokenizer = new Tokenizer();
+            List<Token> toks = tokenizer.Tokenize(prefix);
+            // If prefix has numbers of Chinese, no hints
+            foreach (var tok in toks) if (tok.Norm == Token.Num || tok.Norm == Token.Zho) return res;
+            // Single word: straight from DB
+            if (toks.Count == 1)
+            {
+                Token tok = toks[0];
+                // Shorter than 3 characters: nothing.
+                if (tok.Surf.Length < 3) return res;
+                List<Index.PrefixWord> cands = index.LoadWordsForPrefix(tok.Surf); // No lock needed for this; not from in-memory index.
+                // Strategy A: sort by frequency, largest first
+                //cands.Sort((x, y) => y.Count.CompareTo(x.Count));
+                // Strategy B: alphabetically sort by naked, lower-case form
+                cands.Sort((x, y) => x.NakedLo.CompareTo(y.NakedLo)); 
+                // Return just ze strings
+                for (int i = 0; i < cands.Count && i < limit; ++i)
+                    res.Add(new PrefixHint { Suggestion = cands[i].Word, PrefixLength = tok.Surf.Length });
+                return res;
+            }
+            // TO-DO: Multiple words
+            // Nothing.
+            return res;
         }
     }
 }
