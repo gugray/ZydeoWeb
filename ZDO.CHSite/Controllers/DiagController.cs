@@ -64,7 +64,7 @@ namespace ZDO.CHSite.Controllers
         private void funIndexHDD(object o)
         {
             indexLineCount = 0;
-            string hddPath = "files/data/x-20-handedict.txt";
+            string hddPath = "files/data/handedict.txt";
             using (SqlDict.BulkBuilder imp = dict.GetBulkBuilder(workingFolder, 0, "Importing stuff.", false))
             using (FileStream fs = new FileStream(hddPath, FileMode.Open, FileAccess.Read))
             using (StreamReader sr = new StreamReader(fs))

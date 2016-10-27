@@ -19,6 +19,8 @@ var zdLookup = (function () {
   var prefixReqId = 0;
   // Do *not* trigger prefix query on text change: means the change is b/c we're navigating list, or inserting from list
   var prefixSuppressTrigger = false;
+  // True if IME composition is in progress in the input field
+  var isComposing = false;
 
   zdPage.globalInit(globalInit);
 
@@ -75,9 +77,9 @@ var zdLookup = (function () {
       onPrefixKeyUpDown(e, false);
     });
     $("#txtSearch").focus(txtSearchFocus);
-    $("#txtSearch").on("input", function () {
-      if (!prefixSuppressTrigger) prefixTrigger();
-    });
+    $("#txtSearch").on("input", function () { if (!prefixSuppressTrigger) prefixTrigger(); });
+    $('#txtSearch').on('compositionstart', function (e) { isComposing = true; });
+    $('#txtSearch').on('compositionend', function (e) { isComposing = false; });
 
     // Debug: to work on opening screen
     //$("#resultsHolder").css("display", "none");
@@ -91,11 +93,16 @@ var zdLookup = (function () {
     $("#soaClose").click(hideStrokeAnim);
     $("#soaBox").click(function (e) { e.stopPropagation(); });
     $('#txtSearch').val(data.data);
-    $('#txtSearch').focus();
+    // Hack [?] - but either something steals focus on load, or input field is not yet shown to accept focus.
+    setTimeout(function () {
+      $('#txtSearch').focus();
+    }, 100);
   }
 
   // Invoked when search text changes; starts prefix query, handles result.
   function prefixTrigger() {
+    // If this comes when IME is composing, bollocks. Don't interfere.
+    if (isComposing) return;
     // Show, or maybe hide
     var query = $('#txtSearch').val();
     if (query.length < 3) {
@@ -146,6 +153,8 @@ var zdLookup = (function () {
 
   // Handles keyboard up/down navigation of prefix suggestions list
   function onPrefixKeyUpDown(e, up) {
+    // If this comes when IME is composing, bollocks. Don't interfere.
+    if (isComposing) return;
     // Nothing to do if suggestions list is not even on screen
     if (!$("#searchSuggestions").hasClass("visible")) return;
     // This will get us Tab too
