@@ -31,13 +31,12 @@
 </head>
 <body id="theBody" class="pt16">
   <div id="thePage" style="visibility: hidden;">
-    <div id="searchSuggestions">tralla</div>
     <div id="headerstick">
       <div id="headerHome"><span id="hdrHomeLatin">CHDICT</span><span id="hdrHomeZho">汉匈词典</span></div>
       <div id="header">
         <div id="hdrSearch" class="hdrAlt on">
           <div id="searchBox">
-            <input type="text" id="txtSearch" placeholder="@Model.Str("HintSearchField")" autofocus/>
+            <input type="text" id="txtSearch" placeholder="@Model.Str("HintSearchField")" autofocus />
             <i id="btn-write" class="fa fa-paint-brush" aria-hidden="true"></i>
             <i id="btn-settings" class="fa fa-cog" aria-hidden="true"></i>
             <i id="btn-search" class="fa fa-search" aria-hidden="true"></i>
@@ -72,6 +71,18 @@
         </div>
       </div>
       <div id="searchOptionsBox"></div>
+      <div id="searchSuggestions"></div>
+      <div id="stroke-input">
+        <div id="stroke-inner">
+          <div id="strokeDataLoading">Loading...</div>
+          <canvas id="stroke-input-canvas"></canvas>
+          <div id="stroke-commands">
+            <div id="strokeClear" runat="server">*Clear</div>
+            <div id="strokeUndo" runat="server">*Undo</div>
+          </div>
+          <div id="suggestions"></div>
+        </div>
+      </div>
     </div>
     <div id="headermask">&nbsp;</div>
     <div id="dynPage" class="nosubmenu"></div>
@@ -89,6 +100,12 @@
     <script src="/dev-js/zdSnippets.js"></script>
     <script src="/dev-js/strings-hu.js"></script>
     <script src="/dev-js/strings-en.js"></script>
+    <!-- DBG -->
+    <script src="/dev-js/chardata.js"></script>
+    <script src="/dev-js/_medians.js"></script>
+    <script src="/dev-js/_matcher.js"></script>
+    <script src="/dev-js/handwriting.js"></script>
+    <!-- DBG -->
     <script src="/dev-js/page.js"></script>
     <script src="/dev-js/newentry.js"></script>
     <script src="/dev-js/strokeanim.js"></script>

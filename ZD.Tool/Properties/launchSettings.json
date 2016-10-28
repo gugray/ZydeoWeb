@@ -2,7 +2,7 @@
   "profiles": {
     "ZD.Tool": {
       "commandName": "Project",
-      "commandLineArgs": "--compile-hwinfo",
+      "commandLineArgs": "--tobytes",
       "workingDirectory": "D:\\Development\\ZydeoWeb\\_work"
     }
   }

@@ -30,7 +30,7 @@ namespace ZDO.CHSite.Logic
         {
             logger = lf.CreateLogger(GetType().FullName);
             logger.LogInformation("SQL dictionary initializing...");
-            index = new Index();
+            index = new Index(logger);
             logger.LogInformation("SQL dictionary initialized.");
         }
 

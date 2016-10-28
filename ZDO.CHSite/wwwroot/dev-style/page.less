@@ -150,6 +150,106 @@ body.pt16 { font-size: 16pt; }
   }
 }
 
+#stroke-input {
+  z-index: 3;
+  display: none;
+  position: fixed;
+  background-color: #c7d9b3;
+  width: 15em;
+  padding: 0.5em;
+  top: 0;
+}
+
+#stroke-inner {
+  -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+  -moz-box-sizing: border-box;    /* Firefox, other Gecko */
+  box-sizing: border-box;         /* Opera/IE 8+ */
+  width: 100%;
+  background-color: white;
+}
+
+#strokeDataLoading {
+  position: absolute;
+  padding-left: 0.2em;
+  z-index: 2;
+  color: white;
+  display: none;
+}
+
+#stroke-input-canvas {
+  -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+  -moz-box-sizing: border-box;    /* Firefox, other Gecko */
+  box-sizing: border-box;         /* Opera/IE 8+ */
+  display: block;
+  position: relative;
+  float: left;
+  width: 100%;
+  background-color: white;
+  cursor: crosshair;
+  -webkit-transition: background-color 1s ease;
+  transition: background-color 1s ease;
+}
+
+#stroke-input-canvas.loading {
+  background-color: #a0a0a0;
+}
+
+#stroke-commands {
+  display: block;
+  position: relative;
+  float: left;
+  width: 100%;
+  background-color: white;
+}
+
+#strokeClear,
+#strokeUndo {
+  -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+  -moz-box-sizing: border-box;    /* Firefox, other Gecko */
+  box-sizing: border-box;         /* Opera/IE 8+ */
+  display: block;
+  position: relative;
+  float: left;
+  width: 50%;
+  padding: 0.2em;
+  border: 1px solid #607026;
+  text-align: center;
+  cursor: default;
+}
+
+#strokeClear:hover,
+#strokeUndo:hover {
+  background-color: #b4ca65;
+}
+
+#suggestions {
+  display: block;
+  position: relative;
+  float: left;
+  width: 100%;
+  background-color: white;
+  margin-top: 0.1em;
+  font-size: 350%;
+}
+
+.sugItem {
+  display: block;
+  float: left;
+  cursor: pointer;
+  text-align: center;
+  width: 25%;
+  background-color: white;
+}
+
+.sugItem:hover {
+  background: #b4ca65;
+}
+
+
+
+
+
+
 #toMenu {
   display: block;
   position: relative;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Runtime.InteropServices;
+using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
 
 namespace ZDO.CHSite.Logic
@@ -177,9 +178,16 @@ namespace ZDO.CHSite.Logic
             /// <summary>
             /// Ctor: load (construct) index from DB.
             /// </summary>
-            public Index()
+            public Index(ILogger logger)
             {
-                Reload();
+                try
+                {
+                    //Reload();
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(new EventId(), ex, "Failed to initialize index.");
+                }
             }
             
             /// <summary>

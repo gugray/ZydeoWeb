@@ -25,6 +25,10 @@ namespace ZD.Tool
             Console.WriteLine("  Compiles headword info file");
             Console.WriteLine("  Fixed inputs: Unihan_Readings.txt; Unihan_Variants.txt; cedict_ts.u8; handedict.u8");
             Console.WriteLine("  Outputs unihanzi.bin");
+            Console.WriteLine("--tobytes");
+            Console.WriteLine("  Converts binary file to byte array");
+            Console.WriteLine("  Input name fixed: medians.bin");
+            Console.WriteLine("  Outputs chardata.js");
             Console.WriteLine();
         }
 
@@ -34,6 +38,7 @@ namespace ZD.Tool
             if (args[0] == "--10-prepare") return args[0];
             if (args[0] == "--20-cleanse") return args[0];
             if (args[0] == "--compile-hwinfo") return args[0];
+            if (args[0] == "--tobytes") return args[0];
             return null;
         }
 
@@ -45,6 +50,7 @@ namespace ZD.Tool
                 if (opt as string == "--10-prepare") return new Wrk10Prepare();
                 if (opt as string == "--20-cleanse") return new Wrk20Cleanse();
                 if (opt as string == "--compile-hwinfo") return new WrkUnihanzi();
+                if (opt as string == "--tobytes") return new WrkToBytes();
             }
             throw new Exception(opt.GetType().ToString() + " is not recognized as an options type.");
         }

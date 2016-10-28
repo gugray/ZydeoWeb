@@ -3,6 +3,7 @@
 /// <reference path="x-jquery.tooltipster.min.js" />
 /// <reference path="strings-hu.js" />
 /// <reference path="page.js" />
+/// <reference path="handwriting.js" />
 /// <reference path="strokeanim.js" />
 
 var zdLookup = (function () {
@@ -50,19 +51,19 @@ var zdLookup = (function () {
     $("#btn-search").tooltipster({
       content: $("<span>" + uiStrings["tooltip-btn-search"] + "</span>")
     });
-
-    // TO-DO
-    //initStrokes();
-
-    // Debug: to work on strokes input
-    //showStrokeInput();
-
+    // Clear button; settings
     $("#btn-clear").click(clearSearch);
     $("#btn-settings").click(showSettings);
-
-    // TO-DO
-    //$("#strokeClear").click(clearCanvas);
-    //$("#strokeUndo").click(undoStroke);
+    // Handwriting recognition
+    $("#btn-write").click(function () {
+      if ($("#stroke-input").css("display") == "block") hideStrokeInput();
+      else showStrokeInput();
+    });
+    zdHandwriting.initStrokes();
+    // Debug: to work on strokes input
+    //showStrokeInput();
+    $("#strokeClear").click(zdHandwriting.clearCanvas);
+    $("#strokeUndo").click(zdHandwriting.undoStroke);
 
     $("#btn-search").click(submitSearch);
     $("#txtSearch").keyup(function (e) {
@@ -351,65 +352,52 @@ var zdLookup = (function () {
 
   // Shows the handwriting recognition pop-up.
   function showStrokeInput() {
-    // TO-DO
-    return;
-
-    // Firsty first: load the stroke data if missing
-    if (typeof strokesData === 'undefined') {
-      // Add element, and also event handler for completion
-      var elmStrokes = document.createElement('script');
-      document.getElementsByTagName("head")[0].appendChild(elmStrokes);
-      var funEnabler = function () {
-        setRecogEnabled(true);
-        sessionStorage.setItem("strokesLoaded", true);
-      }
-      elmStrokes.onload = function () { funEnabler(); };
-      elmStrokes.onreadystatechange = function () {
-        if (this.readyState == 'complete') funEnabler();
-      }
-      elmStrokes.setAttribute("type", "text/javascript");
-      elmStrokes.setAttribute("src", getStrokeDataUrl());
-      // Make input disabled
-      setRecogEnabled(false);
-    }
+    //// Firsty first: load the stroke data if missing
+    //// TO-DO
+    //if (typeof strokesData === 'undefined') {
+    //  // Add element, and also event handler for completion
+    //  var elmStrokes = document.createElement('script');
+    //  document.getElementsByTagName("head")[0].appendChild(elmStrokes);
+    //  var funEnabler = function () {
+    //    setRecogEnabled(true);
+    //    sessionStorage.setItem("strokesLoaded", true);
+    //  }
+    //  elmStrokes.onload = function () { funEnabler(); };
+    //  elmStrokes.onreadystatechange = function () {
+    //    if (this.readyState == 'complete') funEnabler();
+    //  }
+    //  elmStrokes.setAttribute("type", "text/javascript");
+    //  elmStrokes.setAttribute("src", getStrokeDataUrl());
+    //  // Make input disabled
+    //  setRecogEnabled(false);
+    //}
     // Position and show panel
-    if (!zdPage.isMobile()) {
-      var searchPanelOfs = $("#search-panel").offset();
-      var searchPanelWidth = $("#search-panel").width();
-      var searchPanelHeight = $("#search-panel").height();
-      var strokeInputWidth = $("#stroke-input").outerWidth();
-      //$("#stroke-input").position({left: 0, top: searchPanelOfs.top + searchPanelHeight + 390});
-      $("#stroke-input").css("margin-top", searchPanelOfs.top - window.pageYOffset + searchPanelHeight);
-      $("#stroke-input").css("left", searchPanelOfs.left + searchPanelWidth - strokeInputWidth + 2);
-      $("#stroke-input").css("display", "block");
-      $("#suggestions").html("<br/><br/>");
-    }
-    else {
-      $("#stroke-input").css("display", "block");
-      $("#suggestions").html("<br/>");
-    }
+    var searchPanelOfs = $("#searchBox").offset();
+    var searchPanelWidth = $("#searchBox").width();
+    var searchPanelHeight = $("#searchBox").height();
+    var strokeInputWidth = $("#stroke-input").outerWidth();
+    //$("#stroke-input").position({left: 0, top: searchPanelOfs.top + searchPanelHeight + 390});
+    $("#stroke-input").css("margin-top", searchPanelOfs.top - window.pageYOffset + searchPanelHeight);
+    $("#stroke-input").css("left", searchPanelOfs.left + searchPanelWidth - strokeInputWidth + 2);
+    $("#stroke-input").css("display", "block");
+    $("#suggestions").html("<br/><br/>");
     var strokeCanvasWidth = $("#stroke-input-canvas").width();
     $("#stroke-input-canvas").css("height", strokeCanvasWidth);
     var canvasElement = document.getElementById("stroke-input-canvas");
     canvasElement.width = strokeCanvasWidth;
     canvasElement.height = strokeCanvasWidth;
     $("#suggestions").css("height", $("#suggestions").height());
-    clearCanvas();
-    $("#btn-write").attr("class", "active");
-    // Must do this explicitly: if hamburger menu is shown, got to hide it
-    if (zdPage.isMobile()) hideShowHamburger(false);
+    zdHandwriting.clearCanvas();
+    $("#btn-write").addClass("active");
   }
 
   // Hides the handwriting recognition popup
   function hideStrokeInput() {
-    // TO-DO
-    return;
-
     // Nothing to hide?
     if ($("#stroke-input").css("display") != "block") return;
     // Hide.
     $("#stroke-input").css("display", "none");
-    $("#btn-write").attr("class", "");
+    $("#btn-write").removeClass("active");
   }
 
   // Clears the search field
