@@ -35,11 +35,11 @@ var zdLookup = (function () {
 
     // If session storage says we've already loaded strokes, append script right now
     // This will happen from browser cache, i.e., page load doesn't suffer
-    if (sessionStorage.getItem("strokesLoaded")) {
+    if (sessionStorage.getItem("charDataLoaded")) {
       var elmStrokes = document.createElement('script');
       document.getElementsByTagName("head")[0].appendChild(elmStrokes);
       elmStrokes.setAttribute("type", "text/javascript");
-      elmStrokes.setAttribute("src", getStrokeDataUrl());
+      elmStrokes.setAttribute("src", "/prod-js/xcharacterdata.js");
     }
     // Add tooltips
     $("#btn-write").tooltipster({
@@ -59,7 +59,13 @@ var zdLookup = (function () {
       if ($("#stroke-input").css("display") == "block") hideStrokeInput();
       else showStrokeInput();
     });
-    zdHandwriting.initStrokes();
+    // Initialize handwriting logic. Element IDs provided as params object.
+    zdHandwriting.init({
+      canvasId: "stroke-input-canvas",
+      suggestionsId: "suggestions",
+      suggestionClass: "sugItem",
+      insertionTargedId: "txtSearch"
+    });
     // Debug: to work on strokes input
     //showStrokeInput();
     $("#strokeClear").click(zdHandwriting.clearCanvas);
@@ -340,37 +346,28 @@ var zdLookup = (function () {
     loadOptions();
   }
 
-  // TO-DO
-  //function getStrokeDataUrl() {
-  //  // Figure out URL by stealing from "common.js" - which is always there. Right?!
-  //  var elmCommonJS = document.getElementById("elmCommonJS");
-  //  var urlCommonJS = elmCommonJS.getAttribute("src");
-  //  var re = /common\.js/;
-  //  var urlStrokes = urlCommonJS.replace(re, "chinesestrokes.js");
-  //  return urlStrokes;
-  //}
-
   // Shows the handwriting recognition pop-up.
   function showStrokeInput() {
-    //// Firsty first: load the stroke data if missing
-    //// TO-DO
-    //if (typeof strokesData === 'undefined') {
-    //  // Add element, and also event handler for completion
-    //  var elmStrokes = document.createElement('script');
-    //  document.getElementsByTagName("head")[0].appendChild(elmStrokes);
-    //  var funEnabler = function () {
-    //    setRecogEnabled(true);
-    //    sessionStorage.setItem("strokesLoaded", true);
-    //  }
-    //  elmStrokes.onload = function () { funEnabler(); };
-    //  elmStrokes.onreadystatechange = function () {
-    //    if (this.readyState == 'complete') funEnabler();
-    //  }
-    //  elmStrokes.setAttribute("type", "text/javascript");
-    //  elmStrokes.setAttribute("src", getStrokeDataUrl());
-    //  // Make input disabled
-    //  setRecogEnabled(false);
-    //}
+    // Firsty first: load the stroke data if missing
+    if (typeof zdCharData === 'undefined') {
+      // Add element, and also event handler for completion
+      var elmStrokes = document.createElement('script');
+      document.getElementsByTagName("head")[0].appendChild(elmStrokes);
+      var funEnabler = function () {
+        zdHandwriting.setEnabled(true);
+        sessionStorage.setItem("charDataLoaded", true);
+      }
+      elmStrokes.onload = function () { funEnabler(); };
+      elmStrokes.onreadystatechange = function () {
+        if (this.readyState == 'complete') funEnabler();
+      }
+      elmStrokes.setAttribute("type", "text/javascript");
+      elmStrokes.setAttribute("src", "/prod-js/xcharacterdata.js");
+      // Make input disabled
+      zdHandwriting.setEnabled(false);
+    }
+    // If stroke data is alreayd loaded, explicitly call setEnabled - this makes sure character matcher is initialized
+    else zdHandwriting.setEnabled(true);
     // Position and show panel
     var searchPanelOfs = $("#searchBox").offset();
     var searchPanelWidth = $("#searchBox").width();

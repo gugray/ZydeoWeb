@@ -33,12 +33,19 @@ gulp.task('snippets', function () {
     .pipe(gulp.dest('./wwwroot/dev-js'));
 });
 
+// Copies raw scripts (character data) to production folder
+gulp.task('scriptcopy', function () {
+  return gulp.src(['./wwwroot/dev-js/xcharacterdata.js']).pipe(gulp.dest('./wwwroot/prod-js/'));
+});
+
 // Minify and bundle JS files
-gulp.task('scripts', ['snippets'], function () {
+gulp.task('scripts', ['snippets', 'scriptcopy'], function () {
   return gulp.src([
     './wwwroot/lib/*.js',
     './wwwroot/dev-js/zdSnippets.js',
     './wwwroot/dev-js/strings*.js',
+    './wwwroot/dev-js/charmatcher.js',
+    './wwwroot/dev-js/handwriting.js',
     './wwwroot/dev-js/page.js',
     './wwwroot/dev-js/newentry.js',
     './wwwroot/dev-js/strokeanim.js',
@@ -46,7 +53,7 @@ gulp.task('scripts', ['snippets'], function () {
     './wwwroot/dev-js/history.js',
     './wwwroot/dev-js/diagnostics.js'
   ])
-    .pipe(uglify())
+    .pipe(uglify().on('error', function (e) { console.log(e); }))
     .pipe(concat('app.min.js'))
     .pipe(gulp.dest('./wwwroot/prod-js/'));
 });

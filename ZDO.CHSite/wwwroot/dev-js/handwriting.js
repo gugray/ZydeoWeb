@@ -1,33 +1,16 @@
 ﻿/// <reference path="x-jquery-2.1.4.min.js" />
-/// <reference path="_matcher.js" />
-/// <reference path="_medians.js" />
-
+/// <reference path="charmatcher.js" />
 
 var zdHandwriting = (function () {
   "use strict";
 
-  var decodedMedians = decodeMedians(charDataArr);
-  var matcher = new Matcher(decodedMedians);
+  var prms = null;
 
   // Global options ******************************
   // Width of strokes drawn on screen, for desktop browsers
   var strokeWidthDesktop = 5;
   // Width of strokes drawn on screen, for mobile browsers
   var strokeWidthMobile = 15;
-  // If "true", results of corner detection are drawn on top of strokes in red
-  var drawAnalyzedStrokes = false;
-  // If not null, diagnostic messages are logged to element with the provided ID
-  var debugId = null; // #something
-  // ID of canvas element where user draws input. Without the # symbol!
-  var canvasId = "stroke-input-canvas";
-  // ID of element where suggestions are displayed.
-  var suggestionsId = "#suggestions";
-  // Class of spans with retrieved suggestions.
-  var suggestionClass = "sugItem";
-  // ID of text input element that receives character when suggestion is clicked.
-  var insertionTargedId = "#txtSearch";
-  // If true, selected hanzi is appended, instead of overwriting existing text.
-  var appendNotOverwrite = false;
 
   var canvas;
   var ctx;
@@ -37,6 +20,7 @@ var zdHandwriting = (function () {
   var tstamp;
   var lastPt;
   var recogEnabled = true;
+  var appendNotOverwrite = false;
 
   // An array of arrays; each element is the coordinate sequence for one stroke from the canvas
   // Where "stroke" is everything between button press - move - button release
@@ -44,18 +28,6 @@ var zdHandwriting = (function () {
 
   // Canvas coordinates of each point in current stroke, in raw (unanalyzed) form.
   var currentStroke = null;
-
-  function setRecogEnabled(enabled) {
-    recogEnabled = enabled;
-    if (!enabled) {
-      $("#stroke-input-canvas").addClass("loading");
-      $("#strokeDataLoading").css("display", "block");
-    }
-    else {
-      $("#stroke-input-canvas").removeClass("loading");
-      $("#strokeDataLoading").css("display", "none");
-    }
-  }
 
   // Draws a clear canvas, with gridlines
   function drawClearCanvas() {
@@ -86,12 +58,6 @@ var zdHandwriting = (function () {
     ctx.moveTo(0, canvas.height / 2);
     ctx.lineTo(canvas.width, canvas.height / 2);
     ctx.stroke();
-  }
-
-  // Logs diagnostic message to designated element, or keeps quiet.
-  function debugOnScreen(msg) {
-    if (debugId === null) return;
-    $(debugId).html(msg);
   }
 
   function startClick(x, y) {
@@ -151,54 +117,52 @@ var zdHandwriting = (function () {
   }
 
   function matchAndShow() {
-    var matches = matcher.match(rawStrokes, 8);
-    $(suggestionsId).html('');
+    var matches = zdCharMatcher.match(rawStrokes, 8);
+    $("#" + prms.suggestionsId).html('');
     for (var i = 0; ((i < 8) && matches[i]) ; i++) {
       var sug = document.createElement('span');
-      $(sug).append(matches[i]).attr('class', suggestionClass);
+      $(sug).append(matches[i]).attr('class', prms.suggestionClass);
       $(sug).click(function () {
         if (appendNotOverwrite)
-          $(insertionTargedId).val($(insertionTargedId).val() + $(this).html());
+          $("#" + prms.insertionTargedId).val($("#" + prms.insertionTargedId).val() + $(this).html());
         else
-          $(insertionTargedId).val($(this).html());
+          $("#" + prms.insertionTargedId).val($(this).html());
         appendNotOverwrite = true;
         clearCanvas();
-        $(suggestionsId).html('');
+        $("#" + prms.suggestionsId).html('');
       });
-      $(suggestionsId).append(sug);
+      $("#" + prms.suggestionsId).append(sug);
     }
 
   }
 
   return {
     // Initializes handwriting recognition (events etc.)
-    initStrokes: function () {
-      canvas = document.getElementById(canvasId);
+    init: function (params) {
+      prms = params;
+      canvas = document.getElementById(prms.canvasId);
       if (canvas === null) return;
       ctx = canvas.getContext("2d");
 
-      $('#' + canvasId).mousemove(function (e) {
+      $('#' + prms.canvasId).mousemove(function (e) {
         if (!clicking || !recogEnabled) return;
         var x = e.pageX - $(this).offset().left;
         var y = e.pageY - $(this).offset().top;
         dragClick(x, y);
-        debugOnScreen("MouseMove X: " + x + " Y: " + y);
       });
-      $('#' + canvasId).mousedown(function (e) {
+      $('#' + prms.canvasId).mousedown(function (e) {
         if (!recogEnabled) return;
         var x = e.pageX - $(this).offset().left;
         var y = e.pageY - $(this).offset().top;
         startClick(x, y);
-        debugOnScreen("MouseDown X: " + x + " Y: " + y);
       }).mouseup(function (e) {
         if (!recogEnabled) return;
         var x = e.pageX - $(this).offset().left;
         var y = e.pageY - $(this).offset().top;
         endClick(x, y);
-        debugOnScreen("MouseUp");
       });
 
-      $('#' + canvasId).bind("touchmove", function (e) {
+      $('#' + prms.canvasId).bind("touchmove", function (e) {
         if (!clicking || !recogEnabled) return;
         e.preventDefault();
         var x = e.originalEvent.touches[0].pageX - $(this).offset().left;
@@ -206,23 +170,20 @@ var zdHandwriting = (function () {
         var y = e.originalEvent.touches[0].pageY - $(this).offset().top;
         lastTouchY = y;
         dragClick(x, y);
-        debugOnScreen("TouchMove X: " + x + " Y: " + y);
       });
-      $('#' + canvasId).bind("touchstart", function (e) {
+      $('#' + prms.canvasId).bind("touchstart", function (e) {
         if (!recogEnabled) return;
         e.preventDefault();
         document.activeElement.blur();
         var x = e.originalEvent.touches[0].pageX - $(this).offset().left;
         var y = e.originalEvent.touches[0].pageY - $(this).offset().top;
         startClick(x, y);
-        debugOnScreen("TouchStart X: " + x + " Y: " + y);
       }).bind("touchend", function (e) {
         if (!recogEnabled) return;
         e.preventDefault();
         document.activeElement.blur();
         endClick(lastTouchX, lastTouchY);
         lastTouchX = lastTouchY = -1;
-        debugOnScreen("TouchEnd");
       });
     },
 
@@ -231,7 +192,7 @@ var zdHandwriting = (function () {
       // Redraw canvas (gridlines)
       drawClearCanvas();
       // Clear previous suggestions
-      $(suggestionsId).html('');
+      $("#" + prms.suggestionsId).html('');
       // Reset gathered strokes input
       rawStrokes = [];
     },
@@ -251,7 +212,21 @@ var zdHandwriting = (function () {
     },
 
     // Sets whether inserting match should overwrite search field, or append to it.
-    setInsertionMode: function (append) { appendNotOverwrite = append; }
+    setInsertionMode: function (append) { appendNotOverwrite = append; },
+
+    // Sets enabled/disabled state of handwriting recognition. (Disabled until character data is dynamically loaded.)
+    setEnabled: function(enabled) {
+      recogEnabled = enabled;
+      if (!enabled) {
+        $("#stroke-input-canvas").addClass("loading");
+        $("#strokeDataLoading").css("display", "block");
+      }
+      else {
+        $("#stroke-input-canvas").removeClass("loading");
+        $("#strokeDataLoading").css("display", "none");
+        zdCharMatcher.init(zdCharData)
+      }
+    }
 
   };
 
