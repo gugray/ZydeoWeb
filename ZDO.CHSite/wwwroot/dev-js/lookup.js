@@ -55,21 +55,12 @@ var zdLookup = (function () {
     $("#btn-clear").click(clearSearch);
     $("#btn-settings").click(showSettings);
     // Handwriting recognition
-    $("#btn-write").click(function () {
+    $("#btn-write").click(function (event) {
       if ($("#stroke-input").css("display") == "block") hideStrokeInput();
-      else showStrokeInput();
-    });
-    // Initialize handwriting logic. Element IDs provided as params object.
-    zdHandwriting.init({
-      canvasId: "stroke-input-canvas",
-      suggestionsId: "suggestions",
-      suggestionClass: "sugItem",
-      insertionTargedId: "txtSearch"
+      else showStrokeInput(event);
     });
     // Debug: to work on strokes input
     //showStrokeInput();
-    $("#strokeClear").click(zdHandwriting.clearCanvas);
-    $("#strokeUndo").click(zdHandwriting.undoStroke);
 
     $("#btn-search").click(submitSearch);
     $("#txtSearch").keyup(function (e) {
@@ -347,7 +338,8 @@ var zdLookup = (function () {
   }
 
   // Shows the handwriting recognition pop-up.
-  function showStrokeInput() {
+  function showStrokeInput(event) {
+    var hwEnabled = false;
     // Firsty first: load the stroke data if missing
     if (typeof zdCharData === 'undefined') {
       // Add element, and also event handler for completion
@@ -363,38 +355,57 @@ var zdLookup = (function () {
       }
       elmStrokes.setAttribute("type", "text/javascript");
       elmStrokes.setAttribute("src", "/prod-js/xcharacterdata.js");
-      // Make input disabled
-      zdHandwriting.setEnabled(false);
     }
     // If stroke data is alreayd loaded, explicitly call setEnabled - this makes sure character matcher is initialized
-    else zdHandwriting.setEnabled(true);
-    // Position and show panel
-    var searchPanelOfs = $("#searchBox").offset();
-    var searchPanelWidth = $("#searchBox").width();
-    var searchPanelHeight = $("#searchBox").height();
-    var strokeInputWidth = $("#stroke-input").outerWidth();
-    //$("#stroke-input").position({left: 0, top: searchPanelOfs.top + searchPanelHeight + 390});
-    $("#stroke-input").css("margin-top", searchPanelOfs.top - window.pageYOffset + searchPanelHeight);
-    $("#stroke-input").css("left", searchPanelOfs.left + searchPanelWidth - strokeInputWidth + 2);
-    $("#stroke-input").css("display", "block");
-    $("#suggestions").html("<br/><br/>");
+    else hwEnabled = true;
+
+    // Render HTML from template
+    var html = zdSnippets["lookup.handwriting"];
+    // TO-DO: Loca
+    $("#handwritingBox").html(html);
+    // Housekeeping; show search box
+    zdPage.modalShown(hideStrokeInput);
+    var elmPopup = $("#handwritingBox");
+    elmPopup.addClass("visible");
+    $("#hwClose").click(hideStrokeInput);
+    elmPopup.click(function (evt) { evt.stopPropagation(); });
+    // Disable tooltip while settings are on screen
+    $("#btn-write").tooltipster('disable');
+    // Stop event propagation, or we'll be closed right away
+    event.stopPropagation();
+    // Position search box to settings button
+    var elmStgs = $("#btn-write");
+    var rectStgs = [elmStgs.offset().left, elmStgs.offset().top, elmStgs.width(), elmStgs.height()];
+    var elmTail = $("#hwTail");
+    var rectTail = [elmTail.offset().left, elmTail.offset().top, elmTail.width(), elmTail.height()];
+    var xMidStgs = rectStgs[0] + rectStgs[2] / 2.2;
+    var xMidTail = rectTail[0] + rectTail[2] / 2;
+    elmPopup.offset({ left: elmPopup.offset().left + xMidStgs - xMidTail, top: elmPopup.offset().top });
+
     var strokeCanvasWidth = $("#stroke-input-canvas").width();
     $("#stroke-input-canvas").css("height", strokeCanvasWidth);
     var canvasElement = document.getElementById("stroke-input-canvas");
     canvasElement.width = strokeCanvasWidth;
     canvasElement.height = strokeCanvasWidth;
     $("#suggestions").css("height", $("#suggestions").height());
+
+    // Initialize handwriting logic. Element IDs provided as params object.
+    zdHandwriting.init({
+      canvasId: "stroke-input-canvas",
+      suggestionsId: "suggestions",
+      suggestionClass: "sugItem",
+      insertionTargedId: "txtSearch"
+    });
+    zdHandwriting.setEnabled(hwEnabled);
     zdHandwriting.clearCanvas();
-    $("#btn-write").addClass("active");
+    $("#strokeClear").click(zdHandwriting.clearCanvas);
+    $("#strokeUndo").click(zdHandwriting.undoStroke);
   }
 
   // Hides the handwriting recognition popup
   function hideStrokeInput() {
-    // Nothing to hide?
-    if ($("#stroke-input").css("display") != "block") return;
-    // Hide.
-    $("#stroke-input").css("display", "none");
-    $("#btn-write").removeClass("active");
+    $("#handwritingBox").empty();
+    $("#handwritingBox").removeClass("visible");
   }
 
   // Clears the search field

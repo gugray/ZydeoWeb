@@ -133,7 +133,15 @@ var zdHandwriting = (function () {
       });
       $("#" + prms.suggestionsId).append(sug);
     }
+  }
 
+  function clearCanvas() {
+    // Redraw canvas (gridlines)
+    drawClearCanvas();
+    // Clear previous suggestions
+    $("#" + prms.suggestionsId).html('');
+    // Reset gathered strokes input
+    rawStrokes = [];
   }
 
   return {
@@ -188,14 +196,7 @@ var zdHandwriting = (function () {
     },
 
     // Clear canvas and resets gathered strokes data for new input.
-    clearCanvas: function () {
-      // Redraw canvas (gridlines)
-      drawClearCanvas();
-      // Clear previous suggestions
-      $("#" + prms.suggestionsId).html('');
-      // Reset gathered strokes input
-      rawStrokes = [];
-    },
+    clearCanvas: function () { clearCanvas(); },
 
     // Undoes the last stroke input by the user.
     undoStroke: function () {
