@@ -19,6 +19,8 @@ namespace ZD.Tool
         StreamReader cedictIn;
         FileStream fsHanDeDict;
         StreamReader hanDeDictIn;
+        FileStream fsMMAH;
+        StreamReader mmahIn;
         FileStream fsOut;
         BinWriter bw;
 
@@ -32,6 +34,8 @@ namespace ZD.Tool
             cedictIn = new StreamReader(fsCedict);
             fsHanDeDict = new FileStream("handedict.u8", FileMode.Open, FileAccess.Read);
             hanDeDictIn = new StreamReader(fsHanDeDict);
+            fsMMAH = new FileStream("makemeahanzi.txt", FileMode.Open, FileAccess.Read);
+            mmahIn = new StreamReader(fsMMAH);
 
             fsOut = new FileStream("unihanzi.bin", FileMode.Create, FileAccess.ReadWrite);
             bw = new BinWriter(fsOut);
@@ -41,6 +45,8 @@ namespace ZD.Tool
         {
             if (bw != null) bw.Dispose();
             if (fsOut != null) fsOut.Dispose();
+            if (mmahIn != null) mmahIn.Dispose();
+            if (fsMMAH != null) fsMMAH.Dispose();
             if (hanDeDictIn != null) hanDeDictIn.Dispose();
             if (fsHanDeDict != null) fsHanDeDict.Dispose();
             if (cedictIn != null) cedictIn.Dispose();
@@ -58,6 +64,7 @@ namespace ZD.Tool
             while ((line = readingsIn.ReadLine()) != null) readingLine(line);
             PurgeReadingless();
             while ((line = variantsIn.ReadLine()) != null) variantLine(line);
+            while ((line = mmahIn.ReadLine()) != null) mmahLine(line);
             writeUnihanData(bw);
             // Compile dictionaries
             while ((line = cedictIn.ReadLine()) != null) dictLine(line, true, bw);
@@ -72,6 +79,7 @@ namespace ZD.Tool
             public string[] Pinyin;
             public string Mandarin;
             public string[] XHC;
+            public HanziStrokes HanziInfo;
             public int FilePos;
         }
 
@@ -83,6 +91,19 @@ namespace ZD.Tool
             CharInfo ci = new CharInfo();
             infos[c] = ci;
             return ci;
+        }
+
+        private void mmahLine(string line)
+        {
+            if (!line.StartsWith("{")) return;
+            MMAHParser parser = new MMAHParser(line);
+            HanziStrokes hi = null;
+            char c;
+            parser.Parse();
+            c = parser.Hanzi;
+            hi = parser.GetHanziInfo();
+            CharInfo ci = getOrMake(c);
+            ci.HanziInfo = hi;
         }
 
         private void readingLine(string line)
@@ -314,8 +335,16 @@ namespace ZD.Tool
             foreach (var x in infos)
             {
                 x.Value.FilePos = bw.Position;
-                UniHanziInfo uhi = getInfo(x.Key, x.Value);
-                uhi.Serialize(bw);
+                byte flags = 0;
+                if (x.Value.Pinyin != null || x.Value.Mandarin != null || x.Value.Pinlu != null) flags |= 1;
+                if (x.Value.HanziInfo != null) flags |= 2;
+                bw.WriteByte(flags);
+                if ((flags & 1) == 1)
+                {
+                    UniHanziInfo uhi = getInfo(x.Key, x.Value);
+                    uhi.Serialize(bw);
+                }
+                if (x.Value.HanziInfo != null) x.Value.HanziInfo.Serialize(bw);
             }
             // Remember end of file
             int endPos = bw.Position;

@@ -5,18 +5,6 @@
 
 var zdStrokeAnim = (function () {
 
-  var soaTemplate =
-    '<div id="soaBoxTail">&nbsp;</div>\n' +
-    '<div id="soaHead">\n' +
-    '  <div id="soaTitle">{{soa-title}}</div>\n' +
-    '  <div id="soaClose">X</div>\n' +
-    '</div>\n' +
-    '<div id="soaGraphics">\n' +
-    '  <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewbox="0 0 1024 1024" id="strokeAnimSVG"></svg>\n' +
-    '  <div id="soaError"><div id="soaErrorContent"></div></div>\n' +
-    '</div>\n' +
-    '<div id="soaFooter">{{soa-attribution}}</div>\n';
-
   // The glyph currently being animated.
   var soa_glyph = {
     strokes: null, // Received info about glyph
@@ -51,7 +39,7 @@ var zdStrokeAnim = (function () {
   var _svgNS = 'http://www.w3.org/2000/svg';
 
   function init() {
-    var html = soaTemplate;
+    var html = zdSnippets["lookup.soa"];
     html = html.replace("{{soa-title}}", uiStrings["anim-title"]);
     html = html.replace("{{soa-attribution}}", uiStrings["anim-attribution"]);
     $("#soaBox").html(html);
@@ -59,7 +47,7 @@ var zdStrokeAnim = (function () {
       // Restart animation if we have a glyph but no timer anymore
       if (soa_timer == null && soa_glyph.strokes != null && soa_glyph.strokes.length > 0) {
         soaPrepareGlyph(soa_glyph.strokes, soa_glyph.medians);
-        soaRenderBG();
+        renderBG();
         soaPreRender();
         soa_timer = setInterval(soaTimerFun, soa_msec);
       }
@@ -278,7 +266,7 @@ var zdStrokeAnim = (function () {
   }
 
   // AJAX request success
-  function onSoaReqDone(id, res) {
+  function onReqDone(id, res) {
     // This is a different request just completing.
     if (id != soa_lookupid) return;
     // No result
@@ -286,17 +274,17 @@ var zdStrokeAnim = (function () {
       $("#soaError").css("display", "block");
       $("#soaErrorContent").text(uiStrings["no-animation-for-char"]);
     }
-      // Render result
+    // Render result
     else {
       soaPrepareGlyph(res.strokes, res.medians);
-      soaRenderBG();
+      renderBG();
       soaPreRender();
       soa_timer = setInterval(soaTimerFun, soa_msec);
     }
   }
 
   // AJAX request failure
-  function onSoaReqFail(id, xhr, status, error) {
+  function onReqFail(id, xhr, status, error) {
     // This is a different request just failing; don't care
     if (id != soa_lookupid) return;
     $("#soaError").css("display", "block");
@@ -308,21 +296,18 @@ var zdStrokeAnim = (function () {
     soaPrepareGlyph([], []);
     ++soa_lookupid;
     var id = soa_lookupid;
-    // Query URL: localhost for sandboxing only
-    var url = "/ApiHandler.ashx";
-    if (window.location.protocol == "file:")
-      url = "http://localhost:65100/ApiHandler.ashx";
+    var url = "/api/smarts/charstrokes";
     var req = $.ajax({
       url: url,
-      type: "POST",
+      type: "GET",
       contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-      data: { action: "hanzi", hanzi: hanzi, lookupid: soa_lookupid }
+      data: { hanzi: hanzi }
     });
     req.done(function (res) {
-      onSoaReqDone(id, res);
+      onReqDone(id, res);
     });
     req.fail(function (xhr, status, error) {
-      onSoaReqFail(id, xhr, status, error);
+      onReqFail(id, xhr, status, error);
     });
   }
 

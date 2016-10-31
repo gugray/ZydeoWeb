@@ -182,7 +182,7 @@ namespace ZDO.CHSite.Logic
             {
                 try
                 {
-                    //Reload();
+                    Reload();
                 }
                 catch (Exception ex)
                 {

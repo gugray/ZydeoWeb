@@ -23,7 +23,7 @@ namespace ZD.Tool
             Console.WriteLine("  Input name fixed: x-10-handedict.txt");
             Console.WriteLine("--compile-hwinfo");
             Console.WriteLine("  Compiles headword info file");
-            Console.WriteLine("  Fixed inputs: Unihan_Readings.txt; Unihan_Variants.txt; cedict_ts.u8; handedict.u8");
+            Console.WriteLine("  Fixed inputs: Unihan_Readings.txt; Unihan_Variants.txt; cedict_ts.u8; handedict.u8; makemeahanzi.txt");
             Console.WriteLine("  Outputs unihanzi.bin");
             Console.WriteLine("--tobytes");
             Console.WriteLine("  Converts binary file to byte array");

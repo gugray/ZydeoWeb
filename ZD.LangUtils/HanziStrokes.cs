@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Text;
 
-namespace ZD.Common
+using ZD.Common;
+
+namespace ZD.LangUtils
 {
     /// <summary>
     /// One (graphical) stroke in a Hanzi, along with its median.
@@ -115,7 +116,7 @@ namespace ZD.Common
     /// <summary>
     /// Information about a single Hanzi (strokes and their medians; decomposition; radical)
     /// </summary>
-    public class HanziInfo : IBinSerializable
+    public class HanziStrokes : IBinSerializable
     {
         /// <summary>
         /// The strokes that make up this Hanzi.
@@ -145,7 +146,7 @@ namespace ZD.Common
         /// <summary>
         /// Ctor: init immutable instance.
         /// </summary>
-        public HanziInfo(IList<OneStroke> strokes, string decomp,
+        public HanziStrokes(IList<OneStroke> strokes, string decomp,
             char radical, char phon, char seman)
         {
             if (strokes == null || strokes.Count == 0) throw new ArgumentException("strokes");
@@ -160,7 +161,7 @@ namespace ZD.Common
         /// <summary>
         /// Ctor: deserialize from binary stream.
         /// </summary>
-        public HanziInfo(BinReader br)
+        public HanziStrokes(BinReader br)
         {
             Radical = br.ReadChar();
             Phon = br.ReadChar();

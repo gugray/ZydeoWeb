@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Localization;
 using Serilog;
 
+using ZD.LangUtils;
 using ZDO.CHSite.Logic;
 using ZDO.CHSite.Entities;
 
@@ -79,7 +80,7 @@ namespace ZDO.CHSite
             initDB();
             // Application-specific singletons.
             services.AddSingleton(new PageProvider(loggerFactory, env.IsDevelopment()));
-            services.AddSingleton(new LangRepo());
+            services.AddSingleton(new LangRepo("files/data/unihanzi.bin"));
             services.AddSingleton(new SqlDict(loggerFactory));
             // MVC for serving pages and REST
             services.AddMvc();

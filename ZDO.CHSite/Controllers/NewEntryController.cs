@@ -52,7 +52,7 @@ namespace ZDO.CHSite.Controllers
             // Do we have CEDICT headwords for this simplified HW?
             // If yes, put first headword's traditional and pinyin into first layer of result
             // Fill rest of the alternatives with input from additional results
-            HeadwordSyll[][] chHeads = langRepo.HWInfo.GetPossibleHeadwords(simp, false);
+            HeadwordSyll[][] chHeads = langRepo.GetPossibleHeadwords(simp, false);
             for (int i = 0; i != chHeads.Length; ++i)
             {
                 HeadwordSyll[] sylls = chHeads[i];
@@ -63,7 +63,7 @@ namespace ZDO.CHSite.Controllers
                 }
             }
             // Unihan lookup
-            UniHanziInfo[] uhis = langRepo.HWInfo.GetUnihanInfo(simp);
+            UniHanziInfo[] uhis = langRepo.GetUnihanInfo(simp);
             // We had no headword: build from Unihan data, but with a twist
             // Make sure first traditional matches most common pinyin
             if (chHeads.Length == 0)
@@ -75,7 +75,7 @@ namespace ZDO.CHSite.Controllers
                     // Add pinyin readings first
                     foreach (PinyinSyllable syll in uhi.Pinyin) addIfNew(res.Pinyin[i], syll.GetDisplayString(true));
                     // Look up traditional chars for this position
-                    UniHanziInfo[] tradUhis = langRepo.HWInfo.GetUnihanInfo(uhi.TradVariants);
+                    UniHanziInfo[] tradUhis = langRepo.GetUnihanInfo(uhi.TradVariants);
                     // Find "best" traditional character: the first one whose pinyin readings include our first pinyin
                     char firstTrad = (char)0;
                     string favoritePinyin = uhi.Pinyin[0].GetDisplayString(true);
@@ -128,7 +128,7 @@ namespace ZDO.CHSite.Controllers
                 List<string> tradList = res.Trad[i];
                 if (tradList.Count == 0) continue;
                 List<string> toRem = new List<string>();
-                UniHanziInfo[] tradUhis = langRepo.HWInfo.GetUnihanInfo(new char[] { tradList[0][0] });
+                UniHanziInfo[] tradUhis = langRepo.GetUnihanInfo(new char[] { tradList[0][0] });
                 if (tradUhis == null || tradUhis[0] == null) continue;
                 List<string> pinyinsOfTrad = new List<string>();
                 foreach (var x in tradUhis[0].Pinyin) pinyinsOfTrad.Add(x.GetDisplayString(true));
@@ -162,7 +162,7 @@ namespace ZDO.CHSite.Controllers
         {
             if (simp == null) return StatusCode(400, "Missing 'simp' parameter.");
             NewEntryVerifySimpResult res = new NewEntryVerifySimpResult();
-            UniHanziInfo[] uhis = langRepo.HWInfo.GetUnihanInfo(simp);
+            UniHanziInfo[] uhis = langRepo.GetUnihanInfo(simp);
 
             // Has WS or punctuation
             bool hasSpaceOrPunct = false;
@@ -242,7 +242,7 @@ namespace ZDO.CHSite.Controllers
 
             // Return all entries, CEDICT and HanDeDict, rendered as HTML
             CedictEntry[] ced, hdd;
-            langRepo.HWInfo.GetEntries(simp, out ced, out hdd);
+            langRepo.GetEntries(simp, out ced, out hdd);
             StringBuilder sb = new StringBuilder();
             sb.Append("<div id='newEntryRefCED'>");
             foreach (CedictEntry entry in ced)
@@ -304,7 +304,7 @@ namespace ZDO.CHSite.Controllers
 
             // Do we have a CEDICT headword with this simplified and traditional?
             // If yes, fill in pinyin from these
-            HeadwordSyll[][] chHeads = langRepo.HWInfo.GetPossibleHeadwords(simp, false);
+            HeadwordSyll[][] chHeads = langRepo.GetPossibleHeadwords(simp, false);
             for (int i = 0; i != chHeads.Length; ++i)
             {
                 HeadwordSyll[] sylls = chHeads[i];
@@ -322,8 +322,8 @@ namespace ZDO.CHSite.Controllers
                 }
             }
             // At each position, add missing pinyins that match both simplified and traditional
-            UniHanziInfo[] suhis = langRepo.HWInfo.GetUnihanInfo(simp);
-            UniHanziInfo[] tuhis = langRepo.HWInfo.GetUnihanInfo(trad);
+            UniHanziInfo[] suhis = langRepo.GetUnihanInfo(simp);
+            UniHanziInfo[] tuhis = langRepo.GetUnihanInfo(trad);
             for (int i = 0; i != simp.Length; ++i)
             {
                 UniHanziInfo suhi = suhis[i];

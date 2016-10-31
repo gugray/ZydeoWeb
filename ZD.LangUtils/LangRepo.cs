@@ -109,10 +109,11 @@ namespace ZD.LangUtils
 
     /// <summary>
     /// <para>Provides Unihan information about Hanzi for CHDICT's interactive entry editor.</para>
+    /// <para>Provides stroke order animation data for select Hanzi.</para>
     /// <para>Provides known headwords (from CEDICT) by simplified HW.</para>
     /// <para>Provides CEDICT and HanDeDict entries by simplified HW.</para>
     /// </summary>
-    public class HeadwordInfo
+    public class LangRepo
     {
         /// <summary>
         /// Data file name; will keep opening at every query.
@@ -169,7 +170,7 @@ namespace ZD.LangUtils
         /// <summary>
         /// Ctor: init from compiled binary file.
         /// </summary>
-        public HeadwordInfo(string dataFileName)
+        public LangRepo(string dataFileName)
         {
             this.dataFileName = dataFileName;
             using (BinReader br = new BinReader(dataFileName))
@@ -313,6 +314,23 @@ namespace ZD.LangUtils
             return GetUnihanInfo(charr);
         }
 
+        public HanziStrokes GetStrokes(char c)
+        {
+            using (BinReader br = new BinReader(dataFileName))
+            {
+                int pos = chrPoss[(int)c];
+                if (pos == 0) return null;
+                br.Position = pos;
+                byte flags = br.ReadByte();
+                if ((flags & 2) != 2) return null;
+                if ((flags & 1) == 1)
+                {
+                    var trash = new UniHanziInfo(br);
+                }
+                return new HanziStrokes(br);
+            }
+        }
+
         /// <summary>
         /// <para>Returns information about a bunch of Hanzi.</para>
         /// <para>Accepts A-Z, 0-9. Returns null in array for other non-ideographs, and for unknown Hanzi.</para>
@@ -338,6 +356,8 @@ namespace ZD.LangUtils
                         int pos = chrPoss[(int)c];
                         if (pos == 0) continue;
                         br.Position = pos;
+                        byte flags = br.ReadByte();
+                        if ((flags & 1) != 1) continue;
                         res[i] = new UniHanziInfo(br);
                     }
                 }
