@@ -87,6 +87,8 @@ namespace ZDO.CHSite.Logic
                     indexCommands.CmdInsNormWord = DB.GetCmd(conn, "InsNormWord");
                     indexCommands.CmdInsTrgInstance = DB.GetCmd(conn, "InsTrgInstance");
                     indexCommands.CmdInsUpdPrefixWord = DB.GetCmd(conn, "InsUpdPrefixWord");
+                    indexCommands.CmdDelEntrySyllInstances = DB.GetCmd(conn, "DelEntrySyllInstances");
+                    indexCommands.CmdInsSyllInstance = DB.GetCmd(conn, "InsSyllInstance");
                 }
                 catch
                 {
@@ -104,6 +106,8 @@ namespace ZDO.CHSite.Logic
                 {
                     if (tr != null) { tr.Rollback(); tr.Dispose(); tr = null; }
 
+                    if (indexCommands.CmdInsSyllInstance != null) indexCommands.CmdInsSyllInstance.Dispose();
+                    if (indexCommands.CmdDelEntrySyllInstances != null) indexCommands.CmdDelEntrySyllInstances.Dispose();
                     if (indexCommands.CmdInsUpdPrefixWord != null) indexCommands.CmdInsUpdPrefixWord.Dispose();
                     if (indexCommands.CmdInsTrgInstance != null) indexCommands.CmdInsTrgInstance.Dispose();
                     if (indexCommands.CmdInsNormWord != null) indexCommands.CmdInsNormWord.Dispose();
@@ -161,8 +165,14 @@ namespace ZDO.CHSite.Logic
                 int binId = (int)cmdInsBinaryEntry.LastInsertedId;
                 // Index different parts of the entry
                 indexHanzi(entry, binId);
+                indexPinyin(entry, binId);
                 indexSenses(entry, binId);
                 return binId;
+            }
+
+            private void indexPinyin(CedictEntry entry, int entryId)
+            {
+                index.FileToIndex(entryId, entry.Pinyin);
             }
 
             private void indexSenses(CedictEntry entry, int entryId)

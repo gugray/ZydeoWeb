@@ -40,7 +40,9 @@
     "emitEntryPoint": true,
     "preserveCompilationContext": true,
     "embed": [
-      "Logic/DB.Scripts.txt"
+      "Logic/DB.Scripts.txt",
+      "files/other/std-pinyin.txt",
+      "files/other/syllabary-pinyin.txt"
     ]
   },
 

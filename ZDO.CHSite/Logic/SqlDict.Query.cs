@@ -250,6 +250,94 @@ namespace ZDO.CHSite.Logic
             return res;
         }
 
+        private void verifyPinyin(CedictEntry entry, List<PinyinSyllable> sylls, List<CedictResult> res)
+        {
+            // Find query syllables in entry
+            int syllStart = -1;
+            for (int i = 0; i <= entry.PinyinCount - sylls.Count; ++i)
+            {
+                int j;
+                for (j = 0; j != sylls.Count; ++j)
+                {
+                    PinyinSyllable syllEntry = entry.GetPinyinAt(i + j);
+                    PinyinSyllable syllQuery = sylls[j];
+                    if (syllEntry.Text.ToLowerInvariant() != syllQuery.Text) break;
+                    if (syllQuery.Tone != -1 && syllEntry.Tone != syllQuery.Tone) break;
+                }
+                if (j == sylls.Count)
+                {
+                    syllStart = i;
+                    break;
+                }
+            }
+            // Entry is a keeper if query syllables found
+            if (syllStart == -1) return;
+            // Keeper!
+            CedictResult cr = new CedictResult(entry, entry.HanziPinyinMap, syllStart, sylls.Count);
+            res.Add(cr);
+        }
+
+        private void retrieveVerifyPinyin(HashSet<int> cands, List<PinyinSyllable> query, List<CedictResult> res)
+        {
+            byte[] buf = new byte[32768];
+            List<CedictEntry> entries = new List<CedictEntry>(10);
+            using (MySqlConnection conn = DB.GetConn())
+            using (MySqlCommand cmdSelBinary10 = DB.GetCmd(conn, "SelBinaryEntry10"))
+            {
+                List<int> batch = new List<int>(10);
+                foreach (int blobId in cands)
+                {
+                    if (batch.Count < 10) { batch.Add(blobId); continue; }
+                    retrieveBatch(batch, buf, entries, cmdSelBinary10);
+                    foreach (var entry in entries) verifyPinyin(entry, query, res);
+                    batch.Clear();
+                }
+                if (batch.Count != 0)
+                {
+                    retrieveBatch(batch, buf, entries, cmdSelBinary10);
+                    foreach (var entry in entries) verifyPinyin(entry, query, res);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Compares lookup results after pinyin lookup for sorted presentation.
+        /// </summary>
+        private static int pyComp(CedictResult a, CedictResult b)
+        {
+            // Shorter entry comes first
+            int lengthCmp = a.Entry.PinyinCount.CompareTo(b.Entry.PinyinCount);
+            if (lengthCmp != 0) return lengthCmp;
+            // Between equally long headwords where match starts sooner comes first
+            int startCmp = a.PinyinHiliteStart.CompareTo(b.PinyinHiliteStart);
+            if (startCmp != 0) return startCmp;
+            // Order equally long entries by pinyin lexicographical order
+            return a.Entry.PinyinCompare(b.Entry);
+        }
+
+        private List<CedictResult> lookupPinyin(string query)
+        {
+            List<CedictResult> res = new List<CedictResult>();
+            // Interpret query (parse pinyin; normalized syllables)
+            List<PinyinSyllable> sylls = pinyin.ParsePinyinQuery(query);
+
+            // Get candidate IDs
+            Stopwatch watch = new Stopwatch();
+            watch.Restart();
+            HashSet<int> cands = index.GetPinyinCandidates(sylls);
+            Console.WriteLine("Candidates: " + cands.Count + " (" + watch.ElapsedMilliseconds + " msec)");
+
+            // Retrieve all candidates; verify on the fly
+            watch.Restart();
+            retrieveVerifyPinyin(cands, sylls, res);
+            Console.WriteLine("Retrieval: " + res.Count + " (" + watch.ElapsedMilliseconds + " msec)");
+            // Sort Hanzi results
+            res.Sort((a, b) => pyComp(a, b));
+            // Done.
+            return res;
+
+        }
+
         /// <summary>
         /// Searches the dictionary for Hanzi, annotations, pinyin, or target-language terms.
         /// </summary>
@@ -265,8 +353,9 @@ namespace ZDO.CHSite.Logic
                     return new CedictLookupResult(query, res, anns, SearchLang.Chinese);
                 gotLock = true;
 
-                // Hanzi > Pinyin > Annotate > Target
-                res = lookupHanzi(query);
+                // Hanzi / Pinyin > Annotate > Target
+                if (hasHanzi(query)) res = lookupHanzi(query);
+                else res = lookupPinyin(query);
                 if (res.Count > 0) return new CedictLookupResult(query, res, anns, SearchLang.Chinese);
                 //anns = doAnnotate(query);
                 //if (anns.Count > 0) return new CedictLookupResult(query, res, anns, SearchLang.Chinese);

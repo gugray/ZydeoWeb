@@ -19,6 +19,11 @@ namespace ZDO.CHSite.Logic
         private readonly ILogger logger;
 
         /// <summary>
+        /// Pinyin normalizer/helper.
+        /// </summary>
+        private readonly Pinyin pinyin;
+
+        /// <summary>
         /// In-memort index.
         /// </summary>
         private readonly Index index;
@@ -30,7 +35,8 @@ namespace ZDO.CHSite.Logic
         {
             logger = lf.CreateLogger(GetType().FullName);
             logger.LogInformation("SQL dictionary initializing...");
-            index = new Index(logger);
+            pinyin = new Pinyin();
+            index = new Index(logger, pinyin);
             logger.LogInformation("SQL dictionary initialized.");
         }
 

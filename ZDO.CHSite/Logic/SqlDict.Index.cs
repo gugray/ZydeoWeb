@@ -6,6 +6,8 @@ using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
 
+using ZD.Common;
+
 namespace ZDO.CHSite.Logic
 {
     partial class SqlDict
@@ -171,6 +173,44 @@ namespace ZDO.CHSite.Logic
             private static readonly TrgCmp trgCmp = new TrgCmp();
 
             /// <summary>
+            /// Instances for one (standardized, toned) pinyin syllable.
+            /// </summary>
+            private struct PinyinInstArr
+            {
+                /// <summary>
+                /// Standard pinyin ID in lowest two bytes, plus tone at third lowest byte.
+                /// </summary>
+                public int TonedId;
+                /// <summary>
+                /// Instances. Highest three bytes are always entry ID; lowest byte, entry's (standard) PY syllable count.
+                /// </summary>
+                public uint[] Instances;
+            }
+
+            /// <summary>
+            /// Each toned standard PY syllable's instances; sorted by TonedId.
+            /// </summary>
+            private PinyinInstArr[] syll;
+
+            /// <summary>
+            /// Pinyin syllable comparer. C# syntax be damned.
+            /// </summary>
+            private class SyllCmp : IComparer<PinyinInstArr>
+            {
+                public int Compare(PinyinInstArr x,  PinyinInstArr y) { return x.TonedId.CompareTo(y.TonedId); }
+            }
+
+            /// <summary>
+            /// Pinyin syllable comparer instance.
+            /// </summary>
+            private static readonly SyllCmp syllCmp = new SyllCmp();
+
+            /// <summary>
+            /// Pinyin normalizer/helper.
+            /// </summary>
+            private readonly Pinyin pinyin;
+
+            /// <summary>
             /// RW lock protecting index. Caller must acquire before invoking any function on index.
             /// </summary>
             public readonly ReaderWriterLockSlim Lock = new ReaderWriterLockSlim();
@@ -178,8 +218,9 @@ namespace ZDO.CHSite.Logic
             /// <summary>
             /// Ctor: load (construct) index from DB.
             /// </summary>
-            public Index(ILogger logger)
+            public Index(ILogger logger, Pinyin pinyin)
             {
+                this.pinyin = pinyin;
                 try
                 {
                     Reload();
@@ -202,11 +243,59 @@ namespace ZDO.CHSite.Logic
                     // Separately for each index component so we keep excess memory usage low
                     loadHanzi(conn);
                     loadTrg(conn);
+                    loadPinyin(conn);
                 }
 
                 // Ugly, but this is one place where it's justified: collect our garbage from temporary index construction
                 // Only done once, at startup; better burn this time right now
                 GC.Collect();
+            }
+
+            /// <summary>
+            /// Loads pinyin syllable index.
+            /// </summary>
+            /// <param name="conn"></param>
+            private void loadPinyin(MySqlConnection conn)
+            {
+                // Toned-syllable-to-instance-list
+                Dictionary<int, List<uint>> tmp = new Dictionary<int, List<uint>>();
+                for (int i = 1; i <= pinyin.MaxId; ++i)
+                {
+                    int id = i << 8;
+                    // Syllable ID is higher; lowest byte: tone 0-4.
+                    tmp[id] = new List<uint>();
+                    tmp[id + 1] = new List<uint>();
+                    tmp[id + 2] = new List<uint>();
+                    tmp[id + 3] = new List<uint>();
+                    tmp[id + 4] = new List<uint>();
+                }
+                // Load DB table
+                using (var cmdSelSyllInstances = DB.GetCmd(conn, "SelSyllInstances"))
+                using (var rdr = cmdSelSyllInstances.ExecuteReader())
+                {
+                    while (rdr.Read())
+                    {
+                        int syllId = rdr.GetInt32(0);
+                        byte syllCnt = rdr.GetByte(1);
+                        uint entryId = rdr.GetUInt32(2);
+                        uint val = entryId << 8;
+                        val += syllCnt;
+                        tmp[syllId].Add(val);
+                    }
+                }
+                // List, sort, convert to array
+                List<Tuple<int, List<uint>>> tmpList = new List<Tuple<int, List<uint>>>();
+                foreach (var x in tmp) tmpList.Add(new Tuple<int, List<uint>>(x.Key, x.Value));
+                tmpList.Sort((x, y) => x.Item1.CompareTo(y.Item1));
+                syll = new PinyinInstArr[tmpList.Count];
+                for (int i = 0; i != tmpList.Count; ++i)
+                {
+                    syll[i] = new PinyinInstArr
+                    {
+                        TonedId = tmpList[i].Item1,
+                        Instances = tmpList[i].Item2.ToArray()
+                    };
+                }
             }
 
             /// <summary>
@@ -364,9 +453,11 @@ namespace ZDO.CHSite.Logic
 
             private readonly Dictionary<char, List<IdeoEntryPtr>> hanziToIndex = new Dictionary<char, List<IdeoEntryPtr>>();
             private readonly Dictionary<string, List<TrgEntryPtr>> trgToIndex = new Dictionary<string, List<TrgEntryPtr>>();
+            private readonly Dictionary<int, List<uint>> syllToIndex = new Dictionary<int, List<uint>>();
             private readonly HashSet<int> entriesToUnindex = new HashSet<int>();
             private readonly HashSet<char> hanziToUnindex = new HashSet<char>();
             private readonly HashSet<string> trgToUnindex = new HashSet<string>();
+            private readonly HashSet<int> syllToUnindex = new HashSet<int>();
 
             private readonly Dictionary<string, int> prefixDiffs = new Dictionary<string, int>();
 
@@ -378,6 +469,8 @@ namespace ZDO.CHSite.Logic
                 public MySqlCommand CmdInsNormWord;
                 public MySqlCommand CmdInsTrgInstance;
                 public MySqlCommand CmdInsUpdPrefixWord;
+                public MySqlCommand CmdDelEntrySyllInstances;
+                public MySqlCommand CmdInsSyllInstance;
             }
 
             /// <summary>
@@ -415,6 +508,35 @@ namespace ZDO.CHSite.Logic
                 foreach (char c in hSimp) append(c, hanziToIndex, entryId, 1, simpCount, 0);
                 foreach (char c in hTrad) append(c, hanziToIndex, entryId, 2, 0, tradCount);
                 foreach (char c in hBoth) append(c, hanziToIndex, entryId, 3, simpCount, tradCount);
+            }
+
+            /// <summary>
+            /// Files an entry for indexing (pinyin), pending <see cref="ApplyChanges"/>.
+            /// </summary>
+            public void FileToIndex(int entryId, IEnumerable<PinyinSyllable> sylls)
+            {
+                HashSet<int> tonedSyllSet = new HashSet<int>();
+                foreach (var syll in sylls)
+                {
+                    int id = pinyin.GetId(syll);
+                    if (id == 0) continue;
+                    int tone = syll.Tone;
+                    if (tone == -1) continue;
+                    tonedSyllSet.Add((id << 8) + tone);
+                }
+                byte cnt = (byte)tonedSyllSet.Count;
+                uint val = ((uint)entryId); val <<= 8; val += cnt;
+                foreach (int tonedSyll in tonedSyllSet)
+                {
+                    List<uint> instList;
+                    if (!syllToIndex.ContainsKey(tonedSyll))
+                    {
+                        instList = new List<uint>();
+                        syllToIndex[tonedSyll] = instList;
+                    }
+                    else instList = syllToIndex[tonedSyll];
+                    instList.Add(val);
+                }
             }
 
             /// <summary>
@@ -463,7 +585,8 @@ namespace ZDO.CHSite.Logic
             /// <param name="entryId">ID of entry to unindex.</param>
             /// <param name="hAll">All hanzi from HW (simplified and traditional)</param>
             /// <param name="toks">All tokens from all senses.</param>
-            public void FileToUnindex(int entryId, HashSet<char> hAll, List<Token> toks)
+            /// <param name="sylls">Entry's pinyin.</param>
+            public void FileToUnindex(int entryId, HashSet<char> hAll, List<Token> toks, IEnumerable<PinyinSyllable> sylls)
             {
                 entriesToUnindex.Add(entryId);
                 foreach (char c in hAll) hanziToUnindex.Add(c);
@@ -473,6 +596,77 @@ namespace ZDO.CHSite.Logic
                     trgToUnindex.Add(tok.Norm);
                     if (!prefixDiffs.ContainsKey(tok.Surf)) prefixDiffs[tok.Surf] = -1;
                     else --prefixDiffs[tok.Surf];
+                }
+                HashSet<int> tonedSyllSet = new HashSet<int>();
+                foreach (var syll in sylls)
+                {
+                    int id = pinyin.GetId(syll);
+                    if (id == 0) continue;
+                    int tone = syll.Tone;
+                    if (tone == -1) continue;
+                    tonedSyllSet.Add((id << 8) + tone);
+                }
+                foreach (int tonedSyll in tonedSyllSet) syllToUnindex.Add(tonedSyll);
+            }
+
+            /// <summary>
+            /// Applies pinyin unindexing, in-memory and DB.
+            /// </summary>
+            private void applyUnindexSyll(StorageCommands sc)
+            {
+                // Unindex in DB: simple: just fire off deletes for collected entry IDs
+                foreach (int entryId in entriesToUnindex)
+                {
+                    sc.CmdDelEntrySyllInstances.Parameters["@blob_id"].Value = entryId;
+                    sc.CmdDelEntrySyllInstances.ExecuteNonQuery();
+                }
+                // Comb through each affected instance list; remove deleted entries
+                foreach (var tonedId in syllToUnindex)
+                {
+                    PinyinInstArr pia = new PinyinInstArr { TonedId = tonedId };
+                    int ix = Array.BinarySearch(syll, pia, syllCmp);
+                    pia = syll[ix];
+                    List<uint> instList = new List<uint>(pia.Instances.Length);
+                    foreach (uint val in pia.Instances)
+                    {
+                        uint entryId = val >> 8;
+                        if (!entriesToUnindex.Contains((int)entryId)) instList.Add(val);
+                    }
+                    pia.Instances = instList.ToArray();
+                    syll[ix] = pia;
+                }
+            }
+
+            /// <summary>
+            /// Applies filed pinyin indexing work, DB as well as in-memory.
+            /// </summary>
+            private void applyIndexSyll(StorageCommands sc)
+            {
+                foreach (var x in syllToIndex)
+                {
+                    int tonedId = x.Key;
+                    // Database: simply fire off inserts
+                    sc.CmdInsSyllInstance.Parameters["@toned_syll"].Value = tonedId;
+                    foreach (uint val in x.Value)
+                    {
+                        uint entryId = (val & 0xffffff00);
+                        entryId >>= 8;
+                        sc.CmdInsSyllInstance.Parameters["@syll_count"].Value = (int)(val & 0xff);
+                        sc.CmdInsSyllInstance.Parameters["@blob_id"].Value = (int)entryId;
+                        sc.CmdInsSyllInstance.ExecuteNonQuery();
+                    }
+                    // Index: Append to affected instance lists
+                    PinyinInstArr pia = new PinyinInstArr { TonedId = tonedId };
+                    int ix = Array.BinarySearch(syll, pia, syllCmp);
+                    pia = syll[ix];
+                    // Verify ID growth
+                    if (pia.Instances.Length > 0 && pia.Instances[pia.Instances.Length - 1] > x.Value[0])
+                        throw new Exception("IDs of newly indexed entries must be larger than all previously indexed entry ID.");
+                    uint[] newArr = new uint[pia.Instances.Length + x.Value.Count];
+                    pia.Instances.CopyTo(newArr, 0);
+                    x.Value.CopyTo(newArr, pia.Instances.Length);
+                    pia.Instances = newArr;
+                    syll[ix] = pia;
                 }
             }
 
@@ -666,6 +860,8 @@ namespace ZDO.CHSite.Logic
                 trgToIndex.Clear();
                 trgToUnindex.Clear();
                 prefixDiffs.Clear();
+                syllToIndex.Clear();
+                syllToUnindex.Clear();
             }
 
             /// <summary>
@@ -678,6 +874,8 @@ namespace ZDO.CHSite.Logic
                 applyIndexHanzi();
                 applyUnindexTrg(sc);
                 applyIndexTrg(sc);
+                applyUnindexSyll(sc);
+                applyIndexSyll(sc);
                 applyPrefixDB(sc);
                 clearFiledWork();
             }
@@ -819,6 +1017,124 @@ namespace ZDO.CHSite.Logic
                 }
                 foreach (TrgEntryPtr tep in cands)
                     res.Add(new TrgCandidate { EntryId = tep.EntryID, SenseIx = tep.SenseIx });
+                return res;
+            }
+
+            private static List<uint> union(List<uint> a, uint[] b)
+            {
+                List<uint> res = new List<uint>(a.Count + b.Length);
+                int ixa = 0, ixb = 0;
+                while (ixa < a.Count || ixb < b.Length)
+                {
+                    if (ixa == a.Count) { res.Add(b[ixb]); ++ixb; continue; }
+                    if (ixb == b.Length) { res.Add(a[ixa]); ++ixa; continue; }
+                    if (a[ixa] < b[ixb]) { res.Add(a[ixa]); ++ixa; }
+                    else if (b[ixb] < a[ixa]) { res.Add(b[ixb]); ++ixb; }
+                    else { res.Add(a[ixa]); ++ixa; ++ixb; }
+                }
+                return res;
+            }
+
+            private uint[] getPinyinUnion(int openId)
+            {
+                PinyinInstArr pia0 = new PinyinInstArr { TonedId = (openId << 8) };
+                int ix0 = Array.BinarySearch(syll, pia0, syllCmp);
+                uint[] arr0 = syll[ix0].Instances;
+                PinyinInstArr pia1 = new PinyinInstArr { TonedId = (openId << 8) + 1 };
+                int ix1 = Array.BinarySearch(syll, pia1, syllCmp);
+                uint[] arr1 = syll[ix1].Instances;
+                PinyinInstArr pia2 = new PinyinInstArr { TonedId = (openId << 8) + 2 };
+                int ix2 = Array.BinarySearch(syll, pia2, syllCmp);
+                uint[] arr2 = syll[ix2].Instances;
+                PinyinInstArr pia3 = new PinyinInstArr { TonedId = (openId << 8) + 3 };
+                int ix3 = Array.BinarySearch(syll, pia3, syllCmp);
+                uint[] arr3 = syll[ix3].Instances;
+                PinyinInstArr pia4 = new PinyinInstArr { TonedId = (openId << 8) + 4 };
+                int ix4 = Array.BinarySearch(syll, pia4, syllCmp);
+                uint[] arr4 = syll[ix4].Instances;
+                List<uint> lstA = new List<uint>(arr0.Length);
+                lstA.AddRange(arr0);
+                List<uint> lstB = union(lstA, arr1);
+                lstA = union(lstB, arr2);
+                lstB = union(lstA, arr3);
+                lstA = union(lstB, arr4);
+                return lstA.ToArray();
+            }
+
+            private static List<uint> intersect(List<uint> a, uint[] b)
+            {
+                int ixa = 0, ixb = 0;
+                List<uint> isect = new List<uint>(Math.Min(a.Count, b.Length));
+                while (ixa < a.Count && ixb < b.Length)
+                {
+                    var comp = a[ixa].CompareTo(b[ixb]);
+                    if (comp < 0) ++ixa;
+                    else if (comp > 0) ++ixb;
+                    else
+                    {
+                        isect.Add(a[ixa]);
+                        ++ixa;
+                        ++ixb;
+                    }
+                }
+                return isect;
+            }
+
+            /// <summary>
+            /// Returns IDs of entries that contain all provided distinct Pinyin syllables.
+            /// </summary>
+            public HashSet<int> GetPinyinCandidates(IEnumerable<PinyinSyllable> query)
+            {
+                HashSet<int> res = new HashSet<int>();
+                // Separate query into distinct toned and open (underspecified) syllables
+                // If both "shang" and "shang4" show up, then we only underspecified one.
+                List<int> qToned = new List<int>();
+                List<int> qOpen = new List<int>();
+                // Gather distinct underspecified first
+                foreach (var qs in query)
+                {
+                    int id = pinyin.GetId(qs);
+                    if (id == 0) return res; // Any non-standard syllables: instant no match.
+                    if (qs.Tone != -1) continue;
+                    if (qOpen.Contains(id)) continue; // Real-life queries are short. This is assumed better than HashSet here.
+                    qOpen.Add(id);
+                }
+                // Gather distinct specified.
+                foreach (var qs in query)
+                {
+                    int id = pinyin.GetId(qs);
+                    if (qs.Tone == -1) continue;
+                    if (qOpen.Contains(id)) continue;
+                    id <<= 8; id += qs.Tone;
+                    if (qToned.Contains(id)) continue;
+                    qToned.Add(id);
+                }
+                // OPT: start with shorter instances; do binary search when current set is small and instance list is large
+                // For now, brute brute force
+                // We first do unions of open queries, in-memory; then use these, plus normal toned instance vectors, to isect
+                List<uint[]> toIsect = new List<uint[]>(qToned.Count + qOpen.Count);
+                foreach (int tonedId in qToned)
+                {
+                    PinyinInstArr pia = new PinyinInstArr { TonedId = tonedId };
+                    int ix = Array.BinarySearch(syll, pia, syllCmp);
+                    toIsect.Add(syll[ix].Instances);
+                }
+                foreach (int openId in qOpen) toIsect.Add(getPinyinUnion(openId));
+                // Only one list: easy
+                if (toIsect.Count == 1)
+                {
+                    foreach (uint val in toIsect[0]) res.Add((int)(val >> 8));
+                    return res;
+                }
+                // Intersect 'em all
+                List<uint> isect = new List<uint>();
+                isect.AddRange(toIsect[0]);
+                for (int i = 1; i < toIsect.Count; ++i)
+                {
+                    List<uint> curr = intersect(isect, toIsect[i]);
+                    isect = curr;
+                }
+                foreach (uint val in isect) res.Add((int)(val >> 8));
                 return res;
             }
 

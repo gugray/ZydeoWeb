@@ -16,6 +16,14 @@ CREATE TABLE hanzi_instances(
 ) ENGINE=InnoDB CHARACTER SET=utf8 COLLATE utf8_general_ci;
 CREATE INDEX idx_hanzi_instances_blob_id ON hanzi_instances(blob_id);
 
+DROP TABLE IF EXISTS syll_instances;
+CREATE TABLE syll_instances(
+	toned_syll		INT,			-- Toned pinyin syllable ID
+	syll_count		TINYINT,		-- Count of entry's distinct standard pinyin syllables
+	blob_id			INT				-- binary_entries.id
+) ENGINE=InnoDB CHARACTER SET=utf8 COLLATE utf8_general_ci;
+CREATE INDEX idx_syll_instances_blob_id ON syll_instances(blob_id);
+
 DROP TABLE IF EXISTS norm_words;
 CREATE TABLE norm_words(
 	id				INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -250,5 +258,21 @@ INSERT INTO word_freqs (word, freq) VALUES (@word, @freq);
 # Script SelFreq
 # @word VARCHAR
 SELECT freq FROM word_freqs WHERE word=@word;
+# End
+
+# Script SelSyllInstances
+SELECT toned_syll, syll_count, blob_id FROM syll_instances;
+# End
+
+# Script InsSyllInstance
+# @toned_syll INT
+# @syll_count TINYINT
+# @blob_id INT
+INSERT INTO syll_instances (toned_syll, syll_count, blob_id) VALUES (@toned_syll, @syll_count, @blob_id);
+# End
+
+# Script DelEntrySyllInstances
+# @blob_id INT
+DELETE from syll_instances WHERE blob_id=@blob_id;
 # End
 
