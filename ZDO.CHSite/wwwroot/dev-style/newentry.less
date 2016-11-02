@@ -1,61 +1,41 @@
 @import "defines.less";
 
-#newEntrySimp {
-  display: block;
-  position: relative;
-  float: left;
-  font-size: 1.5em;
-  font-family: "Microsoft YaHei", SimHei, STXihei, STHeitiSC-Medium, DengXian, "????", sans-serif;
-  width: 18em;
-  background-color: @clrLightLight;
-  border: 0.1em solid @clrLightLight;
-  border-radius: 0.1em;
-  color: @clrBodyText;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  outline: none;
-}
+#newEntry { position: relative; width: 100%; clear: both; }
 
-.formBlock.active #newEntrySimp {
-  background-color: @clrLightLight;
-  border: 0.1em solid @clrMedium;
+#newEntrySimp {
+  display: block; position: relative; float: left; box-sizing: border-box; width: calc(100% - 10rem);
+  font-size: 1.5rem; font-family: "Microsoft YaHei", SimHei, STXihei, STHeitiSC-Medium, DengXian, "????", sans-serif;
+  background-color: @clrLightLight; border: 0.1em solid @clrLightLight; border-radius: 0.1rem;
+  color: @clrBodyText;
+  appearance: none; outline: none;
+  .formBlock.active & { background-color: @clrLightLight; border: 0.1rem solid @clrMedium; }
 }
 
 #newEntryTradCtrl,
 #newEntryPinyinCtrl,
 #newEntryTrg {
-  display: block;
-  position: relative;
-  float: left;
-  font-size: 1.5em;
-  font-family: "Microsoft YaHei", SimHei, STXihei, STHeitiSC-Medium, DengXian, "????", sans-serif;
-  width: 18.1em;
+  display: block; position: relative; float: left; box-sizing: border-box; width: calc(100% - 10rem);
+  font-size: 1.5rem; font-family: "Microsoft YaHei", SimHei, STXihei, STHeitiSC-Medium, DengXian, "????", sans-serif;
   background-color: @clrLightLight;
-  border: 0.1em solid @clrLightLight;
-  border-radius: 0.1em;
+  border: 0.1rem solid @clrLightLight;
+  border-radius: 0.1rem;
 }
 
 .formBlock.active #newEntryTradCtrl,
 .formBlock.active #newEntryPinyinCtrl,
 .formBlock.active #newEntryTrg {
   background-color: @clrLightLight;
-  border: 0.1em solid @clrMedium;
+  border: 0.1rem solid @clrMedium;
 }
 
 .newEntryTradPos,
 .newEntryPinyinPos {
-  display: block;
-  position: relative;
-  float: left;
+  display: block; position: relative; float: left;
 }
 
 .newEntryTradPos span,
 .newEntryPinyinPos span {
-  display: inline-block;
-  position: relative;
-  float: left;
-  clear: both;
+  display: inline-block; position: relative; float: left; clear: both;
   cursor: default;
   border-radius: 0.1em;
   color: #808080;
@@ -83,11 +63,10 @@
 
 
 #newEntryPinyinCtrl {
-  font-size: 1em;
+  font-size: 1rem;
   font-family: "Noto Sans", sans-serif;
-  width: 27.25em;
-  padding-top: 0.4em;
-  padding-bottom: 0.4em;
+  padding-top: 0.4rem;
+  padding-bottom: 0.4rem;
 }
 
 .newEntryPinyinPos {
@@ -96,18 +75,18 @@
 
 .newEntryPinyinPos span {
   box-sizing: border-box;
-  padding: 0 0.1em 0 0.1em;
-  margin: 0 0.1em 0 0.1em;
+  padding: 0 0.1rem 0 0.1rem;
+  margin: 0 0.1rem 0 0.1rem;
   width: 100%;
 }
 
 #newEntryTrg {
-  font-size: 0.9em;
+  font-size: 0.9rem;
   font-family: "Noto Sans", sans-serif;
   color: @clrBodyText;
-  height: 9em;
-  padding: 0 0.1em 0 0.1em;
-  width: 30.05em;
+  height: 9rem;
+  padding: 0 0.1rem 0 0.1rem;
+  box-sizing: border-box;
   resize: vertical;
 }
 
@@ -115,13 +94,12 @@
   display: block;
   position: relative;
   float: left;
-  font-size: 0.9em;
+  font-size: 0.9rem;
   font-family: "Noto Sans", sans-serif;
-  width: 29.3em;
-  padding: 0.4em;
+  padding: 0.4rem;
   background-color: @clrLightLight;
-  border: 0.1em solid @clrLightLight;
-  border-radius: 0.1em;
+  border: 0.1rem solid @clrLightLight;
+  border-radius: 0.1rem;
   color: @clrBodyText;
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -137,15 +115,15 @@
 .newEntryKnown {
   display: none;
   position: absolute;
-  top: -0.2em;
-  left: 11.4em;
+  top: -0.2rem;
+  left: 11.4rem;
   font-size: 30pt;
   color: @clrMedium;
   cursor: default;
 }
 
 #blockPinyin .newEntryKnown {
-  top: -0.2em;
+  top: -0.2rem;
 }
 
 .newEntryKnown.visible {

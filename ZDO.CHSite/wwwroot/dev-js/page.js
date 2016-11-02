@@ -239,7 +239,7 @@ var zdPage = (function () {
     });
 
     // *NOW* that we're all done, show page.
-    $("#thePage").css("visibility", "visible");
+    //$("#thePage").css("visibility", "visible");
     // Events - toggle from lookup input to menu
     $("#toMenu").click(function () {
       $("#hdrSearch").removeClass("on");
