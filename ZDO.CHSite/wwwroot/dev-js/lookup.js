@@ -42,28 +42,24 @@ var zdLookup = (function () {
       elmStrokes.setAttribute("src", "/prod-js/xcharacterdata.js");
     }
     // Add tooltips
-    $("#btn-write").tooltipster({
-      content: $("<span>" + uiStrings["tooltip-btn-brush"] + "</span>")
-    });
-    $("#btn-settings").tooltipster({
-      content: $("<span>" + uiStrings["tooltip-btn-settings"] + "</span>")
-    });
-    $("#btn-search").tooltipster({
-      content: $("<span>" + uiStrings["tooltip-btn-search"] + "</span>")
-    });
+    if (!zdPage.isMobile()) {
+      $(".btnWrite").tooltipster({ content: $("<span>" + uiStrings["tooltip-btn-brush"] + "</span>") });
+      $(".btnSettings").tooltipster({ content: $("<span>" + uiStrings["tooltip-btn-settings"] + "</span>") });
+      $(".btnSearch").tooltipster({ content: $("<span>" + uiStrings["tooltip-btn-search"] + "</span>") });
+    }
     // Clear button; settings
     $("#btn-clear").click(clearSearch);
-    $("#btn-settings").click(showSettings);
+    $(".btnSettings").click(showSettings);
     // Handwriting recognition
-    $("#btn-write").click(function (event) {
+    $(".btnWrite").click(function (event) {
       if ($("#stroke-input").css("display") == "block") hideStrokeInput();
       else showStrokeInput(event);
     });
     // Debug: to work on strokes input
     //showStrokeInput();
 
-    $("#btn-search").click(submitSearch);
-    $("#txtSearch").keyup(function (e) {
+    $(".btnSearch").click(submitSearch);
+    $(".txtSearch").keyup(function (e) {
       if (e.keyCode == 13) {
         if (prefixActiveIx >= 0) onPrefixKeyUpDown(e, true);
         // Yes, this way, list insertion with enter immediately triggers lookup too.
@@ -71,13 +67,13 @@ var zdLookup = (function () {
         return false;
       }
     });
-    $("#txtSearch").keydown(function (e) {
+    $(".txtSearch").keydown(function (e) {
       onPrefixKeyUpDown(e, false);
     });
-    $("#txtSearch").focus(txtSearchFocus);
-    $("#txtSearch").on("input", function () { if (!prefixSuppressTrigger) prefixTrigger(); });
-    $('#txtSearch').on('compositionstart', function (e) { isComposing = true; });
-    $('#txtSearch').on('compositionend', function (e) { isComposing = false; });
+    $(".txtSearch").focus(txtSearchFocus);
+    $(".txtSearch").on("input", function () { if (!prefixSuppressTrigger) prefixTrigger(); });
+    $('.txtSearch').on('compositionstart', function (e) { isComposing = true; });
+    $('.txtSearch').on('compositionend', function (e) { isComposing = false; });
 
     // Debug: to work on opening screen
     //$("#resultsHolder").css("display", "none");
@@ -90,10 +86,11 @@ var zdLookup = (function () {
     $(".hanim").click(showStrokeAnim);
     $("#soaClose").click(hideStrokeAnim);
     $("#soaBox").click(function (e) { e.stopPropagation(); });
-    $('#txtSearch').val(data.data);
+    $('.txtSearch.active').val(data.data);
     // Hack [?] - but either something steals focus on load, or input field is not yet shown to accept focus.
     setTimeout(function () {
-      $('#txtSearch').focus();
+      if (!zdPage.isMobile) $('.txtSearch.active').focus();
+      else $('.txtSearch.active').blur();
     }, 100);
   }
 
@@ -102,7 +99,7 @@ var zdLookup = (function () {
     // If this comes when IME is composing, bollocks. Don't interfere.
     if (isComposing) return;
     // Show, or maybe hide
-    var query = $('#txtSearch').val();
+    var query = $('.txtSearch.active').val();
     if (query.length < 3) {
       killPrefixHints();
       return;
@@ -123,12 +120,16 @@ var zdLookup = (function () {
         return;
       }
       // Suggestions box
+      $("body").append('<div id="searchSuggestions"></div>');
       $("#searchSuggestions").addClass("visible");
       $("#searchSuggestions").addClass("pending"); // If already visible, greys out old items while query is in progres
-      var sbOfs = $("#searchBox").offset();
-      var sbWidth = $("#searchBox").width();
-      var ssOfs = $("#searchSuggestions").offset();
-      $("#searchSuggestions").offset({ left: sbOfs.left, top: ssOfs.top });
+      // Positioning magic: in full version only
+      if (!zdPage.isMobile()) {
+        var sbOfs = $(".searchBox").offset();
+        var sbWidth = $(".searchBox").width();
+        var ssOfs = $("#searchSuggestions").offset();
+        $("#searchSuggestions").offset({ left: sbOfs.left, top: ssOfs.top });
+      }
       // Modal window management
       zdPage.modalShown(killPrefixHints);
       // Content (each suggestion)
@@ -176,8 +177,8 @@ var zdLookup = (function () {
       prefixSuppressTrigger = true;
       var newVal = $(".prefix-suggestion.active").text();
       if (keycode == 32) newVal += " ";
-      $("#txtSearch").val(newVal);
-      $("#txtSearch").focus();
+      $(".txtSearch.active").val(newVal);
+      $(".txtSearch.active").focus();
       prefixSuppressTrigger = false;
       killPrefixHints();
       e.preventDefault();
@@ -191,16 +192,15 @@ var zdLookup = (function () {
     // *NOT* doing the below. On click, page will call us to hide list: which is precisely what we want.
     //evt.stopPropagation();
     prefixSuppressTrigger = true;
-    $("#txtSearch").val($(this).text());
-    $("#txtSearch").focus();
+    $(".txtSearch.active").val($(this).text());
+    $(".txtSearch.active").focus();
     prefixSuppressTrigger = false;
   }
 
   // Hides prefix search hint element, resets any interactive state to nothing.
   function killPrefixHints() {
     zdPage.modalHidden();
-    $("#searchSuggestions").html("");
-    $("#searchSuggestions").removeClass("visible");
+    $("#searchSuggestions").remove();
     prefixActiveIx = -1;
   }
 
@@ -225,17 +225,20 @@ var zdLookup = (function () {
     $("#optionsClose").click(hideSettings);
     elmPopup.click(function (evt) { evt.stopPropagation(); });
     // Disable tooltip while settings are on screen
-    $("#btn-settings").tooltipster('disable');
+    $(".btnSettings").tooltipster('disable');
     // Stop event propagation, or we'll be closed right away
     event.stopPropagation();
-    // Position search box to settings button
-    var elmStgs = $("#btn-settings");
-    var rectStgs = [elmStgs.offset().left, elmStgs.offset().top, elmStgs.width(), elmStgs.height()];
-    var elmTail = $("#optionsTail");
-    var rectTail = [elmTail.offset().left, elmTail.offset().top, elmTail.width(), elmTail.height()];
-    var xMidStgs = rectStgs[0] + rectStgs[2] / 2.2;
-    var xMidTail = rectTail[0] + rectTail[2] / 2;
-    elmPopup.offset({ left: elmPopup.offset().left + xMidStgs - xMidTail, top: elmPopup.offset().top });
+    // Full version: position search box to settings button
+    // Mobile: centered, fixed
+    if (!zdPage.isMobile()) {
+      var elmStgs = $(".btnSettings");
+      var rectStgs = [elmStgs.offset().left, elmStgs.offset().top, elmStgs.width(), elmStgs.height()];
+      var elmTail = $("#optionsTail");
+      var rectTail = [elmTail.offset().left, elmTail.offset().top, elmTail.width(), elmTail.height()];
+      var xMidStgs = rectStgs[0] + rectStgs[2] / 2.2;
+      var xMidTail = rectTail[0] + rectTail[2] / 2;
+      elmPopup.offset({ left: elmPopup.offset().left + xMidStgs - xMidTail, top: elmPopup.offset().top });
+    }
     // Load persisted/default values; update UI
     loadOptions();
     // Events
@@ -247,7 +250,7 @@ var zdLookup = (function () {
     $("#searchOptionsBox").removeClass("visible");
     zdPage.modalHidden();
     // Re-enable tooltip
-    $("#btn-settings").tooltipster('enable');
+    if (!zdPage.isMobile()) $(".btnSettings").tooltipster('enable');
   }
 
   // Load options (or inits to defaults); updates UI.
@@ -292,7 +295,7 @@ var zdLookup = (function () {
         selectOption(this.id);
       }
     };
-    var handlers = /* isMobile ? handlersTouch : */ handlersMouse;
+    var handlers = zdPage.isMobile() ? handlersTouch : handlersMouse;
     // Script option set
     $("#optScriptSimplified").on(handlers);
     $("#optScriptTraditional").on(handlers);
@@ -370,18 +373,19 @@ var zdLookup = (function () {
     $("#hwClose").click(hideStrokeInput);
     elmPopup.click(function (evt) { evt.stopPropagation(); });
     // Disable tooltip while settings are on screen
-    $("#btn-write").tooltipster('disable');
+    $(".btnWrite").tooltipster('disable');
     // Stop event propagation, or we'll be closed right away
     event.stopPropagation();
-    // Position search box to settings button
-    var elmStgs = $("#btn-write");
-    var rectStgs = [elmStgs.offset().left, elmStgs.offset().top, elmStgs.width(), elmStgs.height()];
-    var elmTail = $("#hwTail");
-    var rectTail = [elmTail.offset().left, elmTail.offset().top, elmTail.width(), elmTail.height()];
-    var xMidStgs = rectStgs[0] + rectStgs[2] / 2.2;
-    var xMidTail = rectTail[0] + rectTail[2] / 2;
-    elmPopup.offset({ left: elmPopup.offset().left + xMidStgs - xMidTail, top: elmPopup.offset().top });
-
+    // Full version: Position search box to settings button
+    if (!zdPage.isMobile()) {
+      var elmStgs = $(".btnWrite");
+      var rectStgs = [elmStgs.offset().left, elmStgs.offset().top, elmStgs.width(), elmStgs.height()];
+      var elmTail = $("#hwTail");
+      var rectTail = [elmTail.offset().left, elmTail.offset().top, elmTail.width(), elmTail.height()];
+      var xMidStgs = rectStgs[0] + rectStgs[2] / 2.2;
+      var xMidTail = rectTail[0] + rectTail[2] / 2;
+      elmPopup.offset({ left: elmPopup.offset().left + xMidStgs - xMidTail, top: elmPopup.offset().top });
+    }
     var strokeCanvasWidth = $("#stroke-input-canvas").width();
     $("#stroke-input-canvas").css("height", strokeCanvasWidth);
     var canvasElement = document.getElementById("stroke-input-canvas");
@@ -394,7 +398,7 @@ var zdLookup = (function () {
       canvasId: "stroke-input-canvas",
       suggestionsId: "suggestions",
       suggestionClass: "sugItem",
-      insertionTargedId: "txtSearch"
+      insertionTargedClass: "txtSearch"
     });
     zdHandwriting.setEnabled(hwEnabled);
     zdHandwriting.clearCanvas();
@@ -406,18 +410,20 @@ var zdLookup = (function () {
   function hideStrokeInput() {
     $("#handwritingBox").empty();
     $("#handwritingBox").removeClass("visible");
+    zdPage.modalHidden();
   }
 
   // Clears the search field
   function clearSearch() {
-    $("#txtSearch").val("");
-    $("#txtSearch").focus();
+    $(".txtSearch").val("");
+    $(".txtSearch.active").focus();
   }
 
   // When the search input field receives focus
   function txtSearchFocus(event) {
-    if (zdPage.isMobile()) return;
-    if (!prefixSuppressTrigger) $("#txtSearch").select();
+    if (!$(this).hasClass("active")) return;
+    if (prefixSuppressTrigger) return;
+    $(".txtSearch.active").select();
   }
 
   // Returns object with search params.
@@ -427,8 +433,10 @@ var zdLookup = (function () {
 
   // Submits a dictionary search as simple GET URL
   function submitSearch() {
-    var queryStr = $('#txtSearch').val().replace(" ", "+");
+    var queryStr = $('.txtSearch.active').val();
+    queryStr = queryStr.replace(" ", "+");
     killPrefixHints();
+    hideStrokeInput();
     zdPage.submitSearch(queryStr);
   }
 
@@ -452,7 +460,7 @@ var zdLookup = (function () {
     var wBottom = window.pageYOffset + window.innerHeight - 10;
     if (top + boxH > wBottom) top = wBottom - boxH;
     // Then, nudge down if we're over the ceiling
-    //var wTop = $("#hdrSearch").position().top + $("#hdrSearch").height() + window.pageYOffset + 20;
+    //var wTop = $(".hdrSearch").position().top + $("#hdrSearch").height() + window.pageYOffset + 20;
     var wTop = $("#headermask").position().top + $("#headermask").height() + window.pageYOffset;
     if (top < wTop) top = wTop;
     // Position box, and tail
@@ -475,7 +483,7 @@ var zdLookup = (function () {
     // Start the whole spiel
     $("#soaBox").css("display", "block");
     // We only position dynamically in desktop version; in mobile, it's fixed
-    dynPosSOA($(this));
+    if (!zdPage.isMobile()) dynPosSOA($(this));
     // Render grid, issue AJAX query for animation data
     zdStrokeAnim.renderBG();
     zdStrokeAnim.startQuery($(this).text());

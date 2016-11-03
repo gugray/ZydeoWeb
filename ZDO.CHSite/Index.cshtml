@@ -29,28 +29,28 @@
     <link rel="stylesheet" href="/prod-style/app.min.css">
   </environment>
 </head>
-<body id="theBody" class="pt16">
-  <div id="headerstick">
-    <div id="headerHome"><span id="hdrHomeLatin">CHDICT</span><span id="hdrHomeZho">汉匈词典</span></div>
-    <div id="header">
-      <div id="hdrSearch" class="hdrAlt on">
-        <div id="searchBox">
-          <input type="text" id="txtSearch" placeholder="@Model.Str("HintSearchField")" autofocus />
-          <i id="btn-write" class="fa fa-paint-brush" aria-hidden="true"></i>
-          <i id="btn-settings" class="fa fa-cog" aria-hidden="true"></i>
-          <i id="btn-search" class="fa fa-search" aria-hidden="true"></i>
+<body>
+  <div id="headerStickFull">
+    <div id="headerFull">
+      <div id="headerHome"><span id="hdrHomeLatin">CHDICT</span><span id="hdrHomeZho">汉匈词典</span></div>
+      <div class="hdrSearch hdrAlt on">
+        <div class="searchBox">
+          <input type="text" id="txtSearchFull" class="txtSearch active" placeholder="@Model.Str("HintSearchField")" />
+          <i class="btnWrite fa fa-paint-brush"></i>
+          <i class="btnSettings fa fa-cog"></i>
+          <i class="btnSearch fa fa-search"></i>
         </div>
-        <i id="toMenu" class="fa fa-chevron-left" aria-hidden="true"></i>
+        <i id="toMenu" class="fa fa-chevron-left"></i>
       </div>
       <div id="hdrMenu" class="hdrAlt">
-        <a class="topMenu ajax" id="topMenuSearch" href="/@Model.Lang"><i class="fa fa-search" aria-hidden="true"></i></a>
+        <a class="topMenu ajax" id="topMenuSearch" href="/@Model.Lang"><i class="fa fa-search"></i></a>
         <a class="topMenu ajax" id="topMenuEdit" href="/@Model.Lang/edit/new">@Model.Str("TopMenuEdit")</a>
         <a class="topMenu ajax" id="topMenuRead" href="/@Model.Lang/read/about">@Model.Str("TopMenuRead")</a>
         <a class="topMenu ajax" id="topMenuDownload" href="/@Model.Lang/download">@Model.Str("TopMenuDownload")</a>
         <div id="hdrMenuRight">
-          <span class="loginIcon"><i class="fa fa-user" aria-hidden="true"></i></span>
-          <a class="langSel on" id="langSelHu" href="/hu/@Model.Rel">HU</a>
-          <a class="langSel first" id="langSelEn" href="/en/@Model.Rel">EN</a>
+          <span class="loginIcon"><i class="fa fa-user"></i></span>
+          <a class="langSel langSelHu on" href="/hu/@Model.Rel">HU</a>
+          <a class="langSel langSelEn first" href="/en/@Model.Rel">EN</a>
         </div>
       </div>
     </div>
@@ -69,10 +69,38 @@
         <span id="smDownload"><span>@Model.Str("SMDownload")</span></span>
       </div>
     </div>
-    <div id="searchOptionsBox"></div>
-    <div id="handwritingBox"></div>
-    <div id="searchSuggestions"></div>
   </div>
+  <div id="headerStickHamburger">
+    <div id="hdrBurgerTop">
+      <i id="burger" class="fa fa-bars"></i>
+      <span>HanDeDict @@ Zydeo</span>
+    </div>
+    <div class="hdrSearch hdrAlt on">
+      <div class="searchBox">
+        <div class="searchBoxRight">
+          <i class="btnWrite fa fa-paint-brush"></i>
+          <i class="btnSettings fa fa-cog"></i>
+          <i class="btnSearch fa fa-search"></i>
+        </div>
+        <div class="searchBoxLeft">
+          <input type="text" id="txtSearchHamburger" class="txtSearch" placeholder="@Model.Str("HintSearchField")" />
+        </div>
+      </div>
+    </div>
+    <div id="hdrHamMenu">
+      <a class="ajax" href="/@Model.Lang">Search</a>
+      <a class="ajax" href="/@Model.Lang/edit/new">About</a>
+      <div class="hdrHamMenuSep"></div>
+      <div id="hdrHamLangs">
+        <a class="langSel langSelHu on" href="#">HU</a>
+        <a class="langSel langSelEn" href="#">EN</a>
+      </div>
+    </div>
+  </div>
+  <!-- Fixed position elements shared in full and burger modes -->
+  <div id="searchOptionsBox"></div>
+  <div id="handwritingBox"></div>
+  <div id="searchSuggestions"></div>
   <div id="headermask">&nbsp;</div>
 
   <div id="hwrap">

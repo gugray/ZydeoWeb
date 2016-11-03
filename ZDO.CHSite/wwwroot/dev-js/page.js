@@ -1,4 +1,4 @@
-﻿/// <reference path="x-jquery-2.1.4.min.js" />
+﻿/// <reference path="../lib/jquery-2.1.4.min.js" />
 /// <reference path="x-history.min.js" />
 
 var uiStrings = uiStringsHu;
@@ -72,7 +72,7 @@ var zdPage = (function () {
     for (var i = 0; i != globalInitScripts.length; ++i) globalInitScripts[i]();
     // Request dynamic page - async
     // Skipped if we received page with content present already
-    var hasContent = $("#theBody").hasClass("has-initial-content");
+    var hasContent = $("body").hasClass("has-initial-content");
     if (!hasContent) {
       ++reqId;
       var id = reqId;
@@ -92,12 +92,13 @@ var zdPage = (function () {
       req.fail(function (jqXHR, textStatus, error) {
         applyFailHtml();
       });
-      // Generic click-away handler to close active popup
+      // Generic click-away handler to close active popup, and also hamburger menu
       $('html').click(function () {
         if (activeModalCloser != null) {
           activeModalCloser();
           activeModalCloser = null;
         }
+        $("#headerStickHamburger").removeClass("openBurger");
       });
     }
     // Adapt font size to window width
@@ -118,31 +119,26 @@ var zdPage = (function () {
   function onResize() {
     var ww = window.innerWidth;
     var w10em = $("#emMeasure")[0].clientWidth;
+    var ratio = ww / w10em;
+    // For diagnostics
+    //var dynWidth = $("#dynPage").width();
+    //$("#debug").text("Win: " + ww + " MM: " + w10em + " DP: " + dynWidth + " R: " + ratio);
 
-    var frac = ww / w10em;
-    var ptStyle;
-    if (frac < 5.4) ptStyle = "pt7";
-    else if (frac < 6.0) ptStyle = "pt8";
-    else if (frac < 6.6) ptStyle = "pt9";
-    else if (frac < 7.2) ptStyle = "pt10";
-    else if (frac < 7.8) ptStyle = "pt11";
-    else if (frac < 8.4) ptStyle = "pt12";
-    else if (frac < 9) ptStyle = "pt13";
-    else if (frac > 12) ptStyle = "pt16";
-    else ptStyle = "pt14";
-    var theBody = $("#theBody");
-    if (!theBody.hasClass(ptStyle)) {
-      theBody.removeClass("pt7");
-      theBody.removeClass("pt8");
-      theBody.removeClass("pt9");
-      theBody.removeClass("pt10");
-      theBody.removeClass("pt11");
-      theBody.removeClass("pt12");
-      theBody.removeClass("pt13");
-      theBody.removeClass("pt14");
-      theBody.removeClass("pt16");
-      theBody.addClass(ptStyle);
+    // Clear previous styles
+    $("html").removeClass("resplay-stickleft");
+    $("html").removeClass("resplay-hamburger");
+    $("html").removeClass("respfont-small");
+    $(".txtSearch").removeClass("active");
+    // Layout: stick left (not center) if small-ish; hamburger + full-width if real small
+    if (ratio <= 7.8 && ratio > 5.8) $("html").addClass("resplay-stickleft");
+    if (ratio <= 5.8) {
+      $("html").addClass("resplay-hamburger");
+      $("#headerStickHamburger .txtSearch").addClass("active");
+      $('.tooltipstered').tooltipster("disable");
     }
+    else $("#headerStickFull .txtSearch").addClass("active");
+    // Font size: decrease a little within small-ish
+    if (ratio < 7) $("html").addClass("respfont-small");
   }
 
   // Navigate within single-page app (invoked from link click handler)
@@ -224,7 +220,7 @@ var zdPage = (function () {
       }
       // Trick: If we're on search page but menu is shown, link just changes display; no navigation
       if ((rel == "" || startsWith(rel, "search")) && $(this).attr("id") == "topMenuSearch") {
-        $("#hdrSearch").addClass("on");
+        $(".hdrSearch").addClass("on");
         $("#hdrMenu").removeClass("on");
         $("#subHeader").removeClass("visible");
         return false;
@@ -239,12 +235,23 @@ var zdPage = (function () {
     });
 
     // *NOW* that we're all done, show page.
-    //$("#thePage").css("visibility", "visible");
+    $("body").css("visibility", "visible");
     // Events - toggle from lookup input to menu
     $("#toMenu").click(function () {
-      $("#hdrSearch").removeClass("on");
+      $(".hdrSearch").removeClass("on");
       $("#hdrMenu").addClass("on");
       //$("#subHeader").addClass("visible");
+    });
+    // Hamburger menu
+    $("#burger").click(function (evt) {
+      // Toggle hamburger menu
+      if ($("#headerStickHamburger").hasClass("openBurger")) $("#headerStickHamburger").removeClass("openBurger");
+      else $("#headerStickHamburger").addClass("openBurger");
+      // Hide any modal popups
+      if (activeModalCloser != null) activeModalCloser();
+      activeModalCloser = null;
+      // Stop propagating, or we'll self-close right away.
+      evt.stopPropagation();
     });
   }
 
@@ -257,10 +264,10 @@ var zdPage = (function () {
       $("#subHeader").removeClass("visible");
       $("#dynPage").addClass("nosubmenu");
       $("#headermask").addClass("nosubmenu");
-      $("#hdrSearch").addClass("on");
+      $(".hdrSearch").addClass("on");
     }
     else {
-      $("#hdrSearch").removeClass("on");
+      $(".hdrSearch").removeClass("on");
       $("#hdrMenu").addClass("on");
       $("#subHeader").addClass("visible");
       $("#dynPage").removeClass("nosubmenu");
@@ -286,11 +293,11 @@ var zdPage = (function () {
     else if (startsWith(rel, "read/articles")) $("#smReadArticles").addClass("on");
     else if (startsWith(rel, "read/etc")) $("#smReadEtc").addClass("on");
     // Language selector
-    $("#langSelHu").attr("href", "/hu/" + rel);
-    $("#langSelEn").attr("href", "/en/" + rel);
+    $(".langSelHu").attr("href", "/hu/" + rel);
+    $(".langSelEn").attr("href", "/en/" + rel);
     $(".langSel").removeClass("on");
-    if (lang == "en") $("#langSelEn").addClass("on");
-    else if (lang == "hu") $("#langSelHu").addClass("on");
+    if (lang == "en") $(".langSelEn").addClass("on");
+    else if (lang == "hu") $(".langSelHu").addClass("on");
   }
 
   // Closes a standard modal dialog (shown by us).
@@ -314,7 +321,7 @@ var zdPage = (function () {
     },
 
     isMobile: function() {
-      return false;
+      return $("html").hasClass("resplay-hamburger");
     },
 
     submitSearch: function(query) {
@@ -367,6 +374,8 @@ var zdPage = (function () {
       if (activeModalCloser == closeFun) return;
       if (activeModalCloser != null) activeModalCloser();
       activeModalCloser = closeFun;
+      // Close hamburger menu too
+      $("#headerStickHamburger").removeClass("openBurger");
     },
 
     // Called by code when it closes modal of its own accord.
@@ -379,6 +388,8 @@ var zdPage = (function () {
       // Close any other popup
       if (activeModalCloser != null) activeModalCloser();
       activeModalCloser = null;
+      // Close hamburger menu too
+      $("#headerStickHamburger").removeClass("openBurger");
       // Build popup's HTML
       var html = zdSnippets["modalPopup"];
       html = html.replace("{{id}}", params.id);

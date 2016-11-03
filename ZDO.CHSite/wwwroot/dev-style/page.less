@@ -2,40 +2,36 @@
 
 // Page basics; including provisions for sticky footer.
 * { margin: 0; }
-html { height: 100%; }
+html { 
+  height: 100%; font-size: 12pt;
+  &.respfont-small { font-size: 10pt; }
+}
+
 body {
   position: relative; width: 100%; height: 100%; overflow-y: scroll; margin: 0; padding: 0;
-  font-family: "Noto Sans", sans-serif; font-size: 13pt;
-  color: @clrBodyText; background-color: @clrDefBg;
+  font-family: @fntBase; 
+  color: @clrBodyText; background-color: @clrDefBg; visibility: hidden;
 }
 
 // Dynamic content plus sticky footer http://ryanfait.com/sticky-footer/
 #dynPage {
   position: relative; margin: 0 auto 0 auto; width: @contentWidth;
   padding: 11rem 0.8rem 0 0.8rem; box-sizing: border-box; transition: none;
-  &.nosubmenu { margin-top: 4rem; padding-top: 3rem; padding-left: 0.45rem; }
+  &.nosubmenu { padding-top: 7rem; padding-left: 0.45rem; }
   &.fading { opacity: 0.2; }
+  html.resplay-stickleft & { margin: 0 0 0 7.5rem; }
+  html.resplay-hamburger & { margin: 0; width: 100%; padding: 8.5rem 1rem 0 1rem; }
 }
 #push { height: @footerHeight }
 #footer {
-  box-sizing: border-box; height: @footerHeight; position: relative; width: 100%; overflow-y: auto;
-  text-align: center; font-size: 8pt;
+  box-sizing: border-box; height: @footerPushHeight; position: relative; width: 100%; overflow-y: auto;
+  text-align: center; font-size: 8pt; padding-top: 10rem;
 }
 #hwrap {
   position: relative; float: left; width: 100%;
   min-height: 100%; height: auto !important; height: 100%;
   margin: 0 auto -@footerHeight;
 }
-
-body.pt7 { font-size: 7pt; }
-body.pt8 { font-size: 8pt; }
-body.pt9{ font-size: 9pt; }
-body.pt10 { font-size: 10pt; }
-body.pt11 { font-size: 11pt; }
-body.pt12 { font-size: 12pt; }
-body.pt13 { font-size: 13pt; }
-body.pt14 { font-size: 14pt; }
-body.pt16 { font-size: 16pt; }
 
 // FIXED: Optional on-screen debug area
 #debug { position: fixed; top: 0; left: 0; z-index: 20; background: @clrDefBg; }
@@ -47,47 +43,119 @@ body.pt16 { font-size: 16pt; }
 }
 
 // FIXED: Header stuff: logo, menu, search input
-#headerstick {
+#headerStickFull {
   position: fixed; top: 0; width: 100%; padding-top: 0.5rem; height: 5rem; background-color: @clrDefBg;
   z-index: 11;
   > div { background-color: @clrDefBg; }
-  #header { margin: 0 auto 0 auto; width: 45rem; height: 4.6rem; }
+  #headerFull {
+    margin: 0 auto 0 auto; width: 45rem; height: 4.6rem;
+    html.resplay-stickleft & { margin: 0 0 0 7.5rem; }
+  }
   #subHeader {
     display: none; margin: 0 auto 0 auto; width: 45rem; padding-top: 0.4rem; height: 2.6rem;
+    html.resplay-stickleft & { margin: 0 0 0 7.5rem; }
     &.visible { display: block;} 
+  }
+  html.resplay-hamburger & { display: none; }
+}
+
+// FIXED: Header stuff in hamburger mode
+#headerStickHamburger {
+  position: fixed; top: 0; width: 100%; box-sizing: border-box; padding: 0.3rem 0.5rem 0.5rem 0.5rem; height: 7rem;
+  z-index: 11; background-color: @clrLight; display: none;
+  html.resplay-hamburger & { display: block; }
+  // Top half of header
+  #hdrBurgerTop {
+    height: 50%; width: 100%; box-sizing: border-box; position: relative; float: left;
+    font-family: @fntSerif; font-size: 2rem; color:@clrStrongAccent; cursor: default;
+    i, span { position: relative; float: left; display: inline-block; }
+    i {
+      z-index: 12;
+      margin: 0 1rem 0 0; padding: 0 0.5rem 0.1rem 0.5rem; color: @clrStrong; font-size: 2.5rem; cursor: pointer;
+      border: 1pt solid @clrLight;
+    }
+  }
+  // Bottom half of header, when in search mode
+  .hdrSearch {
+    height: 50%; width: 100%; position: relative; float: left; padding: 0;
+    .searchBox {
+      box-sizing: border-box; padding-right: 0.2rem; width: 100%; height: 3rem;
+      background-color: @clrLightLight; cursor: default;
+      .searchBoxRight { float: right; width: 6.9rem; }
+      .searchBoxLeft { overflow: hidden; padding: 0 0.5rem 0 0.5rem; }
+      .txtSearch {
+        background-color: @clrLightLight; box-sizing: border-box; padding: 0;
+        border: 0; margin-top: 0.2rem; font-size: 2rem; width: 100%; color: @clrBodyText;
+      }
+      i {
+        display: block; position: relative; float: left;
+        height: 2.65rem; margin: 0.2rem 0 0 0; padding: 0.4rem 0.3rem 0 0.3rem; box-sizing: border-box;
+        font-size: 1.8rem; color: @clrMedium;
+        &:hover { background-color: @clrLight; }
+      }
+    }
+  }
+  // Hamburger menu, when shown
+  #hdrHamMenu {
+    z-index: 11; font-size: 180%;
+    position: fixed; top: 2.9rem; left: 0.5rem; min-width: 20rem; border: 1pt solid @clrMedium; background-color: @clrDefBg;
+    box-sizing: border-box; padding: 1rem 0.5rem 1rem 0.5rem; display: none;
+    a {
+      display: block; position: relative; float: left; width: 100%; box-sizing: border-box;
+      margin-bottom: 0.5rem; padding: 0.4rem 0 0.4rem 0.5rem;
+      font-family: @fntSansAlt; text-decoration: none; color: @clrStrong;
+      &:hover { background-color: @clrLightLight; }
+    }
+    .hdrHamMenuSep {
+      position: relative; float: left; width: 100%;
+      margin: 0 0 0.5rem 0; height: 0; box-sizing: border-box; border-bottom: 1pt solid @clrLight;
+    }
+    #hdrHamLangs { padding-left: 0.2rem; }
+    .langSel {
+      width: auto; 
+      padding: 0 0.3rem 0 0.3rem; margin: 0.4rem 0.5rem 0 0; border-radius: 0.1rem;
+      font-family: @fntBase; font-weight: bold; font-size: 1.5rem;
+      &:hover, &.on { color: @clrDefBg; background-color: @clrMedium; }
+    }
+  }
+  &.openBurger {
+    #burger { border: 1pt solid @clrMedium; border-bottom: 0; background-color: @clrDefBg; }
+    #hdrHamMenu { display: block; }
   }
 }
 
 // Header > Home logo
 #headerHome {
+  z-index: 11;
   position: absolute; top: 0; left: 0; margin: 1.25rem 0 0 2.5rem;
-  font-family: Neuton; font-size: 250%; color:@clrStrongAccent; cursor: default;
+  font-family: @fntSerif; font-size: 250%; color:@clrStrongAccent; cursor: default;
   span { display: block; position: relative; float: left; word-wrap: break-word; font-weight: normal; }
   #hdrHomeLatin { width: 1.64rem; font-size: 82%; line-height: 1.64rem; text-align: center; }
   #hdrHomeZho {
     width: 2.5rem; line-height: 2.5rem;
-    font-family: SimHei, "Microsoft Yahei", STXihei, STHeitiSC-Medium, DengXian, sans-serif;
-  } 
+    font-family: @fntZho;
+  }
+  html.resplay-hamburger & { display: none; }
 }
 
 // Top header alternatives: search or menu
-.hdrAlt {
+#headerStickFull .hdrAlt {
   width: 100%; position: absolute; top: 1rem; box-sizing: border-box; height: 4rem; padding: 0.4rem 0 0 0;
   overflow: hidden; opacity: 0; transition: opacity 0.8s ease;
-  font-family: Ubuntu; font-size: 200%;
+  font-family: @fntSansAlt; font-size: 200%;
   z-index: 11;
   &.on { opacity: 1; z-index: 12; }
 }
 
 // Top header when it's the search input
-#hdrSearch {
+#headerStickFull .hdrSearch {
   div, input, i { display: block; position: relative; float: left; }
-  #searchBox {
+  .searchBox {
     box-sizing: border-box; height: 3.6rem; padding-right: 0.2rem;
     background-color: @clrLightLight; cursor: default;
-    #txtSearch {
-      font-size: 100%; background-color: @clrLightLight;
-      border: 0; width: 32rem; margin: 0.2rem 0 0.2rem 0.4rem;
+    .txtSearch {
+      font-size: 100%; background-color: @clrLightLight; color: @clrBodyText;
+      border: 0; width: 32rem; margin: 0.4rem 0 0.2rem 0.4rem;
     }
     i {
       height: 3.25rem; margin: 0.2rem 0 0 0; padding: 0.4rem 0.3rem 0 0.3rem; box-sizing: border-box;
@@ -103,10 +171,11 @@ body.pt16 { font-size: 16pt; }
   }
 }
 
-// FIXED: search hints: doesn's belong here in DOM, but logically, it shows right here.
+// FIXED: search hints: doesn't belong here in DOM, but logically, it shows right here.
 #searchSuggestions {
-  display: none; position: fixed; box-sizing: border-box; z-index: 12; top: 5rem; width: 41rem; font-size: 150%;
-  height: auto; background-color: white; border: 1pt solid @clrLight; 
+  display: none; position: fixed; box-sizing: border-box; z-index: 12; top: 5rem; width: 40rem; font-size: 150%;
+  height: auto; background-color: white; border: 1pt solid @clrLight;
+  html.resplay-hamburger & { top: 6.3rem; left: 0.4rem; width: calc(100% - 2.4rem); }
   &.visible { display: block; }
   &.pending { color: #aaa; }
   div {
@@ -131,7 +200,7 @@ body.pt16 { font-size: 16pt; }
       display: inline-block; position: relative; float: right; 
       padding: 0 0.3rem 0 0.3rem; margin: 0.6rem 0.2rem 0 0; border-radius: 0.1rem;
       color: @clrMedium; text-decoration: none; cursor: default;
-      font-family: "Noto Sans"; font-weight: bold; font-size: 50%;
+      font-family: @fntBase; font-weight: bold; font-size: 50%;
       &:hover, &.on { color: @clrDefBg; background-color: @clrMedium; }
     }
     .loginIcon {
@@ -147,7 +216,7 @@ body.pt16 { font-size: 16pt; }
 // Submenu, when top header is menu and an item that is not search is active
 .subMenu {
   display: none; width: 100%; padding: 0 0 0 0.75rem;
-  font-size: 150%; font-family: Ubuntu;
+  font-size: 150%; font-family: @fntSansAlt;
   &.visible { display: block; }
   span {
     margin-right: 1.5rem;
@@ -210,7 +279,7 @@ textarea, input { color: @clrBodyText; }
   .modalPopupHeader {
     position: relative; width: 100%; box-sizing: border-box; padding: 0; height: 2rem;
     background-color: @clrMedium;
-    font-size: 110%; font-family: Ubuntu; color: @clrDefBg; cursor: default;
+    font-size: 110%; font-family: @fntSansAlt; color: @clrDefBg; cursor: default;
   }
   .modalPopupTitle {
     display: inline-block; position: absolute;

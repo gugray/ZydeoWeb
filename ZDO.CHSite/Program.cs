@@ -11,7 +11,7 @@ namespace ZDO.CHSite
             TextProvider.Init();
 
             var host = new WebHostBuilder()
-               .UseUrls("http://127.0.0.1:5002")
+               .UseUrls("http://0.0.0.0:5002")
                .UseKestrel()
                .UseContentRoot(Directory.GetCurrentDirectory())
                .ConfigureLogging(x => { })

@@ -7,10 +7,8 @@ var zdHandwriting = (function () {
   var prms = null;
 
   // Global options ******************************
-  // Width of strokes drawn on screen, for desktop browsers
-  var strokeWidthDesktop = 5;
-  // Width of strokes drawn on screen, for mobile browsers
-  var strokeWidthMobile = 15;
+  // Width of strokes drawn on screen
+  var strokeWidth = 5;
 
   var canvas;
   var ctx;
@@ -67,8 +65,7 @@ var zdHandwriting = (function () {
     currentStroke.push(lastPt);
     ctx.strokeStyle = "black";
     ctx.setLineDash([]);
-    ctx.lineWidth = strokeWidthDesktop;
-    //if (isMobile) ctx.lineWidth = strokeWidthMobile;
+    ctx.lineWidth = strokeWidth;
     ctx.beginPath();
     ctx.moveTo(x, y);
     tstamp = new Date();
@@ -102,8 +99,7 @@ var zdHandwriting = (function () {
     for (var i1 in rawStrokes) {
       ctx.strokeStyle = "black";
       ctx.setLineDash([]);
-      ctx.lineWidth = strokeWidthDesktop;
-      //if (isMobile) ctx.lineWidth = strokeWidthMobile;
+      ctx.lineWidth = strokeWidth;
       ctx.beginPath();
       ctx.moveTo(rawStrokes[i1][0][0], rawStrokes[i1][0][1]);
       var len = rawStrokes[i1].length;
@@ -124,9 +120,9 @@ var zdHandwriting = (function () {
       $(sug).append(matches[i]).attr('class', prms.suggestionClass);
       $(sug).click(function () {
         if (appendNotOverwrite)
-          $("#" + prms.insertionTargedId).val($("#" + prms.insertionTargedId).val() + $(this).html());
+          $("." + prms.insertionTargedClass).val($("." + prms.insertionTargedClass).val() + $(this).html());
         else
-          $("#" + prms.insertionTargedId).val($(this).html());
+          $("." + prms.insertionTargedClass).val($(this).html());
         appendNotOverwrite = true;
         clearCanvas();
         $("#" + prms.suggestionsId).html('');
