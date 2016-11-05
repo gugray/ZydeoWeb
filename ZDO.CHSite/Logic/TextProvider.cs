@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Reflection;
 using System.IO;
+using Newtonsoft.Json;
 
 namespace ZDO.CHSite
 {
@@ -15,13 +16,25 @@ namespace ZDO.CHSite
             get { return instance; }
         }
 
-        public static void Init()
+        /// <summary>
+        /// The site's mutation.
+        /// </summary>
+        private readonly Mutation mut;
+
+        /// <summary>
+        /// Gets the site's mutation (CHD or HDD).
+        /// </summary>
+        public Mutation Mut { get { return mut; } }
+
+        /// <summary>
+        /// Initializes the global singleton.
+        /// </summary>
+        public static void Init(Mutation mut)
         {
-            instance = new TextProvider();
+            instance = new TextProvider(mut);
         }
 
         private readonly Dictionary<string, Dictionary<string, string>> dict = new Dictionary<string, Dictionary<string, string>>();
-        private readonly Regex reStringLine = new Regex(@"^([^\t]+)[\t]+([^\n]+)$");
 
         private void initForLang(string langCode)
         {
@@ -29,30 +42,33 @@ namespace ZDO.CHSite
             Dictionary<string, string> newStrings = new Dictionary<string, string>();
 
             // Load language file, parse
-            string fileName = "files/strings/strings." + langCode + ".txt";
+            string fileName = "files/strings/strings." + langCode + ".json";
             using (FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
             using (StreamReader sr = new StreamReader(fs))
             {
-                string line;
-                while ((line = sr.ReadLine()) != null)
+                string fileStr = sr.ReadToEnd();
+                var parsed = JsonConvert.DeserializeObject<Dictionary<string, object>>(fileStr);
+                foreach (var x in parsed)
                 {
-                    if (line == string.Empty) continue;
-                    if (line.StartsWith("#")) continue;
-                    Match m = reStringLine.Match(line);
-                    if (!m.Success) continue;
-                    string escaped = m.Groups[2].Value.Replace(@"\r\n", "\r\n");
-                    escaped = escaped.Replace(@"\n", "\r\n");
-                    newStrings[m.Groups[1].Value] = escaped;
+                    foreach (var y in (x.Value as Newtonsoft.Json.Linq.JObject))
+                    {
+                        string key = x.Key + "." + y.Key;
+                        string value = y.Value.ToString();
+                        newStrings[key] = value;
+                    }
                 }
             }
+
             // Store for language
             dict[langCode] = newStrings;
         }
 
-        private TextProvider()
+        private TextProvider(Mutation mut)
         {
-            initForLang("hu");
+            this.mut = mut;
             initForLang("en");
+            initForLang("de");
+            initForLang("hu");
         }
 
         public string GetString(string langCode, string id)

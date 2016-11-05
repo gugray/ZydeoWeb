@@ -56,8 +56,12 @@ var zdPage = (function () {
       lang = "hu";
       rel = path == "/hu" ? "" : path.substring(4);
     }
+    else if (startsWith(path, "/de/") || path == "/de") {
+      lang = "de";
+      rel = path == "/de" ? "" : path.substring(4);
+    }
     else {
-      lang = "hu";
+      lang = "en";
       rel = path;
     }
   }
@@ -145,8 +149,7 @@ var zdPage = (function () {
   function dynNavigate() {
     // Make sense of location
     parseLocation();
-    // Clear whatever's currently shown
-    //$("#dynPage").html("");
+    // Fade out current content to indicate navigation
     $("#dynPage").addClass("fading");
     // Update menu to show where I am (will soon end up being)
     updateMenuState();
@@ -184,6 +187,7 @@ var zdPage = (function () {
     $("meta[name = 'description']").attr("content", data.description);
     $("#dynPage").html(data.html);
     $("#dynPage").removeClass("fading");
+    $("#headerStickHamburger").removeClass("openBurger");
     // Run this page's script initializer, if any
     for (var key in initScripts) {
       if (startsWith(rel, key)) initScripts[key](data);
@@ -290,14 +294,17 @@ var zdPage = (function () {
     else if (startsWith(rel, "edit/history")) $("#smEditHistory").addClass("on");
     else if (startsWith(rel, "edit/existing")) $("#smEditExisting").addClass("on");
     else if (startsWith(rel, "read/about")) $("#smReadAbout").addClass("on");
+    else if (startsWith(rel, "read/version-history")) $("#smReadVersionHistory").addClass("on");
     else if (startsWith(rel, "read/articles")) $("#smReadArticles").addClass("on");
     else if (startsWith(rel, "read/etc")) $("#smReadEtc").addClass("on");
     // Language selector
+    $(".langSelDe").attr("href", "/de/" + rel);
     $(".langSelHu").attr("href", "/hu/" + rel);
     $(".langSelEn").attr("href", "/en/" + rel);
     $(".langSel").removeClass("on");
     if (lang == "en") $(".langSelEn").addClass("on");
     else if (lang == "hu") $(".langSelHu").addClass("on");
+    else if (lang == "de") $(".langSelDe").addClass("on");
   }
 
   // Closes a standard modal dialog (shown by us).
@@ -395,8 +402,8 @@ var zdPage = (function () {
       html = html.replace("{{id}}", params.id);
       html = html.replace("{{title}}", escapeHTML(params.title));
       html = html.replace("{{body}}", params.body);
-      html = html.replace("{{OK}}", uiStrings["dialog-ok"]);
-      html = html.replace("{{Cancel}}", uiStrings["dialog-cancel"]);
+      html = html.replace("{{ok}}", uiStrings["dialog"]["ok"]);
+      html = html.replace("{{cancel}}", uiStrings["dialog"]["cancel"]);
       $("#dynPage").append(html);
       // Wire up events
       activeModalCloser = function () { doCloseModal(params.id); };
@@ -447,6 +454,26 @@ var zdPage = (function () {
           }, 1000)
         }, 5000);
       }, 50);
+    },
+
+    // Replaces placeholders in HTML template with localized texts for current language.
+    localize: function (prefix, tmpl) {
+      var rex = /\{\{([^\}]+)\}\}/;
+      while (true) {
+        var match = rex.exec(tmpl);
+        if (!match) break;
+        var txt = uiStrings[prefix][match[1]];
+        txt = escapeHTML(txt);
+        tmpl = tmpl.replace(match[0], txt);
+      }
+      return tmpl;
+    },
+
+    // Returns true if current device is recognized to have a touch screen.
+    isTouch: function () {
+      // http://stackoverflow.com/questions/4817029/whats-the-best-way-to-detect-a-touch-screen-device-using-javascript
+      return 'ontouchstart' in window        // works on most browsers 
+          || navigator.maxTouchPoints;       // works on IE10/11 and Surface
     }
 
   };

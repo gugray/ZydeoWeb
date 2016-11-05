@@ -1,0 +1,16 @@
+﻿{
+  "header": {
+    "topSearch": "Keres",
+    "topEdit": "Szerkeszt",
+    "topRead": "Olvas",
+    "topDownload": "Letölt",
+    "subEditNew": "Új szócikk",
+    "subEditHistory": "Változások",
+    "subEditExisting": "Új szócikk",
+    "subReadAbout": "A szótárról",
+    "subAboutHDD": "--",
+    "subReadArticles": "Írások",
+    "subReadEtc": "Apróbetűs",
+    "subDownload": "A szótár letöltése"
+  }
+}

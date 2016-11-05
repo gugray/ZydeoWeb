@@ -41,11 +41,14 @@ var zdLookup = (function () {
       elmStrokes.setAttribute("type", "text/javascript");
       elmStrokes.setAttribute("src", "/prod-js/xcharacterdata.js");
     }
+    // Search field hint. Depends on mutation.
+    if ($("body").hasClass("hdd")) $(".txtSearch").attr("placeholder", uiStrings["search-manual"]["hint-hdd"]);
+    else $(".txtSearch").attr("placeholder", uiStrings["search-manual"]["hint-chd"]);
     // Add tooltips
-    if (!zdPage.isMobile()) {
-      $(".btnWrite").tooltipster({ content: $("<span>" + uiStrings["tooltip-btn-brush"] + "</span>") });
-      $(".btnSettings").tooltipster({ content: $("<span>" + uiStrings["tooltip-btn-settings"] + "</span>") });
-      $(".btnSearch").tooltipster({ content: $("<span>" + uiStrings["tooltip-btn-search"] + "</span>") });
+    if (!zdPage.isTouch()) {
+      $(".btnWrite").tooltipster({ content: $("<span>" + uiStrings["search-manual"]["tooltip-btn-brush"] + "</span>") });
+      $(".btnSettings").tooltipster({ content: $("<span>" + uiStrings["search-manual"]["tooltip-btn-settings"] + "</span>") });
+      $(".btnSearch").tooltipster({ content: $("<span>" + uiStrings["search-manual"]["tooltip-btn-search"] + "</span>") });
     }
     // Clear button; settings
     $("#btn-clear").click(clearSearch);
@@ -208,15 +211,7 @@ var zdLookup = (function () {
   function showSettings(event) {
     // Render HTML from template
     var html = zdSnippets["lookup.options"];
-    html = html.replace("{{options-title}}", uiStrings["options-title"]);
-    html = html.replace("{{options-script}}", uiStrings["options-script"]);
-    html = html.replace("{{options-simplified}}", uiStrings["options-simplified"]);
-    html = html.replace("{{options-traditional}}", uiStrings["options-traditional"]);
-    html = html.replace("{{options-bothscripts}}", uiStrings["options-bothscripts"]);
-    html = html.replace("{{options-tonecolors}}", uiStrings["options-tonecolors"]);
-    html = html.replace("{{options-nocolors}}", uiStrings["options-nocolors"]);
-    html = html.replace("{{options-pleco}}", uiStrings["options-pleco"]);
-    html = html.replace("{{options-dummitt}}", uiStrings["options-dummitt"]);
+    html = zdPage.localize("options", html);
     $("#searchOptionsBox").html(html);
     // Housekeeping; show search box
     zdPage.modalShown(hideSettings);
@@ -364,7 +359,7 @@ var zdLookup = (function () {
 
     // Render HTML from template
     var html = zdSnippets["lookup.handwriting"];
-    // TO-DO: Loca
+    html = zdPage.localize("handwriting", html);
     $("#handwritingBox").html(html);
     // Housekeeping; show search box
     zdPage.modalShown(hideStrokeInput);

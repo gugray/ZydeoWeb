@@ -1,0 +1,16 @@
+﻿{
+  "header": {
+    "topSearch": "Durchsuchen",
+    "topEdit": "Bearbeiten",
+    "topRead": "Infos",
+    "topDownload": "Herunterladen",
+    "subEditNew": "Neuer Eintrag",
+    "subEditHistory": "Geschiche der Änderungen",
+    "subEditExisting": "Bearbeiten",
+    "subReadAbout": "Infos",
+    "subAboutHDD": "Über HanDeDict @ Zydeo",
+    "subReadArticles": "Artikel",
+    "subReadEtc": "Kleindruck",
+    "subDownload": "Das Wörterbuch herunterladen"
+  }
+}

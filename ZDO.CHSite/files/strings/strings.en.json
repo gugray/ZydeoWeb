@@ -1,0 +1,21 @@
+﻿{
+  "header": {
+    "topSearch": "Search",
+    "topEdit": "Edit",
+    "topRead": "Read",
+    "topDownload": "Download",
+    "subEditNew": "New entry",
+    "subEditHistory": "History",
+    "subEditExisting": "Edit entry",
+    "subReadAbout": "About",
+    "subReadAboutHDD": "About HanDeDict @ Zydeo",
+    "subReadVersionHistory": "Version history",
+    "subReadArticles": "Articles",
+    "subReadEtc": "Small print",
+    "subDownload": "Download the dictionary"
+  },
+  "misc": {
+    "searchResultTitleHDD": "{0} - German translation - HanDeDict @ Zydeo Chinese-German Dictionary",
+    "searchResultTitleCHD": "{0} - magyar fordítás - CHDICT Chinese-Hungarian Dictionary"
+  }
+}

@@ -8,8 +8,6 @@ namespace ZDO.CHSite
     {
         public static void Main(string[] args)
         {
-            TextProvider.Init();
-
             var host = new WebHostBuilder()
                .UseUrls("http://0.0.0.0:5002")
                .UseKestrel()

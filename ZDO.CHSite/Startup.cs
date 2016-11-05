@@ -18,6 +18,7 @@ namespace ZDO.CHSite
     public class Startup
     {
         private readonly IHostingEnvironment env;
+        private readonly Mutation mut;
         private readonly ILoggerFactory loggerFactory;
         private readonly IConfigurationRoot config;
 
@@ -26,12 +27,25 @@ namespace ZDO.CHSite
             this.env = env;
             this.loggerFactory = loggerFactory;
 
+            // What am I today? HanDeDict or CHDICT?
+            if (Environment.GetEnvironmentVariable("MUTATION") == "CHD") mut = Mutation.CHD;
+            else if (Environment.GetEnvironmentVariable("MUTATION") == "HDD") mut = Mutation.HDD;
+            else throw new Exception("Environment variable MUTATION missing value invalid. Supported: CHD, HDD.");
+            // Now that we know our mutatio, init text provider singleton.
+            TextProvider.Init(mut);
+
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
                 .AddJsonFile("appsettings.json", optional: true)
                 .AddJsonFile("appsettings.devenv.json", optional: true)
                 .AddEnvironmentVariables();
-            if (Directory.Exists("/etc/chdict")) builder.AddJsonFile("/etc/chdict/appsettings.json", optional: false);
+            // Config specific to mutation and hostong environment
+            string cfgFileName = null;
+            if (env.IsProduction() && mut == Mutation.HDD) cfgFileName = "/etc/zdo-hdd-prod/appsettings.json";
+            if (env.IsStaging() && mut == Mutation.HDD) cfgFileName = "/etc/zdo-hdd-stage/appsettings.json";
+            if (env.IsProduction() && mut == Mutation.CHD) cfgFileName = "/etc/zdo-chd-prod/appsettings.json";
+            if (env.IsStaging() && mut == Mutation.CHD) cfgFileName = "/etc/zdo-chd-stage/appsettings.json";
+            if (cfgFileName != null && File.Exists(cfgFileName)) builder.AddJsonFile(cfgFileName, optional: false);
             config = builder.Build();
 
             // If running in production or staging, will log to file. Initialize Serilog here.
@@ -79,7 +93,7 @@ namespace ZDO.CHSite
             // Init low-level DB singleton
             initDB();
             // Application-specific singletons.
-            services.AddSingleton(new PageProvider(loggerFactory, env.IsDevelopment()));
+            services.AddSingleton(new PageProvider(loggerFactory, env.IsDevelopment(), mut, config["baseUrl"]));
             services.AddSingleton(new LangRepo("files/data/unihanzi.bin"));
             services.AddSingleton(new SqlDict(loggerFactory));
             // MVC for serving pages and REST

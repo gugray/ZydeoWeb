@@ -40,8 +40,8 @@ var zdStrokeAnim = (function () {
 
   function init() {
     var html = zdSnippets["lookup.soa"];
-    html = html.replace("{{soa-title}}", uiStrings["anim-title"]);
-    html = html.replace("{{soa-attribution}}", uiStrings["anim-attribution"]);
+    html = html.replace("{{title}}", uiStrings["soa"]["title"]);
+    html = html.replace("{{attribution}}", uiStrings["soa"]["attribution"]);
     $("#soaBox").html(html);
     $("#soaGraphics").click(function () {
       // Restart animation if we have a glyph but no timer anymore

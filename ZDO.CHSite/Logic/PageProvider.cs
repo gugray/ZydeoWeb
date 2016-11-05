@@ -35,11 +35,6 @@ namespace ZDO.CHSite.Logic
         }
 
         /// <summary>
-        /// The website's base URL: used in sitemap entries.
-        /// </summary>
-        private const string baseUrl = "https://no.doma.in";
-
-        /// <summary>
         /// My own logger.
         /// </summary>
         private readonly ILogger logger;
@@ -48,18 +43,33 @@ namespace ZDO.CHSite.Logic
         /// </summary>
         private readonly bool isDevelopment;
         /// <summary>
+        /// ZDO mutation.
+        /// </summary>
+        private readonly Mutation mut;
+        /// <summary>
+        /// The website's base URL: used in sitemap entries.
+        /// </summary>
+        private readonly string baseUrl;
+        /// <summary>
         /// Page cache, keyed by language / relative URLs.
         /// </summary>
         private readonly Dictionary<string, PageInfo> pageCache;
 
         /// <summary>
+        /// Gets the site's mutation (CHD or HDD).
+        /// </summary>
+        public Mutation Mut { get { return mut; } }
+
+        /// <summary>
         /// Ctor: init; load pages from plain files into cache.
         /// </summary>
-        public PageProvider(ILoggerFactory lf, bool isDevelopment)
+        public PageProvider(ILoggerFactory lf, bool isDevelopment, Mutation mut, string baseUrl)
         {
             logger = lf.CreateLogger(GetType().FullName);
             logger.LogInformation("Page provider initializing...");
             this.isDevelopment = isDevelopment;
+            this.mut = mut;
+            this.baseUrl = baseUrl;
             pageCache = new Dictionary<string, PageInfo>();
             initPageCache();
             logger.LogInformation("Page provider initialized.");
@@ -79,7 +89,7 @@ namespace ZDO.CHSite.Logic
                 if (!name.EndsWith(".html")) continue;
                 string rel;
                 PageInfo pi = loadPage(fn, out rel);
-                if (rel == null) continue;
+                if (rel == null || pi == null) continue;
                 pageCache[rel] = pi;
             }
             // If running in development env, recreate sitemap
@@ -110,6 +120,7 @@ namespace ZDO.CHSite.Logic
         {
             StringBuilder html = new StringBuilder();
             bool noIndex = false;
+            string mutation = null;
             string title = string.Empty;
             string description = string.Empty;
             string keywords = string.Empty;
@@ -122,21 +133,23 @@ namespace ZDO.CHSite.Logic
                 while ((line = sr.ReadLine()) != null)
                 {
                     Match m = reMetaSpan.Match(line);
-                    if (!m.Success)
-                    {
-                        html.AppendLine(line);
-                        continue;
-                    }
+                    if (!m.Success) { html.AppendLine(line); continue; }
                     string key = m.Groups[1].Value;
-                    if (key == "title") title = m.Groups[2].Value;
-                    else if (key == "description") description = m.Groups[2].Value;
-                    else if (key == "keywords") keywords = m.Groups[2].Value;
-                    else if (key == "rel") rel = m.Groups[2].Value;
+                    string value = m.Groups[2].Value;
+                    if (key == "mutation") mutation = value.ToLowerInvariant();
+                    else if (key == "title") title = value;
+                    else if (key == "title-hdd" && mut == Mutation.HDD) title = value;
+                    else if (key == "title-chd" && mut == Mutation.CHD) title = value;
+                    else if (key == "description") description = value;
+                    else if (key == "keywords") keywords = value;
+                    else if (key == "rel") rel = value;
                     else if (key == "noindex") noIndex = true;
-                    else if (key == "lang") lang = m.Groups[2].Value;
+                    else if (key == "lang") lang = value;
                 }
             }
             rel = lang + "/" + rel;
+            // Wrong mutation: ignore this page
+            if (mutation == "hdd" && mut != Mutation.HDD || mutation == "chd" && mut != Mutation.CHD) return null;
             return new PageInfo(noIndex, title, keywords, description, html.ToString());
         }
 

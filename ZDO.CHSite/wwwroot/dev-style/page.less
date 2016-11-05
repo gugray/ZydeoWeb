@@ -74,6 +74,7 @@ body {
       margin: 0 1rem 0 0; padding: 0 0.5rem 0.1rem 0.5rem; color: @clrStrong; font-size: 2.5rem; cursor: pointer;
       border: 1pt solid @clrLight;
     }
+    span b { font-family: @fntZho; font-weight: normal; }
   }
   // Bottom half of header, when in search mode
   .hdrSearch {
@@ -105,6 +106,9 @@ body {
       margin-bottom: 0.5rem; padding: 0.4rem 0 0.4rem 0.5rem;
       font-family: @fntSansAlt; text-decoration: none; color: @clrStrong;
       &:hover { background-color: @clrLightLight; }
+    }
+    a.sub {
+      font-size: 80%; padding-left: 2rem;
     }
     .hdrHamMenuSep {
       position: relative; float: left; width: 100%;
@@ -237,6 +241,7 @@ body {
   background-size: 100% 100%;
   z-index: 10;
   &.nosubmenu { top: 5rem; }
+  html.resplay-hamburger &, html.resplay-hamburger &.nosubmenu { top: 6.5rem; }
 }
 
 // === General =============================

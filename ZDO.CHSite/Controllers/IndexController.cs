@@ -13,6 +13,10 @@ namespace ZDO.CHSite.Controllers
     public class IndexController : Controller
     {
         /// <summary>
+        /// ZDO mutation.
+        /// </summary>
+        private readonly Mutation mut;
+        /// <summary>
         /// Dynamic page controller.
         /// </summary>
         private readonly DynpageController dpc;
@@ -26,8 +30,26 @@ namespace ZDO.CHSite.Controllers
 
         public IndexController(PageProvider pageProvider, SqlDict dict, IConfiguration config)
         {
+            mut = config["MUTATION"] == "HDD" ? Mutation.HDD : Mutation.CHD;
             dpc = new DynpageController(pageProvider, dict, config);
             gaCode = config["gaCode"];
+        }
+
+        private static void getLangRel(string str, out string lang, out string rel)
+        {
+            if (str == "en" || str == "de" || str == "hu")
+            {
+                lang = str;
+                rel = "";
+                return;
+            }
+            if (str.StartsWith("en/") || str.StartsWith("de/") || str.StartsWith("hu/"))
+            {
+                lang = str.Substring(0, 2);
+                rel = str.Substring(2);
+                return;
+            }
+            lang = rel = null;
         }
 
         /// <summary>
@@ -36,8 +58,18 @@ namespace ZDO.CHSite.Controllers
         /// <param name="paras">The entire relative URL.</param>
         public IActionResult Index(string paras)
         {
-            var pr = dpc.GetPageResult("hu", paras);
-            IndexModel model = new IndexModel("hu", pr.RelNorm, pr, gaCode);
+            string fullRel = paras == null ? "" : paras;
+            string lang, rel;
+            getLangRel(fullRel, out lang, out rel);
+            if (lang == null)
+            {
+                // TO-DO: Check language cookie here
+                string redirTo = mut == Mutation.CHD ? "hu" : "de";
+                return RedirectPermanent("/" + redirTo);
+            }
+            // Infuse requested page right away
+            var pr = dpc.GetPageResult(lang, rel);
+            IndexModel model = new IndexModel(mut, lang, pr.RelNorm, pr, gaCode);
             return View("/Index.cshtml", model);
         }
     }

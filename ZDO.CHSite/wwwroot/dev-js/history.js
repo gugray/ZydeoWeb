@@ -14,15 +14,15 @@ var zdHistory = (function () {
   function init() {
     // Add tooltips to pliant per-entry commands
     $(".opHistComment").tooltipster({
-      content: $("<span>" + uiStrings["tooltip-history-comment"] + "</span>"),
+      content: $("<span>" + uiStrings["history"]["tooltip-comment"] + "</span>"),
       position: 'left'
     });
     $(".opHistEdit").tooltipster({
-      content: $("<span>" + uiStrings["tooltip-history-edit"] + "</span>"),
+      content: $("<span>" + uiStrings["history"]["tooltip-edit"] + "</span>"),
       position: 'left'
     });
     $(".opHistFlag").tooltipster({
-      content: $("<span>" + uiStrings["tooltip-history-flag"] + "</span>"),
+      content: $("<span>" + uiStrings["history"]["tooltip-flag"] + "</span>"),
       position: 'left'
     });
     // Event handlers for per-entry commands
@@ -39,7 +39,7 @@ var zdHistory = (function () {
     bodyHtml = bodyHtml.replace("{{hint}}", uiStrings["history-commententry-hint"]);
     var params = {
       id: "dlgHistComment",
-      title: uiStrings["history-commententry-title"],
+      title: uiStrings["history.addComment"]["title"],
       body: bodyHtml,
       confirmed: function () { return onCommentConfirmed(entryId); },
       toFocus: "#txtHistComment"
@@ -61,10 +61,10 @@ var zdHistory = (function () {
       data: { action: "history_commententry", entry_id: entryId }
     });
     req.done(function (data) {
-      zdPage.showAlert(uiStrings["history-commententry-successtitle"], uiStrings["history-commententry-successmessage"], false);
+      zdPage.showAlert(uiStrings["history.addComment"]["successtitle"], uiStrings["history.addComment"]["successmessage"], false);
     });
     req.fail(function (jqXHR, textStatus, error) {
-      zdPage.showAlert("Csak a baj", "Elmentés nó nó.", true);
+      zdPage.showAlert(uiStrings["history.addComment"]["failtitle"], uiStrings["history.addComment"]["failmessage"], true);
     });
     return true;
   }

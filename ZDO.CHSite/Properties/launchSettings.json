@@ -15,19 +15,21 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    "DevProfile": {
+    "Dev-HDD": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "http://localhost:5002/hu",
+      "launchUrl": "http://localhost:5002/en",
       "environmentVariables": {
+        "MUTATION": "HDD",
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    "ProdProfile": {
+    "Prod-HDD": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "http://localhost:5002/hu",
+      "launchUrl": "http://localhost:5002/en",
       "environmentVariables": {
+        "MUTATION": "HDD",
         "ASPNETCORE_ENVIRONMENT": "Production"
       }
     }

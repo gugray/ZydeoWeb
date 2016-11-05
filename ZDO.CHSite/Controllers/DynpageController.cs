@@ -46,10 +46,10 @@ namespace ZDO.CHSite.Controllers
         public IActionResult GetPage([FromQuery] string rel, [FromQuery] string lang,
             [FromQuery] string searchScript = null, [FromQuery] string searchTones = null)
         {
-            return new ObjectResult(GetPageResult(rel, lang, searchScript, searchTones));
+            return new ObjectResult(GetPageResult(lang, rel, searchScript, searchTones));
         }
 
-        internal PageResult GetPageResult(string rel, string lang, string searchScript = null, string searchTones = null)
+        internal PageResult GetPageResult(string lang, string rel, string searchScript = null, string searchTones = null)
         {
             if (rel == null) rel = "";
             if (rel.StartsWith("search/")) return doSearch(rel, lang, searchScript, searchTones);
@@ -122,11 +122,16 @@ namespace ZDO.CHSite.Controllers
             StringBuilder sb = new StringBuilder();
             ResultsRenderer rr = new ResultsRenderer(lr, uiScript, uiTones);
             rr.Render(sb);
+            // Title
+            string title = TextProvider.Instance.Mut == Mutation.CHD ?
+                TextProvider.Instance.GetString(lang, "misc.searchResultTitleCHD") :
+                TextProvider.Instance.GetString(lang, "misc.searchResultTitleHDD");
+            title = string.Format(title, query);
             // Wrap up
             PageResult pr = new PageResult
             {
                 RelNorm = rel,
-                Title = "Keresési eredmények", // TO-DO: Loca
+                Title = title,
                 Html = sb.ToString(),
                 Data = query,
             };
