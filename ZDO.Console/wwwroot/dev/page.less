@@ -1,0 +1,80 @@
+﻿@import "defines.less";
+
+* { margin: 0; box-sizing: border-box; }
+body {
+  position: relative; width: 100%; height: 100%; overflow-y: scroll; margin: 0; padding: 0;
+  font-family: @fntBase; color: @clrBodyText; font-size: 11pt;
+  background-color: @clrDefBg;
+}
+
+div { position: relative; float: left; }
+
+.header-bar {
+  position: fixed; top: 0; width: 100%; height: @headerHeight;
+  background-color: @clrBase; color: @clrDefBg;
+  font-size: 16pt;
+  z-index: 2;
+}
+
+.header-cont {
+  float: none; margin: 0 auto 0 auto; width: @contentWidth;
+  a {
+    display: block; position: relative; float: left; text-decoration: none; height: @headerHeight;
+    padding: 8pt 10pt 0 10pt; color: @clrDefBg;
+    &.home { width: 150pt; font-weight: 600; margin-left: -100pt; cursor: default; &:hover { background-color: @clrBase; } }
+    &.refresh { float: right; }
+    &:hover, &.selected { background-color: @clrLighter; }
+  }
+}
+
+.content {
+  margin: @headerHeight + 30pt auto 0 auto; width: @contentWidth; float: none;
+}
+
+.statusbar {
+  width: 100%; margin: 0 0 30pt 0; padding: 5pt 0 5pt 10pt;
+  border-left: 3pt solid @clrStatusNeutralBar; background-color: @clrStatusNeutralBg;
+  &.success { border-left: 3pt solid @clrStatusSuccessBar; background-color: @clrStatusSuccessBg; }
+  &.fail { border-left: 3pt solid @clrStatusFailBar; background-color: @clrStatusFailBg; }
+  &.working { border-left: 3pt solid @clrStatusWorkingBar; background-color: @clrStatusWorkingBg; }
+  span { white-space: pre-wrap; }
+  .label { font-weight: 600; }
+}
+
+.sectionsep { width: 100%; clear: both; }
+
+.section {
+  margin: 0 0 40pt 0;
+  &.sysstat {
+    width: 280pt;
+    .title { border-top: 3pt solid #b200ff; }
+  }
+  &.datalogs {
+    width: 360pt; float: right;
+    .title { border-top: 3pt solid #0da104; }
+  }
+  &.maintenance {
+    width: 280pt;
+    .title { border-top: 3pt solid #ebeb2c; }
+    .row span.command { float: left; margin-left: 0; }
+  }
+  &.installation {
+    width: 360pt; float: right;
+    .title { border-top: 3pt solid red; }
+  }
+  .title {
+    display: inline-block; font-size: 13pt; font-weight: 600; width: 100%; border-top: 3pt solid black;
+    margin-bottom: 3pt;
+  }
+  .row {
+    width: 100%;
+    span { display: inline-block; position: relative; float: left; white-space: pre-wrap; }
+    span.label { font-weight: 600; margin-right: 5pt; }
+    span.command {
+      font-weight: 400; background-color: @clrDefBg;
+      float: right; text-transform: uppercase; margin-left: 8pt; color: @clrCommand; cursor: pointer;
+      &.working, &.working:hover { color: @clrGray; cursor: default; }
+      &:hover { color: #b32121; }
+    }
+  }
+}

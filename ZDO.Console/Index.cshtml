@@ -1,0 +1,126 @@
+﻿@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@model ZDO.Console.Logic.IndexModel
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0" />
+  <title>ZDO Console</title>
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600,700" rel="stylesheet">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css">
+  <environment names="Development">
+    <link rel="stylesheet" href="/dev/page.css">
+  </environment>
+  <environment names="Staging,Production">
+    <link rel="stylesheet" href="/prod/app.min.css">
+  </environment>
+</head>
+<body>
+  <div class="header-bar">
+    <div class="header-cont">
+      <a class="home">ZDO Console</a>
+      @for (int i = 0; i != Model.Sites.Length; ++i)
+      { <a class="@Model.GetClass(i)" href="@Model.Sites[i].ShortName">@Model.Sites[i].DisplayName</a> }
+      <a class="refresh" href="#" id="btnRefresh"><i class="fa fa-refresh"></i></a>
+    </div>
+  </div>
+  <div class="content">
+    <div class="section sysstat">
+      <div class="title">System status</div>
+      <div class="row">
+        <span class="label">Maintentance mode:</span><span class="info" data-infofield="maintenance"></span>
+        <span class="command" data-command="goLive">Off</span>
+        <span class="command fail" data-command="goToMaintenance">On</span>
+      </div>
+      <div class="row">
+        <span class="label">Service:</span><span class="info" data-infofield="service"></span>
+        <span class="command" data-command="stopService">Stop</span>
+        <span class="command fail" data-command="startService">Start</span>
+      </div>
+      <div class="row">
+        <span class="label">Response:</span><span class="info" data-infofield="response"></span>
+      </div>
+      <div class="row">
+        <span class="label">DB model:</span><span class="info" data-infofield="dbModel"></span>
+      </div>
+      <div class="row">
+        <span class="label">App version: </span><span class="info" data-infofield="appVersion"></span>
+      </div>
+    </div>
+    <div class="section datalogs">
+      <div class="title">Data &amp; logs</div>
+      <div class="row">
+        <span class="label">Log level: </span><span class="info" data-infofield="logLevel"></span>
+        <span class="command">Dbg</span>
+        <span class="command">Inf</span>
+        <span class="command">Err</span>
+      </div>
+      <div class="row">
+        <span class="label">App log:</span><span class="info" data-infofield="appLog"></span>
+        <span class="command">Fetch</span>
+      </div>
+      <div class="row">
+        <span class="label">DB dump:</span><span class="info" data-infofield="dbDump"></span>
+        <span class="command">Fetch</span>
+      </div>
+      <div class="row">
+        <span class="label">Query log:</span><span class="info" data-infofield="queryLog"></span>
+        <span class="command">Fetch</span>
+      </div>
+      <div class="row">
+        <span class="label">Dict export:</span><span class="info" data-infofield="dictExport"></span>
+        <span class="command">Fetch</span>
+      </div>
+    </div>
+    <div class="sectionsep"></div>
+    <div class="section maintenance">
+      <div class="title">Maintenance</div>
+      <div class="row">
+        <span class="command">Back up database</span>
+      </div>
+      <div class="row">
+        <span class="command" data-command="deployApp">Deploy app</span>
+      </div>
+      <div class="row">
+        <span class="command">Deploy static data</span>
+      </div>
+      <div class="row">
+        <span class="command">Upgrade database</span><br /><br />
+      </div>
+      <div class="row">
+        <span class="command">Clone into staging</span>
+      </div>
+    </div>
+    <div class="section installation">
+      <div class="title">Install/restore  </div>
+      <div class="row">
+        <span class="command">Restore DB from backup</span>
+      </div>
+      <div class="row">
+        <span class="command">Reindex dictionary</span><br /><br />
+      </div>
+      <div class="row">
+        <span class="command" data-command="resetDB">Reset database</span>
+      </div>
+      <div class="row">
+        <span class="command" data-command="importFreq">Import word frequencies</span>
+      </div>
+      <div class="row">
+        <span class="command" data-command="importDict">Import dictionary</span>
+      </div>
+    </div>
+    <div class="statusbar">
+      <span><span class="label">Status:</span> <span class="sb-info" id="msgStatus">Initializing...</span></span>
+    </div>
+  </div>
+
+  <environment names="Development">
+    <script src="/lib/jquery-2.1.4.min.js"></script>
+    <script src="/dev/page.js"></script>
+  </environment>
+  <environment names="Staging,Production">
+    <script src="/prod/app.min.js"></script>
+  </environment>
+</body>
+</html>

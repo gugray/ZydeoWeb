@@ -1,0 +1,55 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Diagnostics;
+using System.IO;
+
+namespace ZDO.Console.Logic
+{
+    public class Helpers
+    {
+        public static bool IsSrvRunning(string pidFileName)
+        {
+            try
+            {
+                string pidStr;
+                using (FileStream fs = new FileStream(pidFileName, FileMode.Open, FileAccess.Read))
+                using (StreamReader sr = new StreamReader(fs))
+                {
+                    pidStr = sr.ReadToEnd();
+                }
+                using (Process p = Process.GetProcessById(int.Parse(pidStr)))
+                {
+                    return p != null;
+                }
+            }
+            catch { return false; }
+        }
+
+        public static string Exec(string cmd, string args, out string stdout, out string stderr)
+        {
+            try
+            {
+                using (Process p = new Process())
+                {
+                    p.StartInfo.FileName = cmd;
+                    p.StartInfo.Arguments = args;
+                    p.StartInfo.CreateNoWindow = true;
+                    p.StartInfo.RedirectStandardOutput = true;
+                    p.StartInfo.RedirectStandardError = true;
+                    p.Start();
+                    p.WaitForExit();
+                    stdout = p.StandardOutput.ReadToEnd();
+                    stderr = p.StandardError.ReadToEnd();
+                    return p.ExitCode != 0 ? "Return code: " + p.ExitCode.ToString() : null;
+                }
+            }
+            catch (Exception ex)
+            {
+                stderr = stdout = "";
+                return "Failed to execute " + cmd + " " + args + "\n" + ex.ToString();
+            }
+        }
+    }
+}

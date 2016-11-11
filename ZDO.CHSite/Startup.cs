@@ -41,10 +41,10 @@ namespace ZDO.CHSite
                 .AddEnvironmentVariables();
             // Config specific to mutation and hostong environment
             string cfgFileName = null;
-            if (env.IsProduction() && mut == Mutation.HDD) cfgFileName = "/etc/zdo-hdd-prod/appsettings.json";
-            if (env.IsStaging() && mut == Mutation.HDD) cfgFileName = "/etc/zdo-hdd-stage/appsettings.json";
-            if (env.IsProduction() && mut == Mutation.CHD) cfgFileName = "/etc/zdo-chd-prod/appsettings.json";
-            if (env.IsStaging() && mut == Mutation.CHD) cfgFileName = "/etc/zdo-chd-stage/appsettings.json";
+            if (env.IsProduction() && mut == Mutation.HDD) cfgFileName = "/etc/zdo/zdo-hdd-live/appsettings.json";
+            if (env.IsStaging() && mut == Mutation.HDD) cfgFileName = "/etc/zdo/zdo-hdd-stage/appsettings.json";
+            if (env.IsProduction() && mut == Mutation.CHD) cfgFileName = "/etc/zdo/zdo-chd-live/appsettings.json";
+            if (env.IsStaging() && mut == Mutation.CHD) cfgFileName = "/etc/zdo/zdo-chd-stage/appsettings.json";
             if (cfgFileName != null && File.Exists(cfgFileName)) builder.AddJsonFile(cfgFileName, optional: false);
             config = builder.Build();
 
@@ -94,7 +94,7 @@ namespace ZDO.CHSite
             initDB();
             // Application-specific singletons.
             services.AddSingleton(new PageProvider(loggerFactory, env.IsDevelopment(), mut, config["baseUrl"]));
-            services.AddSingleton(new LangRepo("files/data/unihanzi.bin"));
+            services.AddSingleton(new LangRepo(Path.Combine(config["dataFolder"], "unihanzi.bin")));
             services.AddSingleton(new SqlDict(loggerFactory));
             // MVC for serving pages and REST
             services.AddMvc();
