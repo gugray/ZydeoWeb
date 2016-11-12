@@ -73,6 +73,7 @@ namespace ZDO.Console.Logic
 
         private void funDeployApp()
         {
+            Helpers.ExecWorkingDir = opt.WarehousePath;
             string stdout, stderr, err;
             StatusMsg = "Preparing to deploy app...";
             if (Helpers.IsSrvRunning(Path.Combine(sconf.AppRoot, "service/service.pid")))

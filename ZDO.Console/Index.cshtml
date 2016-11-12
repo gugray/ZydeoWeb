@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="/dev/page.css">
   </environment>
   <environment names="Staging,Production">
-    <link rel="stylesheet" href="/prod/app.min.css">
+    <link rel="stylesheet" href="/prod/app.min.css" asp-append-version="true">
   </environment>
 </head>
 <body>
@@ -120,7 +120,7 @@
     <script src="/dev/page.js"></script>
   </environment>
   <environment names="Staging,Production">
-    <script src="/prod/app.min.js"></script>
+    <script src="/prod/app.min.js" asp-append-version="true"></script>
   </environment>
 </body>
 </html>

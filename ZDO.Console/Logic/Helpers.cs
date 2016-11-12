@@ -9,6 +9,8 @@ namespace ZDO.Console.Logic
 {
     public class Helpers
     {
+        public static string ExecWorkingDir = null;
+
         public static bool IsSrvRunning(string pidFileName)
         {
             try
@@ -38,6 +40,8 @@ namespace ZDO.Console.Logic
                     p.StartInfo.CreateNoWindow = true;
                     p.StartInfo.RedirectStandardOutput = true;
                     p.StartInfo.RedirectStandardError = true;
+                    if (ExecWorkingDir != null) p.StartInfo.WorkingDirectory = ExecWorkingDir;
+                    else p.StartInfo.WorkingDirectory = Directory.GetCurrentDirectory();
                     p.Start();
                     p.WaitForExit();
                     stdout = p.StandardOutput.ReadToEnd();
