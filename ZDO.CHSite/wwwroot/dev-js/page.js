@@ -294,6 +294,7 @@ var zdPage = (function () {
     else if (startsWith(rel, "edit/history")) $("#smEditHistory").addClass("on");
     else if (startsWith(rel, "edit/existing")) $("#smEditExisting").addClass("on");
     else if (startsWith(rel, "read/about")) $("#smReadAbout").addClass("on");
+    else if (startsWith(rel, "read/search-tips")) $("#smReadSearchTips").addClass("on");
     else if (startsWith(rel, "read/version-history")) $("#smReadVersionHistory").addClass("on");
     else if (startsWith(rel, "read/articles")) $("#smReadArticles").addClass("on");
     else if (startsWith(rel, "read/etc")) $("#smReadEtc").addClass("on");

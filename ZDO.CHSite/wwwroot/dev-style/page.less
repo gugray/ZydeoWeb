@@ -250,6 +250,18 @@ body {
 textarea:focus, input:focus { outline: none; }
 textarea, input { color: @clrBodyText; }
 
+// === STATIC CONTENT =============================
+
+#dynPage .content {
+  position: relative; float: left; width: 100%; font-size: 1.1rem;
+  :first-child { margin-top: 0; }
+  p, ul, li { line-height: 130%; margin-bottom: 0.7rem; }
+  h2 { font-family: @fntSerif; font-size: 2rem; margin: 1.5rem 0 1rem 0; }
+  a { text-decoration: none; color: @clrStrongAccent; }
+  a:hover { color: @clrStrongRed; }
+}
+
+
 // === ALERT BAR =============================
 .alertBar {
   z-index: 15;
@@ -262,10 +274,10 @@ textarea, input { color: @clrBodyText; }
     &.visible { opacity: 1; }
     &.hidden { opacity: 0; transition: opacity 2s ease; }
     &.alertOK { border: 1px solid #338323; background-color: #f1f9eb; }
-    &.alertFail { border: 1px solid #8c2c1b; background-color: #fae7e3; }
+    &.alertFail { border: 1px solid @clrStrongRed; background-color: #fae7e3; }
     .alertMessage { margin-right: 2rem; }
     .alertTitle { font-weight: bold; }
-    &.alertFail .alertTile { color: #8c2c1b; }
+    &.alertFail .alertTile { color: @clrStrongRed; }
     .alertClose { position: absolute; top: 0.3rem; left: 31rem; cursor: pointer; }
     .alertClose img { width: 1.5rem; height: 1.5rem; }
   }

@@ -17,7 +17,6 @@
     },
     "Dev-HDD": {
       "commandName": "Project",
-      "commandLineArgs": "--task import-dict D:\\Development\\ZydeoWeb\\ProdData\\handedict.txt D:\\Development\\ZydeoWeb\\ProdData\\Work",
       "launchBrowser": true,
       "launchUrl": "http://localhost:5002/en",
       "environmentVariables": {

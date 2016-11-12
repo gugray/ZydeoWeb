@@ -73,11 +73,12 @@ namespace ZDO.CHSite
 
         public string GetString(string langCode, string id)
         {
-            Dictionary<string, string> huDict = dict["hu"];
-            Dictionary<string, string> myDict = huDict;
+            Dictionary<string, string> defDict = dict["en"];
+            Dictionary<string, string> myDict = defDict;
             if (dict.ContainsKey(langCode)) myDict = dict[langCode];
             if (myDict.ContainsKey(id)) return myDict[id];
-            else return huDict[id];
+            else if (defDict.ContainsKey(id)) return defDict[id];
+            else return id;
         }
     }
 }
