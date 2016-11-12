@@ -121,7 +121,7 @@ namespace ZDO.CHSite.Controllers
             // Render results
             StringBuilder sb = new StringBuilder();
             ResultsRenderer rr = new ResultsRenderer(lr, uiScript, uiTones);
-            rr.Render(sb);
+            rr.Render(sb, lang);
             // Title
             string title = TextProvider.Instance.Mut == Mutation.CHD ?
                 TextProvider.Instance.GetString(lang, "misc.searchResultTitleCHD") :

@@ -27,6 +27,15 @@ namespace ZDO.CHSite.Logic
             }
 
             /// <summary>
+            /// One annotation candidate: Entry ID, and how long entry must be in query string.
+            /// </summary>
+            public struct AnnCandidate
+            {
+                public int EntryId;
+                public int Length;
+            }
+
+            /// <summary>
             /// One item in list of senses that contain a target-language word.
             /// </summary>
             private struct TrgEntryPtr
@@ -1200,6 +1209,81 @@ namespace ZDO.CHSite.Logic
                 // Result is union of two lists
                 foreach (int id in lstSimp) res.Add(id);
                 foreach (int id in lstTrad) res.Add(id);
+                return res;
+            }
+
+            public List<AnnCandidate> GetAnnotationCandidates(string query, bool simp, int start, int minEnd)
+            {
+                var res = new List<AnnCandidate>();
+                IdeoInstArr val = new IdeoInstArr();
+                int hpos;
+                char cfirst = query[start];
+                // First character not seen in any entry: we're done right here.
+                val.Hanzi = cfirst;
+                hpos = Array.BinarySearch(hanzi, val, hanziCmp);
+                if (hpos < 0) { return res; }
+                val = hanzi[hpos];
+                // Special treatment: very last character of query string
+                if (start == query.Length - 1 && minEnd == query.Length)
+                {
+                    foreach (var iep in val.Instances)
+                    {
+                        if (simp && iep.IsInSimp && iep.SimpCount == 1)
+                            res.Add(new AnnCandidate { EntryId = iep.EntryId, Length = 1 });
+                        if (!simp && iep.IsInTrad && iep.TradCount == 1)
+                            res.Add(new AnnCandidate { EntryId = iep.EntryId, Length = 1 });
+                    }
+                    return res;
+                }
+                // Candidate IDs remaining at each position (increasingly narrow intersections)
+                HashSet<int>[] cands = new HashSet<int>[query.Length - start];
+                for (int i = 0; i != cands.Length; ++i) cands[i] = new HashSet<int>();
+                // Fill in first candidate set
+                foreach (var iep in val.Instances)
+                {
+                    if (simp && iep.IsInSimp) cands[0].Add(iep.EntryId);
+                    if (!simp && iep.IsInTrad) cands[0].Add(iep.EntryId);
+                }
+                // Our candidates of length 1
+                if (start + 1 > minEnd)
+                {
+                    foreach (int id in cands[0])
+                    {
+                        // TO-DO: only short enough entries
+                        res.Add(new AnnCandidate { EntryId = id, Length = 1 });
+                    }
+                }
+                // Narrow down intersections for each subsequent position
+                for (int i = start + 1; i < query.Length; ++i)
+                {
+                    char c = query[i];
+                    HashSet<int> prevSet = cands[i - start - 1];
+                    // If we've run out of candidates, not point in continuing
+                    if (prevSet.Count == 0) break;
+                    // Calculate intersection with previous set
+                    HashSet<int> thisSet = cands[i - start];
+                    val.Hanzi = c;
+                    hpos = Array.BinarySearch(hanzi, val, hanziCmp);
+                    if (hpos < 0) continue;
+                    val = hanzi[hpos];
+                    foreach (var iep in val.Instances)
+                    {
+                        if (simp && iep.IsInSimp && prevSet.Contains(iep.EntryId)) thisSet.Add(iep.EntryId);
+                        if (!simp && iep.IsInTrad && prevSet.Contains(iep.EntryId)) thisSet.Add(iep.EntryId);
+                    }
+                    // If we're far along enough, add to result
+                    if (i > minEnd)
+                    {
+                        foreach (int id in thisSet)
+                        {
+                            // TO-DO: only short enough entries
+                            res.Add(new AnnCandidate { EntryId = id, Length = i - start + 1 });
+                        }
+                    }
+                }
+                // Sort longest to shortest
+                res.Sort((x, y) => y.Length.CompareTo(x.Length));
+                // Done.
                 return res;
             }
         }

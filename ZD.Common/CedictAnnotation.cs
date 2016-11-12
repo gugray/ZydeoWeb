@@ -11,6 +11,11 @@ namespace ZD.Common
     public class CedictAnnotation
     {
         /// <summary>
+        /// Entry ID.
+        /// </summary>
+        public readonly int EntryId;
+
+        /// <summary>
         /// The entry itself.
         /// </summary>
         public readonly CedictEntry Entry;
@@ -36,8 +41,9 @@ namespace ZD.Common
         /// <summary>
         /// Ctor: init immutable instance.
         /// </summary>
-        public CedictAnnotation(CedictEntry entry, SearchScript script, int start, int length)
+        public CedictAnnotation(int entryId, CedictEntry entry, SearchScript script, int start, int length)
         {
+            EntryId = entryId;
             Entry = entry;
             Script = script;
             StartInQuery = start;

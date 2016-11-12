@@ -335,7 +335,132 @@ namespace ZDO.CHSite.Logic
             res.Sort((a, b) => pyComp(a, b));
             // Done.
             return res;
+        }
 
+        private void loadMissingEntries(MySqlCommand cmdSelBinary10, Dictionary<int, CedictEntry> loadedEntries, byte[] buf,
+            List<int> idList)
+        {
+            HashSet<int> toLoadSet = new HashSet<int>();
+            foreach (int id in idList) if (!loadedEntries.ContainsKey(id)) toLoadSet.Add(id);
+            List<int> toLoad = new List<int>(toLoadSet.Count);
+            toLoad.AddRange(toLoadSet);
+            for (int i = 0; i < toLoad.Count; i += 10)
+            {
+                cmdSelBinary10.Parameters["@id0"].Value = i + 0 < toLoad.Count ? toLoad[i + 0] : -1;
+                cmdSelBinary10.Parameters["@id1"].Value = i + 1 < toLoad.Count ? toLoad[i + 1] : -1;
+                cmdSelBinary10.Parameters["@id2"].Value = i + 2 < toLoad.Count ? toLoad[i + 2] : -1;
+                cmdSelBinary10.Parameters["@id3"].Value = i + 3 < toLoad.Count ? toLoad[i + 3] : -1;
+                cmdSelBinary10.Parameters["@id4"].Value = i + 4 < toLoad.Count ? toLoad[i + 4] : -1;
+                cmdSelBinary10.Parameters["@id5"].Value = i + 5 < toLoad.Count ? toLoad[i + 5] : -1;
+                cmdSelBinary10.Parameters["@id6"].Value = i + 6 < toLoad.Count ? toLoad[i + 6] : -1;
+                cmdSelBinary10.Parameters["@id7"].Value = i + 7 < toLoad.Count ? toLoad[i + 7] : -1;
+                cmdSelBinary10.Parameters["@id8"].Value = i + 8 < toLoad.Count ? toLoad[i + 8] : -1;
+                cmdSelBinary10.Parameters["@id9"].Value = i + 9 < toLoad.Count ? toLoad[i + 9] : -1;
+                using (MySqlDataReader rdr = cmdSelBinary10.ExecuteReader())
+                {
+                    while (rdr.Read())
+                    {
+                        int len = (int)rdr.GetBytes(0, 0, buf, 0, buf.Length);
+                        int entryId = rdr.GetInt32(1);
+                        using (BinReader br = new BinReader(buf, len))
+                        {
+                            CedictEntry entry = new CedictEntry(br);
+                            loadedEntries[entryId] = entry;
+                        }
+                    }
+                }
+            }
+        }
+
+        private int annotateFrom(MySqlCommand cmdSelBinary10, Dictionary<int, CedictEntry> loadedEntries, byte[] buf,
+            string query, bool simp, int start, int farthestEnd, List<CedictAnnotation> anns)
+        {
+            // Get candidates
+            List<Index.AnnCandidate> cands = index.GetAnnotationCandidates(query, simp, start, farthestEnd);
+            if (cands.Count == 0) return -1;
+            // Try to verify longest candidates, then increasingly shorter ones
+            int cix = 0;
+            for (int length = cands[0].Length; length > 0; --length)
+            {
+                List<int> idList = new List<int>();
+                while (cix < cands.Count && cands[cix].Length == length)
+                {
+                    idList.Add(cands[cix].EntryId);
+                    ++cix;
+                }
+                loadMissingEntries(cmdSelBinary10, loadedEntries, buf, idList);
+                SearchScript scr = simp ? SearchScript.Simplified : SearchScript.Traditional;
+                string expected = query.Substring(start, length);
+                bool foundAny = false;
+                foreach (int id in idList)
+                {
+                    CedictEntry entry = loadedEntries[id];
+                    string hw = simp ? entry.ChSimpl : entry.ChTrad;
+                    if (hw == expected)
+                    {
+                        CedictAnnotation ann = new CedictAnnotation(id, entry, scr, start, length);
+                        anns.Add(ann);
+                        foundAny = true;
+                    }
+                }
+                if (foundAny) return start + length;
+            }
+            return -1;
+        }
+
+        private List<CedictAnnotation> annotate(string query)
+        {
+            List<CedictAnnotation> anns = new List<CedictAnnotation>();
+            Dictionary<int, CedictEntry> loadedEntries = new Dictionary<int, CedictEntry>();
+            byte[] buf = new byte[32768];
+            using (MySqlConnection conn = DB.GetConn())
+            using (MySqlCommand cmdSelBinary10 = DB.GetCmd(conn, "SelBinaryEntry10"))
+            {
+                // Find longest covered substrings at each position
+                int farthestEnd = 0;
+                List<CedictAnnotation> annsS = new List<CedictAnnotation>();
+                List<CedictAnnotation> annsT = new List<CedictAnnotation>();
+                for (int i = 0; i != query.Length; ++i)
+                {
+                    // If previous search covered through to end of query, no point in continuing
+                    if (farthestEnd == query.Length) break;
+                    // Find annotations separately from simplified and traditional HWs
+                    annsS.Clear();
+                    annsT.Clear();
+                    int nfSimp = annotateFrom(cmdSelBinary10, loadedEntries, buf, query, true, i, farthestEnd, annsS);
+                    int nfTrad = annotateFrom(cmdSelBinary10, loadedEntries, buf, query, false, i, farthestEnd, annsT);
+                    // Both go equally far, and that's far enough
+                    if (nfSimp == nfTrad && nfSimp > farthestEnd)
+                    {
+                        farthestEnd = nfSimp;
+                        // Merge them, we'll have the same entries popping up in both
+                        HashSet<int> idsHere = new HashSet<int>();
+                        foreach (CedictAnnotation ann in annsS)
+                        {
+                            anns.Add(ann);
+                            idsHere.Add(ann.EntryId);
+                        }
+                        foreach (CedictAnnotation ann in annsT)
+                        {
+                            if (!idsHere.Contains(ann.EntryId)) anns.Add(ann);
+                        }
+                    }
+                    // Traditional goes farther, and that's far enough
+                    else if (nfTrad > nfSimp && nfTrad > farthestEnd)
+                    {
+                        farthestEnd = nfTrad;
+                        anns.AddRange(annsT);
+                    }
+                    // Simplified goes farther, and that's far enough
+                    else if (nfSimp > nfTrad && nfSimp > farthestEnd)
+                    {
+                        farthestEnd = nfSimp;
+                        anns.AddRange(annsS);
+                    }
+                }
+            }
+            // Done.
+            return anns;
         }
 
         /// <summary>
@@ -354,11 +479,15 @@ namespace ZDO.CHSite.Logic
                 gotLock = true;
 
                 // Hanzi / Pinyin > Annotate > Target
-                if (hasHanzi(query)) res = lookupHanzi(query);
+                bool queryHasHanzi = hasHanzi(query);
+                if (queryHasHanzi) res = lookupHanzi(query);
                 else res = lookupPinyin(query);
                 if (res.Count > 0) return new CedictLookupResult(query, res, anns, SearchLang.Chinese);
-                //anns = doAnnotate(query);
-                //if (anns.Count > 0) return new CedictLookupResult(query, res, anns, SearchLang.Chinese);
+                if (queryHasHanzi)
+                {
+                    anns = annotate(query);
+                    if (anns.Count > 0) return new CedictLookupResult(query, res, anns, SearchLang.Chinese);
+                }
                 res = lookupTarget(query);
                 if (res.Count > 0) return new CedictLookupResult(query, res, anns, SearchLang.Target);
                 return new CedictLookupResult(query, res, anns, SearchLang.Chinese);

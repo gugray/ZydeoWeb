@@ -10,8 +10,6 @@ namespace ZDO.CHSite.Renderers
 {
     public class ResultsRenderer
     {
-        private const int maxResults = 0;
-
         private readonly CedictLookupResult lr;
         private readonly UiScript uiScript;
         private readonly UiTones uiTones;
@@ -23,18 +21,28 @@ namespace ZDO.CHSite.Renderers
             this.uiTones = uiTones;
         }
 
-        public void Render(StringBuilder sb)
+        public void Render(StringBuilder sb, string uiLang)
         {
             sb.AppendLine("<div id='results'>");
-            int max = lr.Results.Count;
-            if (maxResults > 0) max = Math.Min(lr.Results.Count, maxResults);
-            for (int i = 0; i != max; ++i)
+            for (int i = 0; i != lr.Results.Count; ++i)
             {
-                var lres = lr.Results[i];
-                EntryRenderer er = new EntryRenderer(lres, uiScript, uiTones);
+                EntryRenderer er = new EntryRenderer(lr.Results[i], uiScript, uiTones);
                 er.OneLineHanziLimit = 9;
                 er.Render(sb);
-                if (i != max - 1) sb.AppendLine("<div class='resultSep'></div>");
+                if (i != lr.Results.Count - 1) sb.AppendLine("<div class='resultSep'></div>");
+            }
+            if (lr.Annotations.Count != 0)
+            {
+                sb.Append("<div class='notice'>");
+                sb.Append("<i class='fa fa-umbrella'></i>");
+                sb.Append("<span>" + TextProvider.Instance.GetString(uiLang, "search.annotationNotice") + "</span>");
+                sb.AppendLine("</div>");
+                for (int i = 0; i != lr.Annotations.Count; ++i)
+                {
+                    EntryRenderer er = new EntryRenderer(lr.Query, lr.Annotations[i], uiTones);
+                    er.Render(sb);
+                    if (i != lr.Annotations.Count - 1) sb.AppendLine("<div class='resultSep'></div>");
+                }
             }
             sb.AppendLine("</div>");
         }

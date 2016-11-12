@@ -46,7 +46,7 @@ namespace ZDO.CHSite.Controllers
             if (str.StartsWith("en/") || str.StartsWith("de/") || str.StartsWith("hu/"))
             {
                 lang = str.Substring(0, 2);
-                rel = str.Substring(2);
+                rel = str.Substring(3);
                 return;
             }
             lang = rel = null;

@@ -94,9 +94,9 @@ namespace ZDO.CHSite.Renderers
             string entryClass = "entry";
             if (tones == UiTones.Pleco) entryClass += " toneColorsPleco";
             else if (tones == UiTones.Dummitt) entryClass += " toneColorsDummitt";
-            sb.Append("div class='" + entryClass + "'>"); // <div class="entry">
+            sb.Append("<div class='" + entryClass + "'>"); // <div class="entry">
 
-            sb.Append("<span class='hw-simp'>");// <span class="hw-simp">
+            sb.Append("<span class='hw-ann'>");// <span class="hw-simp">
             renderHanzi(query, entry, ann.StartInQuery, ann.LengthInQuery, sb);
             sb.Append("</span>"); // <span class="hw-ann">
 
@@ -153,7 +153,7 @@ namespace ZDO.CHSite.Renderers
                     sb.Append("<span class='" + cls + "'>");
                 }
                 sb.Append(HtmlEncoder.Default.Encode(c.ToString()));
-                if (!string.IsNullOrEmpty(cls)) sb.Append("</span");
+                if (!string.IsNullOrEmpty(cls)) sb.Append("</span>");
             }
         }
 

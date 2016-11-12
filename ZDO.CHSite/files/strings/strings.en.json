@@ -17,5 +17,8 @@
   "misc": {
     "searchResultTitleHDD": "{0} - German translation - HanDeDict @ Zydeo Chinese-German Dictionary",
     "searchResultTitleCHD": "{0} - magyar fordítás - CHDICT Chinese-Hungarian Dictionary"
+  },
+  "search": {
+    "annotationNotice": "The search expression is not a word in the dictionary; showing annotations instead."
   }
 }

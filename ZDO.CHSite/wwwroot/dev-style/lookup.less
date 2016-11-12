@@ -43,32 +43,13 @@
 
 /* ------------------------------- NOTICE (ANNOTATION MODE, ETC.) ------------------------------- */
 
-#topNotice {
-  display: none;
-  float: left;
-  width: 100%;
-  clear: right;
-  background-color: #c7d9b3;
-  border-radius: 0.3em;
-  -moz-border-radius: 0.3em;
-  -webkit-border-radius: 0.3em;
-  padding: 0;
-  margin-bottom: 10pt;
-  margin-top: 5pt;
-  color: @clrBodyText;
-}
-
-.tnTitle {
-  text-align: center;
-  font-size: 120%;
-  font-weight: bold;
-  margin: 5pt 0 0 0;
-}
-
-.tnMessage {
-  text-align: center;
-  font-size: 90%;
-  margin: 5pt 10pt 10pt 10pt;
+#results .notice {
+  position: relative; width: 100%; overflow-y: auto; margin: 0 0 2em -0.4rem; box-sizing: border-box;
+  padding: 0.5rem; font-size: 1rem;
+  background-color: #fae7e3; border-left: 0.4rem solid #8c2c1b;
+  span, i { display: block; position: relative; float: left; }
+  i { width: 2rem; font-size: 1.5rem; }
+  span { width: calc(100% - 6rem); }
 }
 
 /* ------------------------------- LOOKUP RESULTS ------------------------------- */
