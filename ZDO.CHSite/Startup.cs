@@ -75,7 +75,7 @@ namespace ZDO.CHSite
             else loggerFactory.AddSerilog();
         }
 
-        private void initDB()
+        public static void InitDB(IConfiguration config)
         {
             try
             {
@@ -91,7 +91,7 @@ namespace ZDO.CHSite
         public void ConfigureServices(IServiceCollection services)
         {
             // Init low-level DB singleton
-            initDB();
+            InitDB(config);
             // Application-specific singletons.
             services.AddSingleton(new PageProvider(loggerFactory, env.IsDevelopment(), mut, config["baseUrl"]));
             services.AddSingleton(new LangRepo(Path.Combine(config["dataFolder"], "unihanzi.bin")));

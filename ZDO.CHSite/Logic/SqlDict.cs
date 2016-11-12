@@ -33,7 +33,8 @@ namespace ZDO.CHSite.Logic
         /// </summary>
         public SqlDict(ILoggerFactory lf)
         {
-            logger = lf.CreateLogger(GetType().FullName);
+            if (lf != null) logger = lf.CreateLogger(GetType().FullName);
+            else logger = new DummyLogger();
             logger.LogInformation("SQL dictionary initializing...");
             pinyin = new Pinyin();
             index = new Index(logger, pinyin);

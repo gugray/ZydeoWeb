@@ -1,13 +1,39 @@
-﻿using System.IO;
+﻿using System;
+using System.Diagnostics;
+using System.IO;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace ZDO.CHSite
 {
     public class Program
     {
-        public static void Main(string[] args)
+        private static int workOffline(string[] args)
         {
+            try
+            {
+                OfflineTool ot = new OfflineTool();
+                if (args[1] == "recreate-db") ot.RecreateDB();
+                else if (args[1] == "import-freq") ot.ImportFreq(args[2]);
+                else if (args[1] == "import-dict") ot.ImportDict(args[2], args[3]);
+                else throw new Exception("Unrecognized task: " + args[1]);
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(ex.ToString());
+                return -1;
+            }
+        }
+
+        public static int Main(string[] args)
+        {
+            if (args.Length >= 2 && args[0] == "--task")
+            {
+                int res = workOffline(args);
+                if (Debugger.IsAttached) Console.ReadLine();
+                return res;
+            }
+
             var host = new WebHostBuilder()
                .UseUrls("http://0.0.0.0:5002")
                .UseKestrel()
@@ -17,6 +43,7 @@ namespace ZDO.CHSite
                .CaptureStartupErrors(true)
                .Build();
             host.Run();
+            return 0;
         }
     }
 }

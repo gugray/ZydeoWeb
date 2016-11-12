@@ -33,6 +33,9 @@ namespace ZDO.Console.Logic
                 if (cmd == "startService") funService(true);
                 else if (cmd == "stopService") funService(false);
                 else if (cmd == "deployApp") funDeployApp();
+                else if (cmd == "resetDB") funRecreateDB();
+                else if (cmd == "importFreq") funImportFreq();
+                else if (cmd == "importDict") funImportDict();
                 else
                 {
                     string cmdStr = cmd == null ? "null" : cmd;
@@ -69,6 +72,103 @@ namespace ZDO.Console.Logic
             Succeeded = err == null;
             StatusMsg = "Finished.";
             msgOutErr(stdout, stderr, err);
+        }
+
+        private void funImportDict()
+        {
+            string stdout, stderr, err;
+            StatusMsg = "Preparing to import dictionary...";
+            if (Helpers.IsSrvRunning(Path.Combine(sconf.AppRoot, "service/service.pid")))
+            {
+                StatusMsg = "Aborted because service is running.";
+                return;
+            }
+
+            string dictFile = Path.Combine(opt.WarehousePath, "handedict.txt");
+            if (!File.Exists(dictFile))
+            {
+                StatusMsg = "Aborted because dict file does not exist: " + dictFile;
+                return;
+            }
+
+            string appDll = Path.Combine(sconf.AppRoot, "app/ZDO.CHSite.dll");
+            Dictionary<string, string> env = new Dictionary<string, string>();
+            env["MUTATION"] = sconf.Mutation;
+            if (sconf.StagingOf != "") env["ASPNETCORE_ENVIRONMENT"] = "Staging";
+            else env["ASPNETCORE_ENVIRONMENT"] = "Production";
+            string args = appDll + " --task import-dict " + dictFile + " " + opt.WarehousePath;
+
+            StatusMsg = "Importing dictionary...";
+            err = Helpers.Exec("dotnet", args, out stdout, out stderr, env);
+            if (err != null)
+            {
+                StatusMsg = "Failed to import dictionary.";
+                msgOutErr(stdout, stderr, err);
+                return;
+            }
+            StatusMsg = "Dictionary imported successfully.";
+            Succeeded = true;
+        }
+
+        private void funImportFreq()
+        {
+            string stdout, stderr, err;
+            StatusMsg = "Preparing to import word frequencies...";
+            if (Helpers.IsSrvRunning(Path.Combine(sconf.AppRoot, "service/service.pid")))
+            {
+                StatusMsg = "Aborted because service is running.";
+                return;
+            }
+
+            string freqFile = Path.Combine(opt.WarehousePath, "subtlex-ch.txt");
+            if (!File.Exists(freqFile))
+            {
+                StatusMsg = "Aborted because freq file does not exist: " + freqFile;
+                return;
+            }
+
+            string appDll = Path.Combine(sconf.AppRoot, "app/ZDO.CHSite.dll");
+            Dictionary<string, string> env = new Dictionary<string, string>();
+            env["MUTATION"] = sconf.Mutation;
+            if (sconf.StagingOf != "") env["ASPNETCORE_ENVIRONMENT"] = "Staging";
+            else env["ASPNETCORE_ENVIRONMENT"] = "Production";
+
+            StatusMsg = "Importing word frequencies...";
+            err = Helpers.Exec("dotnet", appDll + " --task import-freq " + freqFile, out stdout, out stderr, env);
+            if (err != null)
+            {
+                StatusMsg = "Failed to import word frequencies.";
+                msgOutErr(stdout, stderr, err);
+                return;
+            }
+            StatusMsg = "Word frequencies imported successfully.";
+            Succeeded = true;
+        }
+
+        private void funRecreateDB()
+        {
+            string stdout, stderr, err;
+            StatusMsg = "Preparing to recreate DB...";
+            if (Helpers.IsSrvRunning(Path.Combine(sconf.AppRoot, "service/service.pid")))
+            {
+                StatusMsg = "Aborted because service is running.";
+                return;
+            }
+
+            string appDll = Path.Combine(sconf.AppRoot, "app/ZDO.CHSite.dll");
+            Dictionary<string, string> env = new Dictionary<string, string>();
+            env["MUTATION"] = sconf.Mutation;
+            if (sconf.StagingOf != "") env["ASPNETCORE_ENVIRONMENT"] = "Staging";
+            else env["ASPNETCORE_ENVIRONMENT"] = "Production";
+            err = Helpers.Exec("dotnet", appDll + " --task recreate-db", out stdout, out stderr, env);
+            if (err != null)
+            {
+                StatusMsg = "Failed to recreate DB.";
+                msgOutErr(stdout, stderr, err);
+                return;
+            }
+            StatusMsg = "DB reset successfully.";
+            Succeeded = true;
         }
 
         private void funDeployApp()
@@ -126,7 +226,7 @@ namespace ZDO.Console.Logic
                 msgOutErr(stdout, stderr, err);
                 return;
             }
-            StatusMsg = "Finished.";
+            StatusMsg = "Application deployed successfully.";
             Succeeded = true;
         }
     }
