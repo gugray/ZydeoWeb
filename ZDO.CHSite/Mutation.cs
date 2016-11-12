@@ -19,4 +19,11 @@ namespace ZDO.CHSite
         /// </summary>
         CHD,
     }
+
+    public enum HostingEnv
+    {
+        Development,
+        Staging,
+        Production,
+    }
 }

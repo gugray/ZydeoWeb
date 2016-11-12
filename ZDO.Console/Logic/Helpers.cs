@@ -29,7 +29,7 @@ namespace ZDO.Console.Logic
             catch { return false; }
         }
 
-        public static string Exec(string cmd, string args, out string stdout, out string stderr)
+        public static string Exec(string cmd, string args, out string stdout, out string stderr, Dictionary<string, string> env = null)
         {
             try
             {
@@ -42,6 +42,7 @@ namespace ZDO.Console.Logic
                     p.StartInfo.RedirectStandardError = true;
                     if (ExecWorkingDir != null) p.StartInfo.WorkingDirectory = ExecWorkingDir;
                     else p.StartInfo.WorkingDirectory = Directory.GetCurrentDirectory();
+                    if (env != null) foreach (var x in env) p.StartInfo.Environment[x.Key] = x.Value;
                     p.Start();
                     p.WaitForExit();
                     stdout = p.StandardOutput.ReadToEnd();

@@ -1,4 +1,6 @@
-﻿using System;
+﻿/*
+
+using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Net;
@@ -127,3 +129,5 @@ namespace ZDO.CHSite.Controllers
         }
     }
 }
+
+*/

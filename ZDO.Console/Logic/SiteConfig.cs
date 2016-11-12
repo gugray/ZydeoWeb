@@ -3,6 +3,7 @@
     public class SiteConfig
     {
         public string ShortName { get; set; }
+        public string Mutation { get; set; }
         public string StagingOf { get; set; }
         public string DisplayName { get; set; }
         public string AppRoot { get; set; }
