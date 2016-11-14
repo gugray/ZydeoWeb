@@ -245,6 +245,28 @@ body {
   html.resplay-hamburger &, html.resplay-hamburger &.nosubmenu { top: 6.5rem; }
 }
 
+// === COOKIE WARNING =============================
+
+
+#bittercookie {
+  display: none; position: fixed; bottom: 0; width: 100%; height: auto; overflow: hidden;
+  text-align: center; background-color: #5a5a5a; color: white;
+  margin-bottom: -1px; border: 0; padding: 4pt 0 4pt 0;
+  font-family: @fntBase; font-size: 0.9rem;
+  opacity: 0.9;
+  a {
+    background-color: #272727; color: white; text-decoration: none;
+    padding: 2pt 4pt 2pt 4pt; margin-left: 3pt; margin-right: 3pt; cursor: default;
+    border-radius: 3pt; white-space: nowrap;
+    &:hover { color: #d9d9d9; }
+  }
+  div { box-sizing: border-box; position: relative; }
+  & div:nth-child(1) { width: 150pt; float: right; padding: 0 10pt 0 0; text-align: left; line-height: 22pt; }
+  html.resplay-hamburger & div:nth-child(1) { width: 90pt; }
+  & div:nth-child(2) { float: none; width: auto; overflow: hidden; padding: 0 10pt 0 10pt; text-align: right; }
+}
+
+
 // === General =============================
 
 // Generic styling of input fields

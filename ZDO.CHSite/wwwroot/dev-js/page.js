@@ -75,6 +75,8 @@ var zdPage = (function () {
     onResize();
     // Update menu to show where I am (will soon end up being)
     updateMenuState();
+    // Cookie warning, Imprint link etc.
+    initGui();
     // Global script initializers
     for (var i = 0; i != globalInitScripts.length; ++i) globalInitScripts[i]();
     // Request dynamic page - async
@@ -257,6 +259,22 @@ var zdPage = (function () {
       activeModalCloser = null;
       // Stop propagating, or we'll self-close right away.
       evt.stopPropagation();
+    });
+  }
+
+  // General UI event wireup
+  function initGui() {
+    // Cookie warning / opt-in pest
+    var cookies = localStorage.getItem("cookies");
+    if (cookies != "go") $("#bittercookie").css("display", "block");
+    $("#swallowbitterpill").click(function (evt) {
+      $("#bittercookie").css("display", "none");
+      localStorage.setItem("cookies", "go");
+      evt.preventDefault();
+    });
+    // Link to imprint
+    $("#imprint").click(function () {
+      window.open("/read/imprint");
     });
   }
 
