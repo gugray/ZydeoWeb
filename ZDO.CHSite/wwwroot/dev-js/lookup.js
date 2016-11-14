@@ -109,6 +109,8 @@ var zdLookup = (function () {
       killPrefixHints();
       return;
     }
+    //$("#searchSuggestions").addClass("pending"); // If already visible, greys out old items while query is in progres
+    //Actually nicer without (no flicker)
     // Query for hints
     var sentId = ++prefixReqId;
     var req = $.ajax({
@@ -127,7 +129,6 @@ var zdLookup = (function () {
       // Suggestions box
       $("body").append('<div id="searchSuggestions"></div>');
       $("#searchSuggestions").addClass("visible");
-      $("#searchSuggestions").addClass("pending"); // If already visible, greys out old items while query is in progres
       // Positioning magic: in full version only
       if (!zdPage.isMobile()) {
         var sbOfs = $(".searchBox").offset();
@@ -140,7 +141,9 @@ var zdLookup = (function () {
       // Content (each suggestion)
       var toShow = "";
       for (var i = 0; i != data.length; ++i) {
-        toShow += "<div class='prefix-suggestion'>" + escapeHTML(data[i].suggestion) + "</div>";
+        var prefix = escapeHTML(data[i].suggestion.substring(0, data[i].prefixLength));
+        var shadow = escapeHTML(data[i].suggestion.substring(data[i].prefixLength));
+        toShow += "<div class='prefix-suggestion'>" + prefix + "<span class='shadow'>" + shadow + "</span></div>";
       }
       $("#searchSuggestions").html(toShow);
       $("#searchSuggestions").removeClass("pending");
@@ -200,6 +203,7 @@ var zdLookup = (function () {
     $(".txtSearch.active").val($(this).text());
     $(".txtSearch.active").focus();
     prefixSuppressTrigger = false;
+    submitSearch();
   }
 
   // Hides prefix search hint element, resets any interactive state to nothing.
