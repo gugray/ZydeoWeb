@@ -20,7 +20,7 @@ prod/
 project.lock.json
 *.user
 /*.tar.gz
-**/html/cont-*.html
+**/html/_cont*.html
 **/sitemap.txt
 
 

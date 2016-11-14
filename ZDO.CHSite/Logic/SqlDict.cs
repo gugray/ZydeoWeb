@@ -59,11 +59,6 @@ namespace ZDO.CHSite.Logic
             return new BulkBuilder(index, workingFolder, userId, note, foldHistory);
         }
 
-        public Query GetQuery()
-        {
-            return new Query(index);
-        }
-
         public class HeadAndTrg
         {
             public readonly string Head;
