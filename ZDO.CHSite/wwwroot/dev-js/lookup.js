@@ -439,6 +439,7 @@ var zdLookup = (function () {
     killPrefixHints();
     hideStrokeInput();
     hideSettings();
+    ++prefixReqId; // If suggestions come in after we've submitted search, should not be shown anymore.
     zdPage.submitSearch(queryStr);
   }
 
