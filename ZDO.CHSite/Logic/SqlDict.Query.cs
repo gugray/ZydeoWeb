@@ -104,10 +104,13 @@ namespace ZDO.CHSite.Logic
                 List<int> batch = new List<int>(10);
                 foreach (int blobId in cands)
                 {
-                    if (batch.Count < 10) { batch.Add(blobId); continue; }
-                    retrieveBatch(batch, buf, entries, cmdSelBinary10);
-                    foreach (var entry in entries) verifyHanzi(entry, query, res);
-                    batch.Clear();
+                    batch.Add(blobId);
+                    if (batch.Count == 10)
+                    {
+                        retrieveBatch(batch, buf, entries, cmdSelBinary10);
+                        foreach (var entry in entries) verifyHanzi(entry, query, res);
+                        batch.Clear();
+                    }
                 }
                 if (batch.Count != 0)
                 {
@@ -195,23 +198,22 @@ namespace ZDO.CHSite.Logic
                 List<int> senseIxs = new List<int>();
                 foreach (var cand in cands)
                 {
-                    if (batch.Count < 10)
+                    if (!resIdSet.Contains(cand.EntryId))
                     {
-                        if (!resIdSet.Contains(cand.EntryId))
+                        batch.Add(cand.EntryId);
+                        senseIxs.Add(cand.SenseIx);
+                    }
+                    if (batch.Count == 10)
+                    {
+                        retrieveBatch(batch, buf, entries, cmdSelBinary10);
+                        for (int i = 0; i != entries.Count; ++i)
                         {
-                            batch.Add(cand.EntryId);
-                            senseIxs.Add(cand.SenseIx);
+                            if (resIdSet.Contains(batch[i])) continue;
+                            if (verifyTrg(tokenizer, entries[i], senseIxs[i], toks, res)) resIdSet.Add(batch[i]);
                         }
-                        continue;
+                        batch.Clear();
+                        senseIxs.Clear();
                     }
-                    retrieveBatch(batch, buf, entries, cmdSelBinary10);
-                    for (int i = 0; i != entries.Count; ++i)
-                    {
-                        if (resIdSet.Contains(batch[i])) continue;
-                        if (verifyTrg(tokenizer, entries[i], senseIxs[i], toks, res)) resIdSet.Add(batch[i]);
-                    }
-                    batch.Clear();
-                    senseIxs.Clear();
                 }
                 if (batch.Count != 0)
                 {
@@ -287,10 +289,13 @@ namespace ZDO.CHSite.Logic
                 List<int> batch = new List<int>(10);
                 foreach (int blobId in cands)
                 {
-                    if (batch.Count < 10) { batch.Add(blobId); continue; }
-                    retrieveBatch(batch, buf, entries, cmdSelBinary10);
-                    foreach (var entry in entries) verifyPinyin(entry, query, res);
-                    batch.Clear();
+                    batch.Add(blobId);
+                    if (batch.Count == 10)
+                    {
+                        retrieveBatch(batch, buf, entries, cmdSelBinary10);
+                        foreach (var entry in entries) verifyPinyin(entry, query, res);
+                        batch.Clear();
+                    }
                 }
                 if (batch.Count != 0)
                 {

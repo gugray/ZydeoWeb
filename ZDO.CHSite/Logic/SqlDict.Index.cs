@@ -187,7 +187,7 @@ namespace ZDO.CHSite.Logic
             private struct PinyinInstArr
             {
                 /// <summary>
-                /// Standard pinyin ID in lowest two bytes, plus tone at third lowest byte.
+                /// Two-byte standard pinyin ID, plus tone at lowest byte.
                 /// </summary>
                 public int TonedId;
                 /// <summary>

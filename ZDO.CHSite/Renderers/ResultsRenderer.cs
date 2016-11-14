@@ -7,7 +7,7 @@ namespace ZDO.CHSite.Renderers
 {
     public class ResultsRenderer
     {
-        private const int maxResults = 256;
+        private const int maxResults = int.MaxValue;
 
         private readonly CedictLookupResult lr;
         private readonly UiScript uiScript;
