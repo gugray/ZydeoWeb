@@ -14,15 +14,15 @@ var zdHistory = (function () {
   function init() {
     // Add tooltips to pliant per-entry commands
     $(".opHistComment").tooltipster({
-      content: $("<span>" + uiStrings["history"]["tooltip-comment"] + "</span>"),
+      content: $("<span>" + zdPage.ui("history", "tooltip-comment") + "</span>"),
       position: 'left'
     });
     $(".opHistEdit").tooltipster({
-      content: $("<span>" + uiStrings["history"]["tooltip-edit"] + "</span>"),
+      content: $("<span>" + zdPage.ui("history", "tooltip-edit") + "</span>"),
       position: 'left'
     });
     $(".opHistFlag").tooltipster({
-      content: $("<span>" + uiStrings["history"]["tooltip-flag"] + "</span>"),
+      content: $("<span>" + zdPage.ui("history", "tooltip-flag") + "</span>"),
       position: 'left'
     });
     // Event handlers for per-entry commands
@@ -36,10 +36,10 @@ var zdHistory = (function () {
     var entryId = elm.data("entryid");
     // Prepare modal window content
     var bodyHtml = zdSnippets["history.addComment"];
-    bodyHtml = bodyHtml.replace("{{hint}}", uiStrings["history-commententry-hint"]);
+    bodyHtml = bodyHtml.replace("{{hint}}", zdPage.ui("history.addComment", "hint"));
     var params = {
       id: "dlgHistComment",
-      title: uiStrings["history.addComment"]["title"],
+      title: zdPage.ui("history.addComment", "title"),
       body: bodyHtml,
       confirmed: function () { return onCommentConfirmed(entryId); },
       toFocus: "#txtHistComment"
@@ -61,10 +61,10 @@ var zdHistory = (function () {
       data: { action: "history_commententry", entry_id: entryId }
     });
     req.done(function (data) {
-      zdPage.showAlert(uiStrings["history.addComment"]["successtitle"], uiStrings["history.addComment"]["successmessage"], false);
+      zdPage.showAlert(zdPage.ui("history.addComment", "successtitle"), uiStrings["history.addComment"]["successmessage"], false);
     });
     req.fail(function (jqXHR, textStatus, error) {
-      zdPage.showAlert(uiStrings["history.addComment"]["failtitle"], uiStrings["history.addComment"]["failmessage"], true);
+      zdPage.showAlert(zdPage.ui("history.addComment", "failtitle"), uiStrings["history.addComment"]["failmessage"], true);
     });
     return true;
   }

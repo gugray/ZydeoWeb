@@ -30,6 +30,8 @@ var zdLookup = (function () {
   });
 
   function globalInit() {
+    // Load persisted/default values UI
+    loadOptions();
     // Register search params provider
     zdPage.setSearchParamsProvider(getSearchParams);
 
@@ -42,13 +44,13 @@ var zdLookup = (function () {
       elmStrokes.setAttribute("src", "/prod-js/xcharacterdata.js");
     }
     // Search field hint. Depends on mutation.
-    if ($("body").hasClass("hdd")) $(".txtSearch").attr("placeholder", uiStrings["search-manual"]["hint-hdd"]);
-    else $(".txtSearch").attr("placeholder", uiStrings["search-manual"]["hint-chd"]);
+    if ($("body").hasClass("hdd")) $(".txtSearch").attr("placeholder", zdPage.ui("search-manual", "hint-hdd"));
+    else $(".txtSearch").attr("placeholder", zdPage.ui("search-manual", "hint-chd"));
     // Add tooltips
     if (!zdPage.isTouch()) {
-      $(".btnWrite").tooltipster({ content: $("<span>" + uiStrings["search-manual"]["tooltip-btn-brush"] + "</span>") });
-      $(".btnSettings").tooltipster({ content: $("<span>" + uiStrings["search-manual"]["tooltip-btn-settings"] + "</span>") });
-      $(".btnSearch").tooltipster({ content: $("<span>" + uiStrings["search-manual"]["tooltip-btn-search"] + "</span>") });
+      $(".btnWrite").tooltipster({ content: $("<span>" + zdPage.ui("search-manual", "tooltip-btn-brush") + "</span>") });
+      $(".btnSettings").tooltipster({ content: $("<span>" + zdPage.ui("search-manual", "tooltip-btn-settings") + "</span>") });
+      $(".btnSearch").tooltipster({ content: $("<span>" + zdPage.ui("search-manual", "tooltip-btn-search") + "</span>") });
     }
     // Clear button; settings
     $("#btn-clear").click(clearSearch);
@@ -92,7 +94,7 @@ var zdLookup = (function () {
     $('.txtSearch.active').val(data.data);
     // Hack [?] - but either something steals focus on load, or input field is not yet shown to accept focus.
     setTimeout(function () {
-      if (!zdPage.isMobile) $('.txtSearch.active').focus();
+      if (!zdPage.isMobile()) $('.txtSearch.active').focus();
       else $('.txtSearch.active').blur();
     }, 100);
   }
@@ -234,7 +236,7 @@ var zdLookup = (function () {
       var xMidTail = rectTail[0] + rectTail[2] / 2;
       elmPopup.offset({ left: elmPopup.offset().left + xMidStgs - xMidTail, top: elmPopup.offset().top });
     }
-    // Load persisted/default values; update UI
+    // Reload persisted/default values; update UI
     loadOptions();
     // Events
     optionsEventWireup();
@@ -290,7 +292,7 @@ var zdLookup = (function () {
         selectOption(this.id);
       }
     };
-    var handlers = zdPage.isMobile() ? handlersTouch : handlersMouse;
+    var handlers = zdPage.isTouch() ? handlersTouch : handlersMouse;
     // Script option set
     $("#optScriptSimplified").on(handlers);
     $("#optScriptTraditional").on(handlers);
@@ -432,6 +434,7 @@ var zdLookup = (function () {
     queryStr = queryStr.replace(" ", "+");
     killPrefixHints();
     hideStrokeInput();
+    hideSettings();
     zdPage.submitSearch(queryStr);
   }
 

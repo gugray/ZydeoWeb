@@ -404,8 +404,8 @@ var zdPage = (function () {
       html = html.replace("{{id}}", params.id);
       html = html.replace("{{title}}", escapeHTML(params.title));
       html = html.replace("{{body}}", params.body);
-      html = html.replace("{{ok}}", uiStrings["dialog"]["ok"]);
-      html = html.replace("{{cancel}}", uiStrings["dialog"]["cancel"]);
+      html = html.replace("{{ok}}", zdPage.ui("dialog", "ok"));
+      html = html.replace("{{cancel}}", zdPage.ui("dialog", "cancel"));
       $("#dynPage").append(html);
       // Wire up events
       activeModalCloser = function () { doCloseModal(params.id); };
@@ -464,20 +464,37 @@ var zdPage = (function () {
       while (true) {
         var match = rex.exec(tmpl);
         if (!match) break;
-        var txt = uiStrings[prefix][match[1]];
+        //var txt = uiStrings[prefix][match[1]];
+        var txt = zdPage.ui(prefix, match[1]);
         txt = escapeHTML(txt);
         tmpl = tmpl.replace(match[0], txt);
       }
       return tmpl;
     },
 
+    // Returns a localized UI string, with safe fallback to English and placeholder.
+    ui: function (prefix, id) {
+      var x = uiStrings[prefix];
+      if (!x) x = uiStringsEn[prefix];
+      if (!x) return "{" + prefix + "." + id + "}";
+      var str = x[id];
+      if (!str) str = "{" + prefix + "." + id + "}";
+      return str;
+    },
+
     // Returns true if current device is recognized to have a touch screen.
     isTouch: function () {
+      return false;
       // http://stackoverflow.com/questions/4817029/whats-the-best-way-to-detect-a-touch-screen-device-using-javascript
-      return 'ontouchstart' in window        // works on most browsers 
-          || navigator.maxTouchPoints;       // works on IE10/11 and Surface
+      var res = false;
+      try {
+        // works on most browsers 
+        res |= 'ontouchstart' in window;
+        // works on IE10/11 and Surface
+        res |= navigator.maxTouchPoints;
+      } catch (e) { }
+      return res;
     }
-
   };
 
 })();

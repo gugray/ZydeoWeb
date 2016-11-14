@@ -40,8 +40,8 @@ var zdStrokeAnim = (function () {
 
   function init() {
     var html = zdSnippets["lookup.soa"];
-    html = html.replace("{{title}}", uiStrings["soa"]["title"]);
-    html = html.replace("{{attribution}}", uiStrings["soa"]["attribution"]);
+    html = html.replace("{{title}}", zdPage.ui("soa", "title"));
+    html = html.replace("{{attribution}}", zdPage.ui("soa", "attribution"));
     $("#soaBox").html(html);
     $("#soaGraphics").click(function () {
       // Restart animation if we have a glyph but no timer anymore
@@ -270,9 +270,9 @@ var zdStrokeAnim = (function () {
     // This is a different request just completing.
     if (id != soa_lookupid) return;
     // No result
-    if (res == null) {
+    if (!res) {
       $("#soaError").css("display", "block");
-      $("#soaErrorContent").text(uiStrings["no-animation-for-char"]);
+      $("#soaErrorContent").text(zdPage.ui("soa", "no-animation-for-char"));
     }
     // Render result
     else {
@@ -288,7 +288,7 @@ var zdStrokeAnim = (function () {
     // This is a different request just failing; don't care
     if (id != soa_lookupid) return;
     $("#soaError").css("display", "block");
-    $("#soaErrorContent").text(uiStrings["anim-query-failed"]);
+    $("#soaErrorContent").text(zdPage.ui("soa", "anim-query-failed"));
   }
 
   // Prepare an issue AJAX query for a Hanzi's stroke order info.
