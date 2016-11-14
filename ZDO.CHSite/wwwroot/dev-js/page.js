@@ -228,6 +228,7 @@ var zdPage = (function () {
       // Trick: If we're on search page but menu is shown, link just changes display; no navigation
       if ((rel == "" || startsWith(rel, "search")) && $(this).attr("id") == "topMenuSearch") {
         $(".hdrSearch").addClass("on");
+        $(".hdrTitle").removeClass("on");
         $("#hdrMenu").removeClass("on");
         $("#subHeader").removeClass("visible");
         return false;
@@ -288,9 +289,11 @@ var zdPage = (function () {
       $("#dynPage").addClass("nosubmenu");
       $("#headermask").addClass("nosubmenu");
       $(".hdrSearch").addClass("on");
+      $(".hdrTitle").removeClass("on");
     }
     else {
       $(".hdrSearch").removeClass("on");
+      $(".hdrTitle").addClass("on");
       $("#hdrMenu").addClass("on");
       $("#subHeader").addClass("visible");
       $("#dynPage").removeClass("nosubmenu");
@@ -317,6 +320,10 @@ var zdPage = (function () {
     else if (startsWith(rel, "read/version-history")) $("#smReadVersionHistory").addClass("on");
     else if (startsWith(rel, "read/articles")) $("#smReadArticles").addClass("on");
     else if (startsWith(rel, "read/etc")) $("#smReadEtc").addClass("on");
+    // In hamburger mode, steal title from selected submenu; or page's ".page-title" element
+    var hamTitle = $(".subMenu span.on").text();
+    if (!hamTitle || hamTitle == "") hamTitle = $("#page-title").text();
+    $(".hdrTitle").text(hamTitle);
     // Language selector
     $(".langSelDe").attr("href", "/de/" + rel);
     $(".langSelHu").attr("href", "/hu/" + rel);
