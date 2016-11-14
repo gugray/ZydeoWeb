@@ -4,10 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using System.Net;
 
+using Countries;
 using ZDO.CHSite.Entities;
 using ZDO.CHSite.Logic;
-using ZDO.CHSite.Renderers;
-using ZD.Common;
 using ZD.LangUtils;
 
 namespace ZDO.CHSite.Controllers
@@ -17,22 +16,21 @@ namespace ZDO.CHSite.Controllers
     /// </summary>
     public class SmartsController : Controller
     {
-        /// <summary>
-        /// SQL dictionary engine.
-        /// </summary>
+        private readonly CountryResolver cres;
         private readonly SqlDict dict;
-        /// <summary>
-        /// Provides stroke order animations.
-        /// </summary>
         private readonly LangRepo langRepo;
+        private readonly QueryLogger qlog;
 
         /// <summary>
         /// Ctor: init controller within app environment.
         /// </summary>
-        public SmartsController(LangRepo langRepo, SqlDict dict, IConfiguration config)
+        public SmartsController(CountryResolver cres, LangRepo langRepo, SqlDict dict,
+            QueryLogger qlog, IConfiguration config)
         {
+            this.cres = cres;
             this.langRepo = langRepo;
             this.dict = dict;
+            this.qlog = qlog;
         }
 
         /// <summary>
@@ -52,26 +50,43 @@ namespace ZDO.CHSite.Controllers
         /// </summary>
         public IActionResult CharStrokes([FromQuery] string hanzi)
         {
+            IActionResult res;
+
             if (hanzi != null) hanzi = WebUtility.UrlDecode(hanzi);
-            if (hanzi == null || hanzi.Length != 1) return StatusCode(400, "A single Hanzi expected.");
-            HanziStrokes strokes = langRepo.GetStrokes(hanzi[0]);
-            if (strokes == null) return new ObjectResult(null);
-            CharStrokes res = new CharStrokes();
-            res.Strokes = new string[strokes.Strokes.Count];
-            res.Medians = new short[strokes.Strokes.Count][][];
-            for (int i = 0; i != strokes.Strokes.Count; ++i)
+            if (hanzi == null || hanzi.Length != 1)
             {
-                var stroke = strokes.Strokes[i];
-                res.Strokes[i] = stroke.SVG;
-                res.Medians[i] = new short[stroke.Median.Count][];
-                for (int j = 0; j != stroke.Median.Count; ++j)
-                {
-                    res.Medians[i][j] = new short[2];
-                    res.Medians[i][j][0] = stroke.Median[j].Item1;
-                    res.Medians[i][j][1] = stroke.Median[j].Item2;
-                }
+                // TO-DO: log warning
+                return StatusCode(400, "A single Hanzi expected.");
             }
-            return new ObjectResult(res);
+            HanziStrokes strokes = langRepo.GetStrokes(hanzi[0]);
+            if (strokes == null) res = new ObjectResult(null);
+            else
+            {
+                CharStrokes cstrokes = new CharStrokes();
+                cstrokes.Strokes = new string[strokes.Strokes.Count];
+                cstrokes.Medians = new short[strokes.Strokes.Count][][];
+                for (int i = 0; i != strokes.Strokes.Count; ++i)
+                {
+                    var stroke = strokes.Strokes[i];
+                    cstrokes.Strokes[i] = stroke.SVG;
+                    cstrokes.Medians[i] = new short[stroke.Median.Count][];
+                    for (int j = 0; j != stroke.Median.Count; ++j)
+                    {
+                        cstrokes.Medians[i][j] = new short[2];
+                        cstrokes.Medians[i][j][0] = stroke.Median[j].Item1;
+                        cstrokes.Medians[i][j][1] = stroke.Median[j].Item2;
+                    }
+                }
+                res = new ObjectResult(cstrokes);
+            }
+            // Log this request (after resolving country code).
+            string country;
+            string xfwd = HttpContext.Request.Headers["X-Real-IP"];
+            if (xfwd != null) country = cres.GetContryCode(IPAddress.Parse(xfwd));
+            else country = cres.GetContryCode(HttpContext.Connection.RemoteIpAddress);
+            qlog.LogHanzi(country, hanzi[0], strokes != null);
+            // Return result
+            return res;
         }
 
     }

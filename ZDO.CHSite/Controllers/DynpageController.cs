@@ -4,11 +4,12 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Collections.Generic;
 using System.Net;
+using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 
+using Countries;
 using ZD.Common;
 using ZDO.CHSite.Entities;
 using ZDO.CHSite.Logic;
@@ -19,48 +20,68 @@ namespace ZDO.CHSite.Controllers
     public class DynpageController : Controller
     {
         /// <summary>
-        /// Provides content HTML based on relative URL of request.
+        /// Relative URLs that are never returned as "static" initial content.
         /// </summary>
-        private readonly PageProvider pageProvider;
-
-        /// <summary>
-        /// SQL dictionary engine.
-        /// </summary>
-        private readonly SqlDict dict;
-
-        /// <summary>
-        /// Configuration.
-        /// </summary>
-        private readonly IConfiguration config;
-
-        /// <summary>
-        /// Ctor: init controller within app environment.
-        /// </summary>
-        public DynpageController(PageProvider pageProvider, SqlDict dict, IConfiguration config)
+        private readonly static string[] dynOnlyPrefixes = new string[]
         {
+            "search", "edit/history",
+        };
+
+        private readonly CountryResolver cres;
+        private readonly PageProvider pageProvider;
+        private readonly SqlDict dict;
+        private readonly IConfiguration config;
+        private readonly QueryLogger qlog;
+
+        /// <summary>
+        /// Ctor: Infuse app services.
+        /// </summary>
+        /// <remarks>
+        /// Default null values make controller accessible to <see cref="IndexController"/>.
+        /// That way, functionality is limited to serving static pages.
+        /// </remarks>
+        public DynpageController(PageProvider pageProvider, IConfiguration config,
+            CountryResolver cres = null, SqlDict dict = null, QueryLogger qlog = null)
+        {
+            this.cres = cres;
             this.pageProvider = pageProvider;
             this.dict = dict;
+            this.qlog = qlog;
             this.config = config;
         }
 
-        public IActionResult GetPage([FromQuery] string rel, [FromQuery] string lang,
+        /// <summary>
+        /// Invoked by single-page app to request current page content.
+        /// </summary>
+        public IActionResult GetPage([FromQuery] string rel, [FromQuery] string lang, [FromQuery] bool isMobile = false,
             [FromQuery] string searchScript = null, [FromQuery] string searchTones = null)
         {
-            return new ObjectResult(GetPageResult(lang, rel, searchScript, searchTones));
+            return new ObjectResult(GetPageResult(lang, rel, true, isMobile, searchScript, searchTones));
         }
 
-        internal PageResult GetPageResult(string lang, string rel, string searchScript = null, string searchTones = null)
+        internal PageResult GetPageResult(string lang, string rel, bool dynamic, bool isMobile,
+            string searchScript = null, string searchTones = null)
         {
             if (rel == null) rel = "";
-            if (rel.StartsWith("search/")) return doSearch(rel, lang, searchScript, searchTones);
-            if (rel.StartsWith("edit/history")) return doHistory(rel, lang);
-            PageResult pr = pageProvider.GetPage(lang, rel, false);
-            if (pr == null)
+            // Dynamic-only pages
+            bool isDynOnly = false;
+            foreach (var x in dynOnlyPrefixes) if (rel.StartsWith(x)) { isDynOnly = true; break; }
+            if (isDynOnly)
             {
-                pr = pageProvider.GetPage(lang, "404", false);
-                // DBG
-                GC.Collect();
+                if (dynamic)
+                {
+                    if (rel.StartsWith("search/")) return doSearch(rel, lang, searchScript, searchTones, isMobile);
+                    if (rel.StartsWith("edit/history")) return doHistory(rel, lang);
+                }
+                else
+                {
+                    PageResult xpr = pageProvider.GetPage(lang, "404", false);
+                    xpr.Html = xpr.Keywords = xpr.Title = xpr.Description = "";
+                    return xpr;
+                }
             }
+            PageResult pr = pageProvider.GetPage(lang, rel, false);
+            if (pr == null) pr = pageProvider.GetPage(lang, "404", false);
             return pr;
         }
 
@@ -100,10 +121,14 @@ namespace ZDO.CHSite.Controllers
             return pr;
         }
 
-        private PageResult doSearch(string rel, string lang, string searchScript = null, string searchTones = null)
+        private PageResult doSearch(string rel, string lang, string searchScript, string searchTones, bool isMobile)
         {
             if (rel == "" || rel == "search/") return pageProvider.GetPage(lang, "", false);
+            PageResult pr;
+            Stopwatch swatch = new Stopwatch();
+            swatch.Restart();
 
+            // Search settings
             UiScript uiScript = UiScript.Both;
             if (searchScript == "simp") uiScript = UiScript.Simp;
             else if (searchScript == "trad") uiScript = UiScript.Trad;
@@ -115,26 +140,46 @@ namespace ZDO.CHSite.Controllers
             string query = rel.Replace("search/", "");
             query = WebUtility.UrlDecode(query);
             CedictLookupResult lr = dict.Lookup(query);
+            int msecLookup = (int)swatch.ElapsedMilliseconds;
+            int msecFull = msecLookup;
             // No results
             if (lr.Results.Count == 0 && lr.Annotations.Count == 0)
-                return pageProvider.GetPage(lang, "/?noresults", false);
-            // Render results
-            StringBuilder sb = new StringBuilder();
-            ResultsRenderer rr = new ResultsRenderer(lr, uiScript, uiTones);
-            rr.Render(sb, lang);
-            // Title
-            string title = TextProvider.Instance.Mut == Mutation.CHD ?
-                TextProvider.Instance.GetString(lang, "misc.searchResultTitleCHD") :
-                TextProvider.Instance.GetString(lang, "misc.searchResultTitleHDD");
-            title = string.Format(title, query);
-            // Wrap up
-            PageResult pr = new PageResult
             {
-                RelNorm = rel,
-                Title = title,
-                Html = sb.ToString(),
-                Data = query,
-            };
+                pr = pageProvider.GetPage(lang, "/?noresults", false);
+            }
+            else
+            {
+                // Render results
+                StringBuilder sb = new StringBuilder();
+                ResultsRenderer rr = new ResultsRenderer(lr, uiScript, uiTones);
+                rr.Render(sb, lang);
+                // Title
+                string title = TextProvider.Instance.Mut == Mutation.CHD ?
+                    TextProvider.Instance.GetString(lang, "misc.searchResultTitleCHD") :
+                    TextProvider.Instance.GetString(lang, "misc.searchResultTitleHDD");
+                title = string.Format(title, query);
+                msecFull = (int)swatch.ElapsedMilliseconds;
+                // Wrap up
+                pr = new PageResult
+                {
+                    RelNorm = rel,
+                    Title = title,
+                    Html = sb.ToString(),
+                    Data = query,
+                };
+            }
+            // Query log
+            string country;
+            string xfwd = HttpContext.Request.Headers["X-Real-IP"];
+            if (xfwd != null) country = cres.GetContryCode(IPAddress.Parse(xfwd));
+            else country = cres.GetContryCode(HttpContext.Connection.RemoteIpAddress);
+            int resCount = lr.Results.Count > 0 ? lr.Results.Count : lr.Annotations.Count;
+            QueryLogger.SearchMode smode = QueryLogger.SearchMode.Target;
+            if (lr.ActualSearchLang == SearchLang.Target) smode = QueryLogger.SearchMode.Target;
+            else if (lr.Results.Count > 0) smode = QueryLogger.SearchMode.Source;
+            else if (lr.Annotations.Count > 0) smode = QueryLogger.SearchMode.Annotate;
+            qlog.LogQuery(country, isMobile, lang, uiScript, uiTones, resCount, msecLookup, msecFull, smode, query);
+            // Done
             return pr;
         }
     }

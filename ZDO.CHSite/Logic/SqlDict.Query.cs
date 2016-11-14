@@ -143,12 +143,12 @@ namespace ZDO.CHSite.Logic
             Stopwatch watch = new Stopwatch();
             watch.Restart();
             HashSet<int> cands = index.GetHanziCandidates(qhanzi);
-            Console.WriteLine("Candidates: " + cands.Count + " (" + watch.ElapsedMilliseconds + " msec)");
+            //Console.WriteLine("Candidates: " + cands.Count + " (" + watch.ElapsedMilliseconds + " msec)");
 
             // Retrieve all candidates; verify on the fly
             watch.Restart();
             retrieveVerifyHanzi(cands, query, res);
-            Console.WriteLine("Retrieval: " + res.Count + " (" + watch.ElapsedMilliseconds + " msec)");
+            //Console.WriteLine("Retrieval: " + res.Count + " (" + watch.ElapsedMilliseconds + " msec)");
             // Sort Hanzi results
             res.Sort((a, b) => hrComp(a, b));
             // Done.
@@ -239,11 +239,11 @@ namespace ZDO.CHSite.Logic
             Stopwatch watch = new Stopwatch();
             watch.Restart();
             var cands = index.GetTrgCandidates(tokSet);
-            Console.WriteLine("Candidates: " + cands.Count + " (" + watch.ElapsedMilliseconds + " msec)");
+            //Console.WriteLine("Candidates: " + cands.Count + " (" + watch.ElapsedMilliseconds + " msec)");
             // Retrieve and verify
             watch.Restart();
             retrieveVerifyTarget(tokenizer, cands, toks, res);
-            Console.WriteLine("Retrieval: " + res.Count + " (" + watch.ElapsedMilliseconds + " msec)");
+            //Console.WriteLine("Retrieval: " + res.Count + " (" + watch.ElapsedMilliseconds + " msec)");
             // Sort
             res.Sort((a, b) => b.Entry.Freq.CompareTo(a.Entry.Freq));
             // Done.
@@ -325,12 +325,12 @@ namespace ZDO.CHSite.Logic
             Stopwatch watch = new Stopwatch();
             watch.Restart();
             HashSet<int> cands = index.GetPinyinCandidates(sylls);
-            Console.WriteLine("Candidates: " + cands.Count + " (" + watch.ElapsedMilliseconds + " msec)");
+            //Console.WriteLine("Candidates: " + cands.Count + " (" + watch.ElapsedMilliseconds + " msec)");
 
             // Retrieve all candidates; verify on the fly
             watch.Restart();
             retrieveVerifyPinyin(cands, sylls, res);
-            Console.WriteLine("Retrieval: " + res.Count + " (" + watch.ElapsedMilliseconds + " msec)");
+            //Console.WriteLine("Retrieval: " + res.Count + " (" + watch.ElapsedMilliseconds + " msec)");
             // Sort Hanzi results
             res.Sort((a, b) => pyComp(a, b));
             // Done.

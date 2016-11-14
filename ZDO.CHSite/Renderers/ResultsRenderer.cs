@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.Encodings.Web;
+﻿using System.Text;
 
 using ZD.Common;
 using ZDO.CHSite.Entities;
@@ -10,6 +7,8 @@ namespace ZDO.CHSite.Renderers
 {
     public class ResultsRenderer
     {
+        private const int maxResults = 256;
+
         private readonly CedictLookupResult lr;
         private readonly UiScript uiScript;
         private readonly UiTones uiTones;
@@ -24,9 +23,10 @@ namespace ZDO.CHSite.Renderers
         public void Render(StringBuilder sb, string uiLang)
         {
             sb.AppendLine("<div id='results'>");
-            for (int i = 0; i != lr.Results.Count; ++i)
+            for (int i = 0; i != lr.Results.Count && i < maxResults; ++i)
             {
                 EntryRenderer er = new EntryRenderer(lr.Results[i], uiScript, uiTones);
+                // TO-DO: double-check, also for mobile
                 er.OneLineHanziLimit = 9;
                 er.Render(sb);
                 if (i != lr.Results.Count - 1) sb.AppendLine("<div class='resultSep'></div>");

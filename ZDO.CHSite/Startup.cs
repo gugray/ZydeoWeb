@@ -2,16 +2,14 @@
 using System.IO;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Localization;
 using Serilog;
 
+using Countries;
 using ZD.LangUtils;
 using ZDO.CHSite.Logic;
-using ZDO.CHSite.Entities;
 
 namespace ZDO.CHSite
 {
@@ -21,6 +19,7 @@ namespace ZDO.CHSite
         private readonly Mutation mut;
         private readonly ILoggerFactory loggerFactory;
         private readonly IConfigurationRoot config;
+        private QueryLogger qlog;
 
         public Startup(IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
@@ -93,9 +92,12 @@ namespace ZDO.CHSite
             // Init low-level DB singleton
             InitDB(config);
             // Application-specific singletons.
+            services.AddSingleton(new CountryResolver(config["ipv4FileName"]));
             services.AddSingleton(new PageProvider(loggerFactory, env.IsDevelopment(), mut, config["baseUrl"]));
-            services.AddSingleton(new LangRepo(Path.Combine(config["dataFolder"], "unihanzi.bin")));
+            services.AddSingleton(new LangRepo(config["uniHanziFileName"]));
             services.AddSingleton(new SqlDict(loggerFactory));
+            qlog = new QueryLogger(config["queryLogFileName"]);
+            services.AddSingleton(qlog);
             // MVC for serving pages and REST
             services.AddMvc();
             // Configuration singleton
@@ -138,6 +140,7 @@ namespace ZDO.CHSite
 
         private void onApplicationStopping()
         {
+            if (qlog != null) qlog.Shutdown();
         }
     }
 }

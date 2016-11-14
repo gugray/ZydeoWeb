@@ -70,6 +70,9 @@ var zdPage = (function () {
   $(document).ready(function () {
     // Make sense of location
     parseLocation();
+    // Adapt font size to window width
+    $(window).resize(onResize);
+    onResize();
     // Update menu to show where I am (will soon end up being)
     updateMenuState();
     // Global script initializers
@@ -80,7 +83,7 @@ var zdPage = (function () {
     if (!hasContent) {
       ++reqId;
       var id = reqId;
-      var data = { lang: lang, rel: rel };
+      var data = { lang: lang, rel: rel, isMobile: zdPage.isMobile() };
       // Infuse extra params (search)
       infuseSearchParams(data);
       // Submit request
@@ -105,9 +108,6 @@ var zdPage = (function () {
         $("#headerStickHamburger").removeClass("openBurger");
       });
     }
-    // Adapt font size to window width
-    $(window).resize(onResize);
-    onResize();
     // If page has initial content, trigger dyn-content-loaded activities right now
     if (hasContent) dynReady(null, -1);
   });
@@ -156,7 +156,8 @@ var zdPage = (function () {
     // Request dynamic page - async
     ++reqId;
     var id = reqId;
-    var data = { lang: lang, rel: rel };
+    // TO-DO: isMobile
+    var data = { lang: lang, rel: rel, isMobile: zdPage.isMobile() };
     // Infuse extra search parameters
     infuseSearchParams(data);
     // Submit request

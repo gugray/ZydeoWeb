@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 
-using ZDO.CHSite.Entities;
+using Countries;
 using ZDO.CHSite.Logic;
 
 namespace ZDO.CHSite.Controllers
@@ -28,10 +28,10 @@ namespace ZDO.CHSite.Controllers
         /// Ctor: infuse dependencies.
         /// </summary>
 
-        public IndexController(PageProvider pageProvider, SqlDict dict, IConfiguration config)
+        public IndexController(PageProvider pageProvider, IConfiguration config)
         {
             mut = config["MUTATION"] == "HDD" ? Mutation.HDD : Mutation.CHD;
-            dpc = new DynpageController(pageProvider, dict, config);
+            dpc = new DynpageController(pageProvider, config);
             gaCode = config["gaCode"];
         }
 
@@ -68,7 +68,7 @@ namespace ZDO.CHSite.Controllers
                 return RedirectPermanent("/" + redirTo);
             }
             // Infuse requested page right away
-            var pr = dpc.GetPageResult(lang, rel);
+            var pr = dpc.GetPageResult(lang, rel, false, false);
             IndexModel model = new IndexModel(mut, lang, pr.RelNorm, pr, gaCode);
             return View("/Index.cshtml", model);
         }

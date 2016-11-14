@@ -1,5 +1,5 @@
 # Special folders (deployment, runtime data etc.)
-ProdData
+_dev_site_data
 _deploy*
 _work
 
