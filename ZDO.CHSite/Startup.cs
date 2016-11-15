@@ -117,8 +117,10 @@ namespace ZDO.CHSite
             {
                 OnPrepareResponse = (context) =>
                 {
-                    // For all stuff coming from "/static/**", add directly to cache indefinitely.
-                    if (context.Context.Request.Path.Value.StartsWith("/static/"))
+                    // Genuine static staff: tell browser to cache indefinitely
+                    bool toCache = context.Context.Request.Path.Value.StartsWith("/static/");
+                    toCache |= context.Context.Request.Path.Value.StartsWith("/prod-");
+                    if (toCache)
                     {
                         context.Context.Response.Headers["Cache-Control"] = "private, max-age=31536000";
                         context.Context.Response.Headers["Expires"] = DateTime.UtcNow.AddYears(1).ToString("R");
@@ -130,6 +132,7 @@ namespace ZDO.CHSite
                         context.Context.Response.Headers["Pragma"] = "no-cache";
                         context.Context.Response.Headers["Expires"] = "0";
                     }
+                    // The rest of the content is served by IndexController, which adds its own cache directive.
                 }
             };
             // Static files (JS, CSS etc.) served directly.

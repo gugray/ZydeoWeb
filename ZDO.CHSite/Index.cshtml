@@ -28,7 +28,7 @@
     <link rel="stylesheet" href="/dev-style/diagnostics.css">
   </environment>
   <environment names="Staging,Production">
-    <link rel="stylesheet" href="/prod-style/app.min.css">
+    <link rel="stylesheet" href="/prod-style/app.min.css" asp-append-version="true">
   </environment>
 </head>
 <body class="@Model.BodyClass">
@@ -208,7 +208,7 @@
     <script src="/dev-js/diagnostics.js"></script>
   </environment>
   <environment names="Staging,Production">
-    <script src="/prod-js/app.min.js"></script>
+    <script src="/prod-js/app.min.js" asp-append-version="true"></script>
   </environment>
   
   <script>

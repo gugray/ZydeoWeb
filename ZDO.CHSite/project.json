@@ -62,8 +62,8 @@
       "files/strings"
     ],
     "exclude": [
-      "wwwroot/static/dev*",
-      "wwwroot/static/lib"
+      "wwwroot/dev*",
+      "wwwroot/lib"
     ]
   }
 }
