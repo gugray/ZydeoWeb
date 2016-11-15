@@ -52,13 +52,29 @@ namespace ZDO.CHSite.Controllers
         }
 
         /// <summary>
-        /// Returns the class the body element must receive.
+        /// Gets the class the body element must receive.
         /// </summary>
-        public string BodyClass()
+        public string BodyClass
         {
-            string cls = Mut == Mutation.CHD ? "chd" : "hdd";
-            if (PR.Html != "") cls += " has-initial-content";
-            return cls;
+            get
+            {
+                string cls = Mut == Mutation.CHD ? "chd" : "hdd";
+                if (PR.Html != "") cls += " has-initial-content";
+                return cls;
+            }
+        }
+
+        /// <summary>
+        /// Gets the language to be marked up on the HTML element.
+        /// </summary>
+        public string DocLang
+        {
+            get
+            {
+                if (Lang == "jian") return "zh-TW";
+                else if (Lang == "fan") return "zh-CN";
+                else return Lang;
+            }
         }
     }
 }

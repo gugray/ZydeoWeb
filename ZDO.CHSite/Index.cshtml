@@ -2,14 +2,16 @@
 @model ZDO.CHSite.Controllers.IndexModel
 
 <!DOCTYPE html>
-<html>
+<html lang="@Model.DocLang">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0" />
   <title>@Model.PR.Title</title>
   <meta name="keywords" content="@Model.PR.Keywords" />
   <meta name="description" content="@Model.PR.Description" />
-  <meta name="google" content="notranslate">
+  <meta name="google" content="notranslate" />
+  @if (Model.PR.NoIndex)
+  { <meta name='robots' content='noindex,nofollow' /> }
   <link href='https://fonts.googleapis.com/css?family=Noto+Sans:400,400italic&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
   <link href='https://fonts.googleapis.com/css?family=Neuton&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
   <link href='https://fonts.googleapis.com/css?family=Ubuntu:700&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
@@ -29,7 +31,7 @@
     <link rel="stylesheet" href="/prod-style/app.min.css">
   </environment>
 </head>
-<body class="@Model.BodyClass()">
+<body class="@Model.BodyClass">
   <div id="headerStickFull">
     <div id="headerFull">
       @if (Model.Mut == ZDO.CHSite.Mutation.CHD)

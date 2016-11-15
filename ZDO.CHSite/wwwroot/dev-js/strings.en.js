@@ -1,5 +1,13 @@
 ﻿var uiStringsEn = {
   "empty-str": "",
+  "oops": {
+    "title-hdd": "Error - HanDeDict @ Zydeo Chinese-German Dictionary",
+    "title-chd": "Error - CHDICT Chinese-Hungarian Dictionary",
+    "caption": "Something went wrong",
+    "message1": "This can be the Internet's fault, or simply a bug in the dictionary. Please try reloading the page in a few seconds.",
+    "message2": "If the problem persists, please drop me a note:",
+    "message3": "zydeodict-[at]-gmail-[dot]-com"
+  },
   "search-manual": {
     "hint-hdd": "Hanzi, Pinyin or German word",
     "hint-chd": "Hanzi, Pinyin or Hungarian word",

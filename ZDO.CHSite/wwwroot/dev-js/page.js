@@ -179,15 +179,31 @@ var zdPage = (function () {
 
   // Show error content in dynamic area
   function applyFailHtml() {
-    $("#dynPage").html("Ouch.");
-    // TO-DO: fail title; keywords; description
+    // Meta: clear all, except title
+    if ($("body").hasClass("hdd")) $(document).attr("title", zdPage.ui("oops", "title-hdd"));
+    else $(document).attr("title", zdPage.ui("oops", "title-chd"));
+    $("meta[name = 'keywords']").attr("content", "");
+    $("meta[name = 'description']").attr("content", "");
+    $("meta[name = 'robots']").attr("content", "");
+    // Content
+    var html = zdSnippets["oops"];
+    html = zdPage.localize("oops", html);
+    $("#dynPage").html(html);
+    $("#dynPage").removeClass("fading");
   }
 
   // Apply dynamic content: HTML body, title, description, keywords; possible other data
   function applyDynContent(data) {
+    // Infuse all the metainfo
     $(document).attr("title", data.title);
     $("meta[name = 'keywords']").attr("content", data.keywords);
     $("meta[name = 'description']").attr("content", data.description);
+    if (data.noIndex) $("meta[name = 'robots']").attr("content", "noindex,nofollow");
+    else $("meta[name = 'robots']").attr("content", "");
+    if (lang == "fan") $("html").attr("lang", "zh-TW");
+    else if (lang == "jian") $("html").attr("lang", "zh-CN");
+    else $("html").attr("lang", lang);
+    // Actual page content
     $("#dynPage").html(data.html);
     $("#dynPage").removeClass("fading");
     $("#headerStickHamburger").removeClass("openBurger");
@@ -509,15 +525,12 @@ var zdPage = (function () {
 
     // Returns true if current device is recognized to have a touch screen.
     isTouch: function () {
-      return false;
       // http://stackoverflow.com/questions/4817029/whats-the-best-way-to-detect-a-touch-screen-device-using-javascript
       var res = false;
-      try {
-        // works on most browsers 
-        res |= 'ontouchstart' in window;
-        // works on IE10/11 and Surface
-        res |= navigator.maxTouchPoints;
-      } catch (e) { }
+      // works on most browsers 
+      try { res |= 'ontouchstart' in window; } catch (e) { }
+      // works on IE10/11 and Surface
+      try { res |= navigator.maxTouchPoints; } catch (e) { }
       return res;
     }
   };

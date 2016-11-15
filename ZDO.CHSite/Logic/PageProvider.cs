@@ -20,13 +20,15 @@ namespace ZDO.CHSite.Logic
         public class PageInfo
         {
             public readonly bool NoIndex;
+            public readonly bool NoSitemap;
             public readonly string Title;
             public readonly string Keywords;
             public readonly string Description;
             public readonly string Html;
-            public PageInfo(bool noIndex, string title, string keywords, string description, string html)
+            public PageInfo(bool noIndex, bool noSitemap, string title, string keywords, string description, string html)
             {
                 NoIndex = noIndex;
+                NoSitemap = noSitemap;
                 Title = title;
                 Keywords = keywords;
                 Description = description;
@@ -100,7 +102,11 @@ namespace ZDO.CHSite.Logic
                 {
                     foreach (var pi in pageCache)
                     {
-                        if (pi.Value.NoIndex) continue;
+                        // Pages we don't want showing up in sitemap:
+                        // - noindex pages
+                        // - explicitly marked as "nositemap"
+                        // - relative URL contains "?", i.e., fetched as snippet, not as full page
+                        if (pi.Value.NoIndex || pi.Value.NoSitemap || pi.Key.Contains("?")) continue;
                         string line = baseUrl + pi.Key;
                         sw.WriteLine(line);
                     }
@@ -111,7 +117,7 @@ namespace ZDO.CHSite.Logic
         /// <summary>
         /// Regex to identify/extract metainformation included in HTML files as funny SPANs.
         /// </summary>
-        private readonly Regex reMetaSpan = new Regex("<span id=\"x\\-([^\"]+)\">([^<]*)<\\/span>");
+        private readonly Regex reMetaSpan = new Regex("<div id=\"x\\-([^\"]+)\">([^<]*)<\\/div>");
 
         /// <summary>
         /// Loads and parses a single page.
@@ -120,6 +126,7 @@ namespace ZDO.CHSite.Logic
         {
             StringBuilder html = new StringBuilder();
             bool noIndex = false;
+            bool noSitemap = false;
             string mutation = null;
             string title = string.Empty;
             string description = string.Empty;
@@ -133,7 +140,15 @@ namespace ZDO.CHSite.Logic
                 while ((line = sr.ReadLine()) != null)
                 {
                     Match m = reMetaSpan.Match(line);
-                    if (!m.Success) { html.AppendLine(line); continue; }
+                    // Regular content line
+                    if (!m.Success)
+                    {
+                        // Replace {lang} placeholders - needed to make localization work smoothly
+                        line = line.Replace("{lang}", lang);
+                        html.AppendLine(line);
+                        continue;
+                    }
+                    // Resolve special <div id="x-whatever"> directives
                     string key = m.Groups[1].Value;
                     string value = m.Groups[2].Value;
                     if (key == "mutation") mutation = value.ToLowerInvariant();
@@ -144,13 +159,14 @@ namespace ZDO.CHSite.Logic
                     else if (key == "keywords") keywords = value;
                     else if (key == "rel") rel = value;
                     else if (key == "noindex") noIndex = true;
+                    else if (key == "nositemap") noIndex = true;
                     else if (key == "lang") lang = value;
                 }
             }
-            rel = lang + "/" + rel;
+            rel = lang + rel;
             // Wrong mutation: ignore this page
             if (mutation == "hdd" && mut != Mutation.HDD || mutation == "chd" && mut != Mutation.CHD) return null;
-            return new PageInfo(noIndex, title, keywords, description, html.ToString());
+            return new PageInfo(noIndex, noSitemap, title, keywords, description, html.ToString());
         }
 
         /// <summary>
@@ -169,14 +185,14 @@ namespace ZDO.CHSite.Logic
                 if (rel == string.Empty) rel = "/";
                 if (!rel.StartsWith("/")) rel = "/" + rel;
             }
-            string key = lang + "/" + rel;
-            // Only page with "*" for lang?
-            if (!pageCache.ContainsKey(key)) key = "*/" + rel;
+            string key = lang + rel;
+            // Only one variant with "*" for lang?
+            if (!pageCache.ContainsKey(key)) key = "*" + rel;
+            // Fallback to "en"?
+            if (!pageCache.ContainsKey(key)) key = "en" + rel;
             // Page or null.
             if (!pageCache.ContainsKey(key)) return null;
             PageInfo pi = pageCache[key];
-            // If page only allows direct requests, but current request is in-page: null
-            if (pi.NoIndex && !direct) return null;
             PageResult pr = new PageResult
             {
                 NoIndex = pi.NoIndex,
