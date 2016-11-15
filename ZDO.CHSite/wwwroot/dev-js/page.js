@@ -170,7 +170,8 @@ var zdPage = (function () {
       data: data
     });
     req.done(function (data) {
-      navReady(data, id);
+      if (data) navReady(data, id);
+      else applyFailHtml();
     });
     req.fail(function (jqXHR, textStatus, error) {
       applyFailHtml();

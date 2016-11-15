@@ -17,7 +17,9 @@
   },
   "misc": {
     "searchResultTitleHDD": "{0} - German translation - HanDeDict @ Zydeo Chinese-German Dictionary",
+    "searchResultTitleTrgHDD": "{0} - Chinese translation - HanDeDict @ Zydeo Chinese-German Dictionary",
     "searchResultTitleCHD": "{0} - Hungarian translation - CHDICT Chinese-Hungarian Dictionary",
+    "searchResultTitleTrgCHD": "{0} - Chinese translation - CHDICT Chinese-Hungarian Dictionary",
     "cookieNotice": "This website relies on cookies for some of its functionality. By using the site, you agree to its use of cookies.",
     "cookieOK": "OK",
     "cookieLearnMore": "Learn more"

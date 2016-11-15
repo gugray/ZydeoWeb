@@ -138,6 +138,7 @@ namespace ZDO.CHSite.Controllers
 
             // Perform query
             string query = rel.Replace("search/", "");
+            query = query.Trim();
             query = WebUtility.UrlDecode(query);
             CedictLookupResult lr = dict.Lookup(query);
             int msecLookup = (int)swatch.ElapsedMilliseconds;
@@ -145,7 +146,8 @@ namespace ZDO.CHSite.Controllers
             // No results
             if (lr.Results.Count == 0 && lr.Annotations.Count == 0)
             {
-                pr = pageProvider.GetPage(lang, "/?noresults", false);
+                pr = pageProvider.GetPage(lang, "?/noresults", false);
+                pr.Data = query;
             }
             else
             {
@@ -154,9 +156,19 @@ namespace ZDO.CHSite.Controllers
                 ResultsRenderer rr = new ResultsRenderer(lr, uiScript, uiTones);
                 rr.Render(sb, lang);
                 // Title
-                string title = TextProvider.Instance.Mut == Mutation.CHD ?
+                string title;
+                if (lr.ActualSearchLang == SearchLang.Chinese)
+                {
+                    title = TextProvider.Instance.Mut == Mutation.CHD ?
                     TextProvider.Instance.GetString(lang, "misc.searchResultTitleCHD") :
                     TextProvider.Instance.GetString(lang, "misc.searchResultTitleHDD");
+                }
+                else
+                {
+                    title = TextProvider.Instance.Mut == Mutation.CHD ?
+                    TextProvider.Instance.GetString(lang, "misc.searchResultTitleTrgCHD") :
+                    TextProvider.Instance.GetString(lang, "misc.searchResultTitleTrgHDD");
+                }
                 title = string.Format(title, query);
                 msecFull = (int)swatch.ElapsedMilliseconds;
                 // Wrap up

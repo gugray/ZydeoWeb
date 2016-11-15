@@ -183,7 +183,7 @@ namespace ZDO.CHSite.Logic
             {
                 rel = rel.TrimEnd('/');
                 if (rel == string.Empty) rel = "/";
-                if (!rel.StartsWith("/")) rel = "/" + rel;
+                if (!rel.StartsWith("/") && !rel.StartsWith("?")) rel = "/" + rel;
             }
             string key = lang + rel;
             // Only one variant with "*" for lang?
