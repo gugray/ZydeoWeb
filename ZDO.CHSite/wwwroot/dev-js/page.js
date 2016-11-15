@@ -223,6 +223,13 @@ var zdPage = (function () {
 
     // Show dynamic content, title etc.
     applyDynContent(data);
+    // GA single-page navigation
+    ga('set', 'page', path);
+    ga('send', {
+      hitType: 'pageview',
+      page: path,
+      title: data.title
+    });
   }
 
   // Dynamic data received after initial page load (not within single-page navigation)
