@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.IO;
 using System.Reflection;
+using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
 
 using ZD.Common;
@@ -27,6 +27,11 @@ namespace ZDO.CHSite.Logic
         }
 
         /// <summary>
+        /// Logger.
+        /// </summary>
+        private static ILogger logger;
+
+        /// <summary>
         /// Pre-processed scripts.
         /// </summary>
         private static readonly Dictionary<string, Command> cmdDict = new Dictionary<string, Command>();
@@ -40,8 +45,9 @@ namespace ZDO.CHSite.Logic
         /// Pre-processes scripts from DB.Scripts.txt.
         /// Builds and stores connection string from site config.
         /// </summary>
-        public static void Init(string server, uint port, string db, string user, string pass)
+        public static void Init(string server, uint port, string db, string user, string pass, ILogger logger)
         {
+            DB.logger = logger;
             // Build connection string. Comes from Private.config
             MySqlConnectionStringBuilder csb = new MySqlConnectionStringBuilder();
             csb.Server = server;
@@ -120,6 +126,24 @@ namespace ZDO.CHSite.Logic
             foreach (var x in cmd.Params) res.Parameters.Add(x.Key, x.Value);
             if (res.Parameters.Count != 0) res.Prepare();
             return res;
+        }
+
+        /// <summary>
+        /// Verifies DB model so it matches current application version; throws if there's a mismatch.
+        /// </summary>
+        public static void VerifyVersion(string appVersion)
+        {
+            string dbModel = "n/a";
+            using (var conn = GetConn())
+            using (var cmd = new MySqlCommand("SELECT value FROM sys_params WHERE xkey='db_model';", conn))
+            using (var rdr = cmd.ExecuteReader())
+            {
+                while (rdr.Read()) dbModel= rdr.GetString(0);
+            }
+            if (dbModel != appVersion)
+            {
+                throw new Exception("DB model is " + dbModel + "; it does not match app version, which is " + appVersion);
+            }
         }
 
         /// <summary>

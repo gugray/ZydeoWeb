@@ -74,23 +74,27 @@ namespace ZDO.CHSite
             else loggerFactory.AddSerilog();
         }
 
-        public static void InitDB(IConfiguration config)
+        public static void InitDB(IConfiguration config, ILoggerFactory loggerFactory, bool checkVersion)
         {
+            Microsoft.Extensions.Logging.ILogger dbLogger = new DummyLogger();
+            if (loggerFactory != null) dbLogger = loggerFactory.CreateLogger("DB");
             try
             {
                 DB.Init(config["dbServer"], uint.Parse(config["dbPort"]), config["dbDatabase"], 
-                    config["dbUserID"], config["dbPass"]);
+                    config["dbUserID"], config["dbPass"], dbLogger);
+                if (checkVersion) DB.VerifyVersion(AppVersion.VerStr);
             }
             catch (Exception ex)
             {
-                // TO-DO: Log.
+                dbLogger.LogError(new EventId(), ex, "Failed to initialize database.");
+                throw;
             }
         }
 
         public void ConfigureServices(IServiceCollection services)
         {
             // Init low-level DB singleton
-            InitDB(config);
+            InitDB(config, loggerFactory, true);
             // Application-specific singletons.
             services.AddSingleton(new CountryResolver(config["ipv4FileName"]));
             services.AddSingleton(new PageProvider(loggerFactory, env.IsDevelopment(), mut, config["baseUrl"]));

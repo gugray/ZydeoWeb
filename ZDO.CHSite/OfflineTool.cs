@@ -48,13 +48,13 @@ namespace ZDO.CHSite
 
         public void RecreateDB()
         {
-            Startup.InitDB(config);
+            Startup.InitDB(config, null, false);
             DB.CreateTables();
         }
 
         public void ImportFreq(string freqPath)
         {
-            Startup.InitDB(config);
+            Startup.InitDB(config, null, false);
             using (SqlDict.Freq freq = new SqlDict.Freq())
             using (FileStream fs = new FileStream(freqPath, FileMode.Open, FileAccess.Read))
             using (StreamReader sr = new StreamReader(fs))
@@ -72,7 +72,7 @@ namespace ZDO.CHSite
 
         public void ImportDict(string dictPath, string workingFolder)
         {
-            Startup.InitDB(config);
+            Startup.InitDB(config, null, false);
             SqlDict dict = new SqlDict(null);
             using (SqlDict.BulkBuilder imp = dict.GetBulkBuilder(workingFolder, 0, "Importing stuff.", false))
             using (FileStream fs = new FileStream(dictPath, FileMode.Open, FileAccess.Read))

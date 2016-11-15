@@ -30,17 +30,22 @@ namespace ZDO.CHSite.Controllers
         /// Google Analytics code.
         /// </summary>
         public readonly string GACode;
+        /// <summary>
+        /// Application version (X.Y)
+        /// </summary>
+        public readonly string VerStr;
 
         /// <summary>
         /// Ctor: init immutable instance.
         /// </summary>
-        public IndexModel(Mutation mut, string lang, string rel, PageResult pr, string gaCode)
+        public IndexModel(Mutation mut, string lang, string rel, PageResult pr, string gaCode, string verStr)
         {
             Mut = mut;
             Lang = lang;
             Rel = rel;
             PR = pr;
             GACode = gaCode;
+            VerStr = "v" + verStr;
         }
 
         /// <summary>
@@ -75,6 +80,14 @@ namespace ZDO.CHSite.Controllers
                 else if (Lang == "fan") return "zh-CN";
                 else return Lang;
             }
+        }
+
+        /// <summary>
+        /// Current year, for the copyright notice.
+        /// </summary>
+        public string Year
+        {
+            get { return DateTime.UtcNow.Year.ToString(); }
         }
     }
 }

@@ -32,17 +32,19 @@ namespace ZDO.Console.Logic
             try
             {
                 bool srvRunning = Helpers.IsSrvRunning(Path.Combine(sc.AppRoot, "service/service.pid"));
+                var config = Helpers.GetAppConfig(sc.EtcRoot);
+
                 SiteValues sv = new SiteValues
                 {
-                    Maintenance = "n/a",
+                    Maintenance = "?",
                     Service = srvRunning ? "running" : "stopped",
-                    DbModel = "n/a",
-                    AppVersion = "n/a",
-                    LogLevel = "n/a",
-                    AppLog = "n/a",
-                    DbDump = "n/a",
-                    QueryLog = "n/a",
-                    DictExport = "n/a",
+                    DbModel = Helpers.GetDbModel(config),
+                    AppVersion = Helpers.GetAppVer(sc.AppRoot),
+                    LogLevel = "?",
+                    AppLog = "?",
+                    DbDump = "?",
+                    QueryLog = "?",
+                    DictExport = "?",
                 };
                 return new ObjectResult(sv);
             }

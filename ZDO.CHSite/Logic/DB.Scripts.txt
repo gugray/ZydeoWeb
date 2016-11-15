@@ -1,9 +1,17 @@
 ﻿# Script CreateDB
+DROP TABLE IF EXISTS sys_params;
+CREATE TABLE sys_params(
+	xkey			VARCHAR(64) NOT NULL,
+	value			VARCHAR(256)
+) ENGINE=InnoDB CHARACTER SET=utf8 COLLATE utf8_general_ci;
+CREATE INDEX idx_sys_params_xkey ON sys_params(xkey);
+INSERT INTO sys_params (xkey, value) VALUES ('db_model', '2.0');
+
 DROP TABLE IF EXISTS binary_entries;
 CREATE TABLE binary_entries(
 	id				INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
 	data			BLOB
-);
+) ENGINE=InnoDB CHARACTER SET=utf8 COLLATE utf8_general_ci;
 
 DROP TABLE IF EXISTS hanzi_instances;
 CREATE TABLE hanzi_instances(
