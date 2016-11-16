@@ -49,7 +49,7 @@ var zdLookup = (function () {
     $(".btnWrite").tooltipster({ content: $("<span>" + zdPage.ui("search-manual", "tooltip-btn-brush") + "</span>") });
     $(".btnSettings").tooltipster({ content: $("<span>" + zdPage.ui("search-manual", "tooltip-btn-settings") + "</span>") });
     $(".btnSearch").tooltipster({ content: $("<span>" + zdPage.ui("search-manual", "tooltip-btn-search") + "</span>") });
-    $(".searchBtn").tooltipster("disable");
+    if (zdPage.isTouch()) $(".searchBtn").tooltipster("disable");
     // Clear button; settings
     $("#btn-clear").click(clearSearch);
     $(".btnSettings").click(showSettings);
