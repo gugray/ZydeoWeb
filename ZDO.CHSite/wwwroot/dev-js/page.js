@@ -1,7 +1,7 @@
 ﻿/// <reference path="../lib/jquery-2.1.4.min.js" />
 /// <reference path="x-history.min.js" />
 
-var uiStrings = uiStringsHu;
+var uiStrings = uiStringsEn;
 
 function startsWith(str, prefix) {
   if (str.length < prefix.length)
@@ -55,10 +55,12 @@ var zdPage = (function () {
     else if (startsWith(path, "/hu/") || path == "/hu") {
       lang = "hu";
       rel = path == "/hu" ? "" : path.substring(4);
+      uiStrings = uiStringsHu;
     }
     else if (startsWith(path, "/de/") || path == "/de") {
       lang = "de";
       rel = path == "/de" ? "" : path.substring(4);
+      uiStrings = uiStringsDe;
     }
     else {
       lang = "en";

@@ -1,7 +1,6 @@
-﻿/// <reference path="x-jquery-2.1.4.min.js" />
-/// <reference path="x-jquery.color-2.1.2.min.js" />
-/// <reference path="x-jquery.tooltipster.min.js" />
-/// <reference path="strings-hu.js" />
+﻿/// <reference path="../lib/jquery-2.1.4.min.js" />
+/// <reference path="../lib/jquery.color-2.1.2.min.js" />
+/// <reference path="../lib/jquery.tooltipster.min.js" />
 /// <reference path="page.js" />
 /// <reference path="handwriting.js" />
 /// <reference path="strokeanim.js" />
@@ -46,12 +45,11 @@ var zdLookup = (function () {
     // Search field hint. Depends on mutation.
     if ($("body").hasClass("hdd")) $(".txtSearch").attr("placeholder", zdPage.ui("search-manual", "hint-hdd"));
     else $(".txtSearch").attr("placeholder", zdPage.ui("search-manual", "hint-chd"));
-    // Add tooltips
-    if (!zdPage.isTouch()) {
-      $(".btnWrite").tooltipster({ content: $("<span>" + zdPage.ui("search-manual", "tooltip-btn-brush") + "</span>") });
-      $(".btnSettings").tooltipster({ content: $("<span>" + zdPage.ui("search-manual", "tooltip-btn-settings") + "</span>") });
-      $(".btnSearch").tooltipster({ content: $("<span>" + zdPage.ui("search-manual", "tooltip-btn-search") + "</span>") });
-    }
+    // Add tooltips; disable right away for touch. (Must *add* or enable/disable code crashes on iOS.)
+    $(".btnWrite").tooltipster({ content: $("<span>" + zdPage.ui("search-manual", "tooltip-btn-brush") + "</span>") });
+    $(".btnSettings").tooltipster({ content: $("<span>" + zdPage.ui("search-manual", "tooltip-btn-settings") + "</span>") });
+    $(".btnSearch").tooltipster({ content: $("<span>" + zdPage.ui("search-manual", "tooltip-btn-search") + "</span>") });
+    $(".searchBtn").tooltipster("disable");
     // Clear button; settings
     $("#btn-clear").click(clearSearch);
     $(".btnSettings").click(showSettings);
@@ -250,8 +248,8 @@ var zdLookup = (function () {
   function hideSettings() {
     $("#searchOptionsBox").removeClass("visible");
     zdPage.modalHidden();
-    // Re-enable tooltip
-    if (!zdPage.isMobile()) $(".btnSettings").tooltipster('enable');
+    // Re-enable tooltip, unless we have a touch screen
+    if (!zdPage.isTouch()) $(".btnSettings").tooltipster('enable');
   }
 
   // Load options (or inits to defaults); updates UI.
