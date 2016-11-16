@@ -34,8 +34,13 @@ namespace ZDO.CHSite
                 return res;
             }
 
+            // What port are we listening at? Comes from environment variable.
+            string portStr = Environment.GetEnvironmentVariable("ZDO_PORT");
+            if (portStr == null) portStr = "";
+            else portStr = ":" + portStr;
+
             var host = new WebHostBuilder()
-               .UseUrls("http://0.0.0.0:5002")
+               .UseUrls("http://0.0.0.0" + portStr)
                .UseKestrel()
                .UseContentRoot(Directory.GetCurrentDirectory())
                .ConfigureLogging(x => { })

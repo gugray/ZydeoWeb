@@ -20,6 +20,7 @@
       "launchBrowser": true,
       "launchUrl": "http://localhost:5002/en",
       "environmentVariables": {
+        "ZDO_PORT": "5002",
         "MUTATION": "HDD",
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
