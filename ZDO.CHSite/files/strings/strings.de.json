@@ -1,30 +1,31 @@
 ﻿{
   "header": {
-    "topSearch": "Hcraaees",
-    "topEdit": "Tiidee",
-    "topRead": "Tuuoobaa",
-    "topDownload": "Daaoolnwod",
-    "subEditNew": "Ween yrtne",
-    "subEditHistory": "Yrootsiih",
-    "subEditExisting": "Tiidee yrtne",
-    "subReadAbout": "Tuuoobaa",
-    "subReadAboutHDD": "TciiDeeDnaah @ OOedyz",
-    "subReadSearchTipsHDD": "Hcraaees spiit",
-    "subReadVersionHistory": "Nooiisreev yrotsih",
-    "subReadArticles": "Seelciitraa",
-    "subReadEtc": "Llaams tniirp",
-    "subDownload": "Daaoolnwod eeht yranoiitcid"
+    "topSearch": "Suche",
+    "topEdit": "Bearbeiten",
+    "topRead": "Über",
+    "topDownload": "Herunterladen",
+    "subEditNew": "Neuer Eintrag",
+    "subEditHistory": "Veränderungen",
+    "subEditExisting": "Eintrag bearbeiten",
+    "subReadAbout": "Über",
+    "subReadAboutHDD": "HanDeDict @ Zydeo",
+    "subReadSearchTipsHDD": "Suchtipps",
+    "subReadVersionHistory": "Versionsgeschichte",
+    "subReadArticles": "Artikel",
+    "subReadEtc": "Kleingedrucktes",
+    "subDownload": "Das Wörterbuch herunterladen"
   },
   "misc": {
-    "searchResultTitleHDD": "{0} - Naamreeg nooiitalsnart - TciDeDnah @ Oedyz Namreg-eSenihc Yranoitcid",
-    "searchResultTitleTrgHDD": "{0} - EEseniihc nooitaalsnart - TciDeDnah @ Oedyz Namreg-eSenihc Yranoitcid",
-    "searchResultTitleCHD": "{0} - Naaiiragnuuh nooitalsnart - TCIDHC NairagnuH-eesenihc Yranoitcid",
-    "searchResultTitleTrgCHD": "{0} - EEseniihc nooitaalsnart - TCIDHC NairagnuuH-esenihc Yranoitcid",
-    "cookieNotice": "Siiht eetisbew seiler noo seikooc rof emos fo sti ytilaanoitcnuuf. Yb gniisuu eeht etis, uooy eergaa ot sti esu fo seikooc.",
-    "cookieOK": "KOO",
-    "cookieLearnMore": "Nraaeel eroom"
+    "searchResultTitleHDD": "{0} - deutsche Übersetzung - HanDeDict @ Zydeo Chinesisch-Deutsches Wörterbuch",
+    "searchResultTitleTrgHDD": "{0} - chinesische Übersetzung - HanDeDict @ Zydeo Chinesisch-Deutsches Wörterbuch",
+    "searchResultTitleCHD": "{0} - ungarische Übersetzung - CHDICT Chinesisch-Ungarisches Wörterbuch",
+    "searchResultTitleTrgCHD": "{0} - chinesische Übersetzung - CHDICT Chinesisch-Ungarisches Wörterbuch",
+    "cookieNotice": "Diese Webseite verwendet Cookies für einige Funktionen. Indem Sie die Webseite benutzen, stimmen Sie der Nutzung von Cookies zu.",
+    "cookieOK": "OK",
+    "cookieLearnMore": "Mehr erfahren",
+    "imprint":  "Impressum"
   },
   "search": {
-    "annotationNotice": "EEht hcraaes nooiisserpxe si ton a drow ni eht yranoitcid; gniwohs snoitatonna daetsni."
+    "annotationNotice": "Ihre Suchanfrage ist nicht im Wörterbuch vorhanden; der Text wird mit Annotationen wiedergegeben."
   }
 }

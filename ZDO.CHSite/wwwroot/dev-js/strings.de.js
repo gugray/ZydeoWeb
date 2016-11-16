@@ -1,58 +1,58 @@
 ﻿var uiStringsDe = {
   "empty-str": "",
   "oops": {
-    "title-hdd": "Roorree - TciiDeDnaah @ Oedyz Namreg-eSenihc Yranoitcid",
-    "title-chd": "Roorree - TCIIDHC NaairagnuuH-esenihc Yranoitcid",
-    "caption": "Gniihteemoos tnew gnorw",
-    "message1": "Siiht naac eeb eht S'tenretni tluuaf, roo ylpmis a gub ni eht yranoitcid. EEsaaelp yrt gniidaooler eht egap ni a wef sdnoces.",
-    "message2": "Fii eeht melboorp stsisrep, esaaelp pord em a eton:",
-    "message3": "zydeeoodiict-[aat]-gmail-[dot]-com"
+    "title-hdd": "Fehler - HanDeDict @ Zydeo Chinesisch-deutsches Wörterbuch",
+    "title-chd": "Fehler - CHDICT Chinesisch-ungarisches Wörterbuch",
+    "caption": "Etwas ist schiefgegangen.",
+    "message1": "Das kann an der Internetverbindung liegen, oder die Folge eines Programmfehlers sein. Versuchen Sie die Seite in ein paar Sekunden zu aktualisieren.",
+    "message2": "Wenn die Fehlermeldung wiederholt erscheint, bitte dem Entwickler Bescheid sagen:",
+    "message3": "zydeodict-[at]-gmail-[dot]-com"
   },
   "search-manual": {
-    "hint-hdd": "IIznaah, Niynip roo Namreeg drow",
-    "hint-chd": "IIznaah, Niynip roo Nairagnuuh drow",
-    "tooltip-btn-brush": "Gniitirwdnaah nooitingoceer",
-    "tooltip-btn-settings": "Hcraaees sgniittes",
-    "tooltip-btn-search": "Hcraaees (Retne)"
+    "hint-hdd": "Hanzi, Pinyin oder deutsches Wort",
+    "hint-chd": "Hanzi, Pinyin oder ungarisches Wort",
+    "tooltip-btn-brush": "Handschrifterkennung",
+    "tooltip-btn-settings": "Suchoptionen",
+    "tooltip-btn-search": "Durchsuchen (Eingabetaste)"
   },
   "soa": {
-    "no-animation-for-char": "Yrroos; eew t'nod evaah na noiitamina rof siht retcarahc.",
-    "query-failed": "T'ndluuooc eeveiirter ekorts redro noitaamina. EEsaaelp yrt niiaga ni a wef sdnooces.",
-    "attribution": "EEcruuoos:",
-    "title": "EEkoorts redro"
+    "no-animation-for-char": "Für dieses Schriftzeichen ist leider keine Animation vorhanden.",
+    "query-failed": "Die Strichfolge-Animation konnte nicht geladen werden. Bitte in ein paar Sekunden erneut versuchen.",
+    "attribution": "Quelle:",
+    "title": "Strichfolge"
   },
   "handwriting": {
-    "title": "Gniitirwdnaah",
-    "loading": "Gniidaaool...",
-    "clear": "Raaeelc",
-    "undo": "OOdnuu"
+    "title": "Handschrifterkennung",
+    "loading": "Wird geladen...",
+    "clear": "Löschen",
+    "undo": "Rückgängig"
   },
   "options": {
-    "title": "Hcraaees sgniittes",
-    "script": "Tpiircs",
-    "simplified": "Deeiifilpmis",
-    "traditional": "Laanooiitidart",
-    "bothscripts": "Htoob",
-    "tonecolors": "EEnoot sroloc",
-    "nocolors": "EEnoon",
-    "pleco": "OOceelp",
-    "dummitt": "Ttiimmuud"
+    "title": "Suchoptionen",
+    "script": "Schriftform",
+    "simplified": "Vereinfacht",
+    "traditional": "Traditionell",
+    "bothscripts": "Beides",
+    "tonecolors": "Tonfarben",
+    "nocolors": "Keine",
+    "pleco": "Pleco",
+    "dummitt": "Dummitt"
   },
   "history": {
-    "tooltip-comment": "Tneemmooc yrtne",
-    "tooltip-edit": "Tiidee yrtne",
-    "tooltip-flag": "Gaalf yrtnee (etaruuccanii, eslaf roo etelpmocni)"
+    "tooltip-comment": "Eintrag kommentieren",
+    "tooltip-edit": "Eintrag bearbeiten",
+    "tooltip-flag": "Eintrag markieren (unutreffend, falsch oder unvollständig)"
   },
   "dialog": {
-    "ok": "KOO",
-    "cancel": "Leecnaac",
+    "ok": "OK",
+    "cancel": "Abbrechen",
   },
   "history.addComment": {
-    "title": "Tneemmooc yrtne",
-    "hint": "Ruuooy tneemmoc ereh...",
-    "successtitle": "Tneemmooc devaas",
-    "successmessage": "UUooy tneemmoc saah neeb devas yllufsseccus. UUooy lliiw won dnif eeht yrtne taa eht pot fo eht tsrif egap ni eht egnahc yrotsih.",
-    "failtitle": "Deeliiaaf oot evas tnemmoc",
-    "failmessage": "Gniihteemoos tnew gnorw. Ruuooy tneemmoc saah ton neeb devas."
+    "title": "Eintrag kommentieren",
+    "hint": "Ihre Bemerkung...",
+    "successtitle": "Kommentar gespeichert",
+    "successmessage": "Ihr Kommentar ist erfolgreich gespeichert worden. Der Eintrag erscheint jetzt oben auf der ersten Seite der Veränderungen.",
+    "failtitle": "Kommentar konnte nicht gespeichert werden",
+    "failmessage": "Etwas ist schiefgegangen. Ihr Kommentar ist leider nicht gespeichert worden."
   }
 };
