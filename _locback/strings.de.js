@@ -1,4 +1,4 @@
-﻿var uiStringsEn = {
+﻿var uiStringsDe = {
   "empty-str": "",
   "oops": {
     "title-hdd": "Roorree - TciiDeDnaah @ Oedyz Namreg-eSenihc Yranoitcid",
