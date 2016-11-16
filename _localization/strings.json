@@ -1,0 +1,30 @@
+﻿{
+  "header": {
+    "topSearch": "Search",
+    "topEdit": "Edit",
+    "topRead": "About",
+    "topDownload": "Download",
+    "subEditNew": "New entry",
+    "subEditHistory": "History",
+    "subEditExisting": "Edit entry",
+    "subReadAbout": "About",
+    "subReadAboutHDD": "HanDeDict @ Zydeo",
+    "subReadSearchTipsHDD": "Search tips",
+    "subReadVersionHistory": "Version history",
+    "subReadArticles": "Articles",
+    "subReadEtc": "Small print",
+    "subDownload": "Download the dictionary"
+  },
+  "misc": {
+    "searchResultTitleHDD": "{0} - German translation - HanDeDict @ Zydeo Chinese-German Dictionary",
+    "searchResultTitleTrgHDD": "{0} - Chinese translation - HanDeDict @ Zydeo Chinese-German Dictionary",
+    "searchResultTitleCHD": "{0} - Hungarian translation - CHDICT Chinese-Hungarian Dictionary",
+    "searchResultTitleTrgCHD": "{0} - Chinese translation - CHDICT Chinese-Hungarian Dictionary",
+    "cookieNotice": "This website relies on cookies for some of its functionality. By using the site, you agree to its use of cookies.",
+    "cookieOK": "OK",
+    "cookieLearnMore": "Learn more"
+  },
+  "search": {
+    "annotationNotice": "The search expression is not a word in the dictionary; showing annotations instead."
+  }
+}
