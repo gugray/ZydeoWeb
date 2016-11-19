@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
-using Countries;
 using ZDO.CHSite.Logic;
 
 namespace ZDO.CHSite.Controllers
@@ -28,10 +28,10 @@ namespace ZDO.CHSite.Controllers
         /// Ctor: infuse dependencies.
         /// </summary>
 
-        public IndexController(PageProvider pageProvider, IConfiguration config)
+        public IndexController(PageProvider pageProvider, IConfiguration config, ILoggerFactory loggerFactory)
         {
             mut = config["MUTATION"] == "HDD" ? Mutation.HDD : Mutation.CHD;
-            dpc = new DynpageController(pageProvider, config);
+            dpc = new DynpageController(pageProvider, config, loggerFactory);
             gaCode = config["gaCode"];
         }
 

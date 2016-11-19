@@ -31,6 +31,7 @@ namespace ZDO.CHSite.Controllers
         private readonly PageProvider pageProvider;
         private readonly SqlDict dict;
         private readonly IConfiguration config;
+        private readonly ILogger logger;
         private readonly QueryLogger qlog;
 
         /// <summary>
@@ -40,7 +41,7 @@ namespace ZDO.CHSite.Controllers
         /// Default null values make controller accessible to <see cref="IndexController"/>.
         /// That way, functionality is limited to serving static pages.
         /// </remarks>
-        public DynpageController(PageProvider pageProvider, IConfiguration config,
+        public DynpageController(PageProvider pageProvider, IConfiguration config, ILoggerFactory loggerFactory,
             CountryResolver cres = null, SqlDict dict = null, QueryLogger qlog = null)
         {
             this.cres = cres;
@@ -48,6 +49,7 @@ namespace ZDO.CHSite.Controllers
             this.dict = dict;
             this.qlog = qlog;
             this.config = config;
+            this.logger = loggerFactory.CreateLogger("DynpageController");
         }
 
         /// <summary>
@@ -123,6 +125,26 @@ namespace ZDO.CHSite.Controllers
 
         private PageResult doSearch(string rel, string lang, string searchScript, string searchTones, bool isMobile)
         {
+            string query = "";
+            try
+            {
+                var res = doSearchInner(rel, lang, searchScript, searchTones, isMobile, out query);
+                if (query == "Gasherd") GC.Collect();
+                if (Debugger.IsAttached && query == "throw") throw new Exception("Test error.");
+                return res;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(new EventId(), ex, "Lookup failed; query: \"" + query + "\"",
+                    rel, lang, searchScript, searchTones, isMobile);
+                throw;
+            }
+        }
+
+        private PageResult doSearchInner(string rel, string lang, string searchScript, string searchTones, 
+            bool isMobile, out string query)
+        {
+            query = "";
             if (rel == "" || rel == "search/") return pageProvider.GetPage(lang, "", false);
             PageResult pr;
             Stopwatch swatch = new Stopwatch();
@@ -137,7 +159,7 @@ namespace ZDO.CHSite.Controllers
             else if (searchTones == "none") uiTones = UiTones.None;
 
             // Perform query
-            string query = rel.Replace("search/", "");
+            query = rel.Replace("search/", "");
             query = query.Trim();
             query = WebUtility.UrlDecode(query);
             CedictLookupResult lr = dict.Lookup(query);
