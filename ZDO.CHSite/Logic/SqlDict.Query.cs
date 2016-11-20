@@ -168,7 +168,11 @@ namespace ZDO.CHSite.Logic
             for (int i = 0; i != rtoks.Count; ++i)
             {
                 int j = 0;
-                for (; j != qtoks.Count; ++j) if (rtoks[i + j].Norm != qtoks[j].Norm) break;
+                for (; j != qtoks.Count; ++j)
+                {
+                    if (i + j >= rtoks.Count) break;
+                    if (rtoks[i + j].Norm != qtoks[j].Norm) break;
+                }
                 if (j != qtoks.Count) continue;
                 // We got a match starting at i!
                 CedictTargetHighlight[] hlarr = new CedictTargetHighlight[1];
