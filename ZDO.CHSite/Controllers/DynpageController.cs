@@ -129,7 +129,12 @@ namespace ZDO.CHSite.Controllers
             try
             {
                 var res = doSearchInner(rel, lang, searchScript, searchTones, isMobile, out query);
-                if (query == "Gasherd") GC.Collect();
+                if (query == "Gasherd")
+                {
+                    GC.AddMemoryPressure(256000000);
+                    GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true);
+                    GC.RemoveMemoryPressure(256000000);
+                }
                 if (Debugger.IsAttached && query == "throw") throw new Exception("Test error.");
                 return res;
             }
