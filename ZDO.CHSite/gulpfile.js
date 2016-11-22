@@ -44,6 +44,7 @@ gulp.task('scripts', ['snippets', 'scriptcopy'], function () {
     './wwwroot/lib/*.js',
     './wwwroot/dev-js/zdSnippets.js',
     './wwwroot/dev-js/strings*.js',
+    './wwwroot/dev-js/auth.js',
     './wwwroot/dev-js/charmatcher.js',
     './wwwroot/dev-js/handwriting.js',
     './wwwroot/dev-js/page.js',

@@ -1,7 +1,8 @@
-﻿/// <reference path="x-jquery-2.1.4.min.js" />
-/// <reference path="x-jquery.color-2.1.2.min.js" />
-/// <reference path="x-jquery.tooltipster.min.js" />
-/// <reference path="strings-hu.js" />
+﻿/// <reference path="../lib/jquery-2.1.4.min.js" />
+/// <reference path="../lib/jquery.color-2.1.2.min.js" />
+/// <reference path="../lib/jquery.tooltipster.min.js" />
+/// <reference path="strings.en.js" />
+/// <reference path="auth.js" />
 /// <reference path="page.js" />
 
 var zdHistory = (function () {
@@ -54,12 +55,7 @@ var zdHistory = (function () {
     if (cmt.length == 0) {
       return false;
     }
-    var req = $.ajax({
-      url: "/Handler.ashx",
-      type: "POST",
-      contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-      data: { action: "history_commententry", entry_id: entryId }
-    });
+    var req = zdAuth.ajax("!!history_commententry", "POST", { action: "history_commententry", entry_id: entryId });
     req.done(function (data) {
       zdPage.showAlert(zdPage.ui("history.addComment", "successtitle"), uiStrings["history.addComment"]["successmessage"], false);
     });

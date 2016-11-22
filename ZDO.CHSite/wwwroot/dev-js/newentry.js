@@ -1,4 +1,5 @@
-/// <reference path="x-jquery-2.1.4.min.js" />
+/// <reference path="../lib/jquery-2.1.4.min.js" />
+/// <reference path="auth.js" />
 /// <reference path="page.js" />
 
 var zdNewEntry = (function () {
@@ -426,13 +427,8 @@ var zdNewEntry = (function () {
 
 var zdNewEntryServer = (function() {
   return {
-    processSimp: function(simp, ready) {
-      var req = $.ajax({
-        url: "/api/newentry/processsimp",
-        type: "GET",
-        contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-        data: { simp: simp }
-      });
+    processSimp: function (simp, ready) {
+      var req = zdAuth.ajax("/api/newentry/processsimp", "GET", { simp: simp });
       req.done(function(data) {
         ready(data.trad, data.pinyin, data.is_known_headword);
       });
@@ -444,13 +440,8 @@ var zdNewEntryServer = (function() {
       });
     },
 
-    verifySimp: function(simp, ready) {
-      var req = $.ajax({
-        url: "/api/newentry/verifysimp",
-        type: "GET",
-        contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-        data: { simp: simp }
-      });
+    verifySimp: function (simp, ready) {
+      var req = zdAuth.ajax("/api/newentry/verifysimp", "GET", { simp: simp });
       req.done(function (data) {
         var res = {
           passed: data.passed,
@@ -466,13 +457,8 @@ var zdNewEntryServer = (function() {
       });
     },
 
-    verifyHead: function(simp, trad, pinyin, ready) {
-      var req = $.ajax({
-        url: "/api/newentry/verifyhead",
-        type: "GET",
-        contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-        data: { simp: simp, trad: trad, pinyin: pinyin }
-      });
+    verifyHead: function (simp, trad, pinyin, ready) {
+      var req = zdAuth.ajax("/api/newentry/verifyhead", "GET", { simp: simp, trad: trad, pinyin: pinyin });
       req.done(function (data) {
         var res = {
           passed: data.passed,
@@ -488,13 +474,8 @@ var zdNewEntryServer = (function() {
       });
     },
 
-    verifyTrg: function(simp, trad, pinyin, trg, ready) {
-      var req = $.ajax({
-        url: "/api/newentry/verifyfull",
-        type: "GET",
-        contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-        data: { simp: simp, trad: trad, pinyin: pinyin, trg: trg }
-      });
+    verifyTrg: function (simp, trad, pinyin, trg, ready) {
+      var req = zdAuth.ajax("/api/newentry/verifyfull", "GET", { simp: simp, trad: trad, pinyin: pinyin, trg: trg });
       req.done(function (data) {
         var res = {
           passed: data.passed,
@@ -511,13 +492,8 @@ var zdNewEntryServer = (function() {
       });
     },
 
-    processSimpTrad: function(simp, trad, ready) {
-      var req = $.ajax({
-        url: "/api/newentry/processsimptrad",
-        type: "GET",
-        contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-        data: { simp: simp, trad: trad }
-      });
+    processSimpTrad: function (simp, trad, ready) {
+      var req = zdAuth.ajax("/api/newentry/processsimptrad", "GET", { simp: simp, trad: trad });
       req.done(function (data) {
         ready(data.pinyin, data.isKnownHeadword);
       });
@@ -530,12 +506,7 @@ var zdNewEntryServer = (function() {
     },
 
     submit: function (simp, trad, pinyin, trg, note, ready) {
-      var req = $.ajax({
-        url: "/api/newentry/submit",
-        type: "POST",
-        contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-        data: { simp: simp, trad: trad, pinyin: pinyin, trg: trg, note: note }
-      });
+      var req = zdAuth.ajax("/api/newentry/submit", "POST", { simp: simp, trad: trad, pinyin: pinyin, trg: trg, note: note });
       req.done(function (data) {
         ready(data.success);
       });

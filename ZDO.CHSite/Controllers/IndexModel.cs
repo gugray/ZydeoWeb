@@ -34,11 +34,15 @@ namespace ZDO.CHSite.Controllers
         /// Application version (X.Y)
         /// </summary>
         public readonly string VerStr;
+        /// <summary>
+        /// Site key for Google reCaptchas.
+        /// </summary>
+        public readonly string CaptchaSiteKey;
 
         /// <summary>
         /// Ctor: init immutable instance.
         /// </summary>
-        public IndexModel(Mutation mut, string lang, string rel, PageResult pr, string gaCode, string verStr)
+        public IndexModel(Mutation mut, string lang, string rel, PageResult pr, string gaCode, string verStr, string captchaSiteKey)
         {
             Mut = mut;
             Lang = lang;
@@ -46,6 +50,7 @@ namespace ZDO.CHSite.Controllers
             PR = pr;
             GACode = gaCode;
             VerStr = "v" + verStr;
+            CaptchaSiteKey = captchaSiteKey;
         }
 
         /// <summary>

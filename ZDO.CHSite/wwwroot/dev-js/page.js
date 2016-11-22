@@ -1,5 +1,6 @@
 ﻿/// <reference path="../lib/jquery-2.1.4.min.js" />
-/// <reference path="x-history.min.js" />
+/// <reference path="../lib/history.min.js" />
+/// <reference path="auth.js" />
 
 var uiStrings = uiStringsEn;
 
@@ -77,7 +78,8 @@ var zdPage = (function () {
     onResize();
     // Update menu to show where I am (will soon end up being)
     updateMenuState();
-    // Cookie warning, Imprint link etc.
+    zdAuth.loginChanged(updateMenuState);
+    // Cookie warning, Imprint link, login/logout command etc.
     initGui();
     // Global script initializers
     for (var i = 0; i != globalInitScripts.length; ++i) globalInitScripts[i]();
@@ -91,12 +93,7 @@ var zdPage = (function () {
       // Infuse extra params (search)
       infuseSearchParams(data);
       // Submit request
-      var req = $.ajax({
-        url: "/api/dynpage/getpage",
-        type: "GET",
-        contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-        data: data
-      });
+      var req = zdAuth.ajax("/api/dynpage/getpage", "GET", data);
       req.done(function (data) {
         dynReady(data, id);
       });
@@ -165,12 +162,7 @@ var zdPage = (function () {
     // Infuse extra search parameters
     infuseSearchParams(data);
     // Submit request
-    var req = $.ajax({
-      url: "/api/dynpage/getpage",
-      type: "GET",
-      contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-      data: data
-    });
+    var req = zdAuth.ajax("/api/dynpage/getpage", "GET", data);
     req.done(function (data) {
       if (data) navReady(data, id);
       else applyFailHtml();
@@ -303,12 +295,29 @@ var zdPage = (function () {
     $("#imprint").click(function () {
       window.open("/" + zdPage.getLang() + "/read/imprint");
     });
+    // Login/logout
+    $("#smUserLogInOut").click(function () {
+      if (!zdAuth.isLoggedIn()) zdAuth.showLogin();
+      else zdAuth.logout();
+    });
   }
 
   // Updates top navigation menu to reflect where we are
   function updateMenuState() {
+    if (zdAuth.isLoggedIn()) {
+      $(".loginIcon").addClass("loggedin");
+      $("#smUserProfile").addClass("visible");
+      $("#smUserLogInOut span").text(zdPage.ui("login", "menuLogout"));
+    }
+    else {
+      $(".loginIcon").removeClass("loggedin");
+      $("#smUserProfile").removeClass("visible");
+      $("#smUserLogInOut span").text(zdPage.ui("login", "menuLogin"));
+    }
+
     $(".topMenu").removeClass("on");
     $(".subMenu").removeClass("visible");
+    $(".loginIcon").removeClass("on");
     if (rel == "" || startsWith(rel, "search")) {
       $("#hdrMenu").removeClass("on");
       $("#subHeader").removeClass("visible");
@@ -336,6 +345,10 @@ var zdPage = (function () {
         $("#topMenuDownload").addClass("on");
         $("#subMenuDownload").addClass("visible");
       }
+      else if (startsWith(rel, "user")) {
+        $(".loginIcon").addClass("on");
+        $("#subMenuUser").addClass("visible");
+      }
     }
     $(".subMenu span").removeClass("on");
     if (startsWith(rel, "edit/new")) $("#smEditNew").addClass("on");
@@ -346,6 +359,8 @@ var zdPage = (function () {
     else if (startsWith(rel, "read/version-history")) $("#smReadVersionHistory").addClass("on");
     else if (startsWith(rel, "read/articles")) $("#smReadArticles").addClass("on");
     else if (startsWith(rel, "read/etc")) $("#smReadEtc").addClass("on");
+    else if (startsWith(rel, "user/users")) $("#smUserUsers").addClass("on");
+    else if (startsWith(rel, "user/profile")) $("#smUserProfile").addClass("on");
     // In hamburger mode, steal title from selected submenu; or page's ".page-title" element
     var hamTitle = $(".subMenu span.on").text();
     if (!hamTitle || hamTitle == "") hamTitle = $("#page-title").text();
@@ -361,9 +376,10 @@ var zdPage = (function () {
   }
 
   // Closes a standard modal dialog (shown by us).
-  function doCloseModal(id) {
+  function doCloseModal(id, onClosed) {
     $("#" + id).remove();
     zdPage.modalHidden();
+    if (onClosed) onClosed();
   }
 
   return {
@@ -457,18 +473,21 @@ var zdPage = (function () {
       html = html.replace("{{body}}", params.body);
       html = html.replace("{{ok}}", zdPage.ui("dialog", "ok"));
       html = html.replace("{{cancel}}", zdPage.ui("dialog", "cancel"));
-      $("#dynPage").append(html);
+      $("body").append(html);
       // Wire up events
-      activeModalCloser = function () { doCloseModal(params.id); };
+      activeModalCloser = function () { doCloseModal(params.id, params.onClosed); };
       $(".modalPopupInner2").click(function (evt) { evt.stopPropagation(); });
-      $(".modalPopupClose").click(function () { doCloseModal(params.id); });
-      $(".modalPopupButtonCancel").click(function () { doCloseModal(params.id); });
+      $(".modalPopupClose").click(function () { doCloseModal(params.id, params.onClosed); });
+      $(".modalPopupButtonCancel").click(function () { doCloseModal(params.id, params.onClosed); });
       $(".modalPopupButtonOK").click(function () {
-        if (params.confirmed()) doCloseModal(params.id);
+        if (params.confirmed()) doCloseModal(params.id, params.onClosed);
       });
       // Focus requested field
       if (params.toFocus) $(params.toFocus).focus();
     },
+
+    // Closes modal dialog with the provided ID. Does not invoke onClosed callback.
+    closeModal: function (id) { doCloseModal(id); },
 
     // Shows an alert at the top of the page.
     showAlert: function (title, body, isError) {

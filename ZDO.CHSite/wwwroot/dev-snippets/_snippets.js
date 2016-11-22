@@ -1,4 +1,5 @@
 //= alert : alert.html
+//= login : login.html
 //= oops : oops.html
 //= modalPopup : modalPopup.html
 //= history.addComment : history.addComment.html

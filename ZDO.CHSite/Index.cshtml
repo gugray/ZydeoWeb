@@ -31,7 +31,7 @@
     <link rel="stylesheet" href="/prod-style/app.min.css" asp-append-version="true">
   </environment>
 </head>
-<body class="@Model.BodyClass">
+<body class="@Model.BodyClass" data-captcha-sitekey="@Model.CaptchaSiteKey">
   <div id="headerStickFull">
     <div id="headerFull">
       @if (Model.Mut == ZDO.CHSite.Mutation.CHD)
@@ -65,7 +65,7 @@
             <!-- <a class="topMenu ajax" id="topMenuDownload" href="/@Model.Lang/download">@Model.Str("header.topDownload")</a> -->
         }
         <div id="hdrMenuRight">
-          <span class="loginIcon"><i class="fa fa-user"></i></span>
+          <a class="loginIcon ajax" href="/@Model.Lang/user/users"><i class="fa fa-user"></i></a>
           @if (Model.Mut == ZDO.CHSite.Mutation.CHD)
           {
               <a class="langSel langSelHu on" href="/hu/@Model.Rel">HU</a>
@@ -101,6 +101,11 @@
             <span id="smReadSearchTips"><a class="ajax" href="/@Model.Lang/read/search-tips">@Model.Str("header.subReadSearchTipsHDD")</a></span>
             <span id="smReadAbout"><a class="ajax" href="/@Model.Lang/read/about">@Model.Str("header.subReadAboutHDD")</a></span>
             <span id="smReadVersionHistory"><a class="ajax" href="/@Model.Lang/read/version-history">@Model.Str("header.subReadVersionHistory")</a></span>
+          </div>
+          <div class="subMenu" id="subMenuUser">
+            <span id="smUserUsers"><a class="ajax" href="/@Model.Lang/user/users">Users</a></span>
+            <span id="smUserProfile"><a class="ajax" href="/@Model.Lang/user/profile">My profile</a></span>
+            <span id="smUserLogInOut"><span></span></span>
           </div>
           <!--
           <div class="subMenu" id="subMenuDownload">
@@ -198,6 +203,7 @@
     <script src="/dev-js/strings.de.js"></script>
     <script src="/dev-js/strings.hu.js"></script>
     <script src="/dev-js/strings.en.js"></script>
+    <script src="/dev-js/auth.js"></script>
     <script src="/dev-js/charmatcher.js"></script>
     <script src="/dev-js/handwriting.js"></script>
     <script src="/dev-js/page.js"></script>
@@ -221,8 +227,7 @@
     ga('create', '@Model.GACode', 'auto');
     ga('send', 'pageview');
   </script>
-
-
+  <script src='https://www.google.com/recaptcha/api.js?render=explicit&hl=@Model.Lang' async defer></script>
 </body>
 
 

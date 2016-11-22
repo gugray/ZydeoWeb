@@ -25,6 +25,10 @@ namespace ZDO.CHSite.Controllers
         /// </summary>
         private readonly string gaCode;
         /// <summary>
+        /// Site key for Google recaptchas.
+        /// </summary>
+        private readonly string captchaSiteKey;
+        /// <summary>
         /// Ctor: infuse dependencies.
         /// </summary>
 
@@ -33,6 +37,7 @@ namespace ZDO.CHSite.Controllers
             mut = config["MUTATION"] == "HDD" ? Mutation.HDD : Mutation.CHD;
             dpc = new DynpageController(pageProvider, config, loggerFactory);
             gaCode = config["gaCode"];
+            captchaSiteKey = config["captchaSiteKey"];
         }
 
         private static void getLangRel(string str, out string lang, out string rel)
@@ -69,7 +74,7 @@ namespace ZDO.CHSite.Controllers
             }
             // Infuse requested page right away
             var pr = dpc.GetPageResult(lang, rel, false, false);
-            IndexModel model = new IndexModel(mut, lang, pr.RelNorm, pr, gaCode, AppVersion.VerStr);
+            IndexModel model = new IndexModel(mut, lang, pr.RelNorm, pr, gaCode, AppVersion.VerStr, captchaSiteKey);
             return View("/Index.cshtml", model);
         }
     }

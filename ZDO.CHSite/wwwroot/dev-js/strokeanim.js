@@ -296,13 +296,7 @@ var zdStrokeAnim = (function () {
     soaPrepareGlyph([], []);
     ++soa_lookupid;
     var id = soa_lookupid;
-    var url = "/api/smarts/charstrokes";
-    var req = $.ajax({
-      url: url,
-      type: "GET",
-      contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-      data: { hanzi: hanzi }
-    });
+    var req = zdAuth.ajax("/api/smarts/charstrokes", "GET", { hanzi: hanzi });
     req.done(function (res) {
       onReqDone(id, res);
     });

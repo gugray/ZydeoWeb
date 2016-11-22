@@ -101,6 +101,41 @@ CREATE TABLE bulk_modifs(
 ) ENGINE=InnoDB CHARACTER SET=utf8;
 CREATE INDEX idx_bulk_modifs_modif_id ON bulk_modifs(modif_id);
 CREATE INDEX idx_bulk_modifs_entry_id ON bulk_modifs(entry_id);
+
+DROP TABLE IF EXISTS users;
+CREATE TABLE users(
+	id				INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+	user_name		VARCHAR(96) NOT NULL,
+	email			VARCHAR(768),
+	pass_hash		VARCHAR(256),
+	pass_salt		VARCHAR(256),
+	status			TINYINT NOT NULL,		-- 0: active; 1: unconfirmed; 2: removed
+	registered		DATETIME NOT NULL,
+	real_name		VARCHAR(768),			-- *optional* real name
+	location		VARCHAR(768)			-- *optional* location
+) ENGINE=InnoDB CHARACTER SET=utf8;
+CREATE INDEX idx_users_email ON users(email);
+
+# End
+
+# Script InsNewUser
+# @user_name VARCHAR
+# @email VARCHAR
+# @pass_hash VARCHAR
+# @pass_salt VARCHAR
+# @registered DATETIME
+INSERT INTO users (user_name, email, pass_hash, pass_salt, status, registered)
+VALUES (@user_name, @email, @pass_hash, @pass_salt, 1, @registered);
+# End
+
+# Script SelUserByName
+# @user_name VARCHAR
+SELECT * FROM users WHERE user_name=@user_name;
+# End
+
+# Script SelUserByEmail
+# @email VARCHAR
+SELECT * FROM users WHERE email=@email;
 # End
 
 # Script InsHanziInstance

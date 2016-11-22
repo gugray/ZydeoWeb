@@ -1,6 +1,7 @@
 ﻿/// <reference path="../lib/jquery-2.1.4.min.js" />
 /// <reference path="../lib/jquery.color-2.1.2.min.js" />
 /// <reference path="../lib/jquery.tooltipster.min.js" />
+/// <reference path="auth.js" />
 /// <reference path="page.js" />
 /// <reference path="handwriting.js" />
 /// <reference path="strokeanim.js" />
@@ -111,12 +112,7 @@ var zdLookup = (function () {
     //Actually nicer without (no flicker)
     // Query for hints
     var sentId = ++prefixReqId;
-    var req = $.ajax({
-      url: "/api/smarts/prefixhints",
-      type: "GET",
-      contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-      data: { prefix: query }
-    });
+    var req = zdAuth.ajax("/api/smarts/prefixhints", "GET", { prefix: query });
     req.done(function (data) {
       if (sentId != prefixReqId) return;
       // No suggestions: kill box

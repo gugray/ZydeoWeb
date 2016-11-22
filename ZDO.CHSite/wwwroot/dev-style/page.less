@@ -207,7 +207,7 @@ body {
     &:hover, &.on { background-color: @clrStrong; color: @clrDefBg; }
   }
   #hdrMenuRight {
-    position: absolute; width: 9rem; left: 39rem;
+    position: absolute; width: 9rem; left: 35.2rem;
     .langSel {
       display: inline-block; position: relative; float: right; 
       padding: 0 0.3rem 0 0.3rem; margin: 0.6rem 0.2rem 0 0; border-radius: 0.1rem;
@@ -216,11 +216,13 @@ body {
       &:hover, &.on { color: @clrDefBg; background-color: @clrMedium; }
     }
     .loginIcon {
-      display: inline-block; position: relative; float: right;
-      i {
-        color: @clrMedium; cursor: default; font-size: 80%; padding-top: 0; margin-left: 0.2rem; 
-        &:hover { color: @clrStrong; }
-      }
+      display: inline-block; position: relative; float: right; text-decoration: none;
+      i { color: @clrMediumAccent; cursor: default; font-size: 80%; padding-top: 0; margin-left: 0.2rem; }
+      i:hover { color: @clrStrongAccent; }
+      &.loggedin i { color: @clrMediumGreen; }
+      &.loggedin i:hover { color: @clrStrongGreen; }
+      &.on i { color: @clrStrongAccent; }
+      &.on.loggedin i { color: @clrStrongGreen; }
     }
   }
 }
@@ -240,6 +242,13 @@ body {
     a:hover { border-bottom-color: @clrMedium; }
     &.on a { border-bottom-color: @clrStrong; }
   }
+  #smUserLogInOut {
+    display: inline-block; position: relative; float: right; margin-right: 0;
+    span { color: @clrStrongAccent; }
+    &:hover span { color: @clrStrongRed; }
+  }
+  #smUserProfile { display: none; }
+  #smUserProfile.visible { display: inline; }
 }
 
 // FIXED: gradient overlay to make content disappear nicely behind header
@@ -274,11 +283,53 @@ body {
 }
 
 
+// === Login dialog =============================
+
+#dlgLogin {
+  .dlgInner {
+    width: 25rem; padding: 0.2rem 0.2rem 1rem 0.2rem; box-sizing: border-box; height: auto; overflow: auto;
+    display: none;
+    &.visible { display: block; }
+    div { position: relative; float: left; clear: both; box-sizing: border-box; }
+    .sep { height: 1rem; }
+    .fieldLabel { font-size: 1.1rem; font-weight: bold; }
+    .lblNote { font-weight: normal; font-style: italic; }
+    .note {
+      font-size: 1rem; display: none;
+      &.visible { display: block; }
+      &.error { color: @clrStrongRed; }
+      &.remark { font-style: italic; }
+      &.hilite { background-color: @clrLightAccent; padding: 0.3rem; }
+    }
+    input {
+      display: block; position: relative; float: left; clear: both; padding: 0.2rem 0.4rem 0.2rem 0.4rem;
+      width: 100%; font-family: @fntBase; font-size: 1.2rem; text-align: center; height: 2.5rem; box-sizing: border-box;
+      &.error { background-color: @clrLightRed; }
+    }
+    .pwdWrap {
+      width: 100%; background-color: @clrLightLight;
+      i { display: block; position: absolute; right: 0; font-size: 1.5rem; color: @clrMedium; margin: 0.5rem 0.5rem 0 0; cursor: default; }
+      i:hover { color: @clrStrong; }
+    }
+    .linkCommand {
+      float: right; cursor: pointer; color: @clrStrongAccent; font-size: 1rem; margin-bottom: 0.3rem;
+      &:hover { color: @clrStrongRed; }
+    }
+    .loginCaptcha {
+      float: left; width: 100%; height: auto; display: none;
+      &.visible { display: block; }
+    }
+    a { text-decoration: none; color: @clrStrongAccent; }
+    a:hover { color: @clrStrongRed; }
+  }
+}
+
+
 // === General =============================
 
 // Generic styling of input fields
-textarea:focus, input:focus { outline: none; }
-textarea, input { color: @clrBodyText; }
+textarea:focus, input:focus { outline: none; border: none; background-color: @clrLightLight; }
+textarea, input { outline: none; border: none; background-color: @clrLightLight; color: @clrBodyText; }
 
 // === STATIC CONTENT =============================
 
@@ -303,8 +354,8 @@ textarea, input { color: @clrBodyText; }
     opacity: 0; transition: opacity 0.75s ease;
     &.visible { opacity: 1; }
     &.hidden { opacity: 0; transition: opacity 2s ease; }
-    &.alertOK { border: 1px solid #338323; background-color: #f1f9eb; }
-    &.alertFail { border: 1px solid @clrStrongRed; background-color: #fae7e3; }
+    &.alertOK { border: 1px solid @clrStrongGreen; background-color: #f1f9eb; }
+    &.alertFail { border: 1px solid @clrStrongRed; background-color: @clrLightRed; }
     .alertMessage { margin-right: 2rem; }
     .alertTitle { font-weight: bold; }
     &.alertFail .alertTile { color: @clrStrongRed; }
@@ -315,8 +366,8 @@ textarea, input { color: @clrBodyText; }
 
 // === GENERIC MODAL POPUP =============================
 .modalPopup {
-  z-index: 3;
-  position: fixed; width: 100%; top: 14rem; left: 0;
+  z-index: 11;
+  position: fixed; width: 100%; top: 8rem; left: 0;
   .modalPopupInner1 { position: relative; float: left; left: 50%; }
   .modalPopupInner2 {
     position: relative; float: left; left: -50%;
@@ -354,5 +405,6 @@ textarea, input { color: @clrBodyText; }
     &:hover { background-color: @clrMediumAccent; }
     &.modalPopupButtonCancel { background-color: @clrLightLight; }
     &.modalPopupButtonCancel:hover { background-color: @clrLight; }
+    &.hidden { display: none; }
   }
 }

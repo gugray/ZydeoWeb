@@ -100,6 +100,7 @@ namespace ZDO.CHSite
             services.AddSingleton(new PageProvider(loggerFactory, env.IsDevelopment(), mut, config["baseUrl"]));
             services.AddSingleton(new LangRepo(config["uniHanziFileName"]));
             services.AddSingleton(new SqlDict(loggerFactory));
+            services.AddSingleton(new Auth(loggerFactory, config));
             qlog = new QueryLogger(config["queryLogFileName"]);
             services.AddSingleton(qlog);
             // MVC for serving pages and REST
@@ -137,6 +138,15 @@ namespace ZDO.CHSite
             };
             // Static files (JS, CSS etc.) served directly.
             app.UseStaticFiles(sfo);
+            // Authentication for MVC calls
+            app.Use(async (context, next) =>
+            {
+                var auth = app.ApplicationServices.GetService<Auth>();
+                int userId; string userName;
+                auth.CheckSession(context.Request.Headers, out userId, out userName);
+                if (userId != -1) context.Response.Headers.Add("ZydeoLoggedIn", "true"); ;
+                await next.Invoke();
+            });
             // Serve our (single) .cshtml file, and serve API requests.
             app.UseMvc(routes =>
             {
