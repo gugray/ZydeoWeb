@@ -36,6 +36,7 @@ var zdAuth = (function () {
     };
     // Show
     zdPage.showModal(params);
+    $("#dlgLogin").addClass("userAccountDialog");
     // Enter key events
     $("#dlgLogin input").keyup(function (e) {
       if (e.keyCode == 13) $(".modalPopupButtonOK").trigger("click");
@@ -144,10 +145,8 @@ var zdAuth = (function () {
     $(".emailExists").removeClass("visible");
     $(".userExists").removeClass("visible");
     var ok = true;
-    // - email regex
-    // http://emailregex.com/
-    var reMail = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-    if (!reMail.test($("#registerEmail").val())) {
+    // - email
+    if (!zdAuth.isValidEmail($("#registerEmail").val())) {
       ok = false;
       $("#registerEmail").addClass("error");
       $(".emailWrong").addClass("visible");
@@ -191,7 +190,8 @@ var zdAuth = (function () {
       email: $("#registerEmail").val(),
       userName: usr,
       pass: $("#registerPassword").val(),
-      captcha: $("#registerCaptcha").data("response")
+      captcha: $("#registerCaptcha").data("response"),
+      lang: zdPage.getLang()
     };
     var req = $.ajax({
       url: "/api/auth/createuser",
@@ -257,7 +257,7 @@ var zdAuth = (function () {
     var failCallback;
     var res = {
       done: function (callback) { doneCallback = callback; },
-      fail: function (callback) { failCallback = failCallback; }
+      fail: function (callback) { failCallback = callback; }
     };
     var request = $.ajax({
       url: url,
@@ -284,8 +284,19 @@ var zdAuth = (function () {
     return res;
   }
 
+  function doShowDeleteProfile() {
+
+  }
+
   return {
     ajax: function (url, type, data) { return doAjax(url, type, data); },
+
+    isValidEmail: function(email) {
+      // Email regex: http://emailregex.com/
+      var reMail = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+      if (!reMail.test(email)) return false;
+      return true;
+    },
 
     showLogin: function (message, callback) { showLogin(message, callback); },
 
@@ -308,7 +319,9 @@ var zdAuth = (function () {
       return true;
     },
 
-    loginChanged: function (callback) { loginChangedCallback = callback; }
+    loginChanged: function (callback) { loginChangedCallback = callback; },
+
+    showDeleteProfile: function () { doShowDeleteProfile(); }
   };
 
 })();

@@ -50,30 +50,29 @@ namespace ZDO.CHSite.Controllers
         }
 
         public IActionResult CreateUser([FromForm] string email, [FromForm] string userName, [FromForm] string pass,
-            [FromForm] string captcha)
+            [FromForm] string captcha, [FromForm] string lang)
         {
             // Must have all fields
-            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(pass) || string.IsNullOrEmpty(captcha))
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(pass) ||
+                string.IsNullOrEmpty(captcha) || string.IsNullOrEmpty(lang))
             {
                 // TO-DO: log warning
                 return StatusCode(400, "Missing request data.");
             }
             // Verify email, user and pass criteria. If they fail here, that's an invalid request: client should have checked.
             bool dataValid = true;
-            // http://emailregex.com/
-            Regex reEmail = new Regex(@"^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$");
-            if (!reEmail.Match(email).Success) dataValid = false;
+            if (!auth.IsEmailValid(email)) dataValid = false;
             Regex reUsrName = new Regex(@"^[\._\-\p{L}\p{N}]+$");
             if (!reUsrName.Match(userName).Success) dataValid = false;
             if (userName.Length < 3) dataValid = false;
-            if (pass.Length < 6) dataValid = false;
+            if (!auth.IsPasswordValid(pass)) dataValid = false;
             if (!dataValid) return StatusCode(400, "Invalid data; check for validation criteria.");
 
             // Verify captcha
             if (!isCaptchaOk(captcha)) return StatusCode(400, "Captcha didn't verify.");
 
             // See if user can be created
-            Auth.CreateUserResult cur = auth.CreateUser(email, userName, pass);
+            Auth.CreateUserResult cur = auth.CreateUser(lang, email, userName, pass);
             CreateUserResult res = new CreateUserResult
             {
                 Success = (cur == 0),
@@ -93,6 +92,57 @@ namespace ZDO.CHSite.Controllers
         {
             auth.Logout(HttpContext.Request.Headers);
             return new ObjectResult(null);
+        }
+
+        public IActionResult ChangeInfo([FromForm] string location, [FromForm] string about)
+        {
+            if (location == null) location = "";
+            if (about == null) about = "";
+            // Must come from authenticated user
+            int userId; string userName;
+            auth.CheckSession(HttpContext.Request.Headers, out userId, out userName);
+            if (userId < 0) return StatusCode(401, "Authentication token missing, invalid or expired.");
+            // Store changes
+            auth.ChangeInfo(userId, location, about);
+            return new ObjectResult(true);
+        }
+
+        public IActionResult ChangeEmail([FromForm] string pass, [FromForm] string newEmail)
+        {
+            // Must have all fields
+            if (string.IsNullOrEmpty(pass) || string.IsNullOrEmpty(newEmail))
+            {
+                // TO-DO: log warning
+                return StatusCode(400, "Missing request data.");
+            }
+            // Must come from authenticated user
+            int userId; string userName;
+            auth.CheckSession(HttpContext.Request.Headers, out userId, out userName);
+            if (userId < 0) return StatusCode(401, "Authentication token missing, invalid or expired.");
+            // Validate new email
+            if (!auth.IsEmailValid(newEmail)) return StatusCode(400, "Invalid data; validate before request.");
+            // Trigger mail change sequence, with password verification
+            if (auth.TriggerChangeEmail(userId, pass, newEmail)) return new ObjectResult(true);
+            else return new ObjectResult(false);
+        }
+
+        public IActionResult ChangePassword([FromForm] string oldPass, [FromForm] string newPass)
+        {
+            // Must have all fields
+            if (string.IsNullOrEmpty(oldPass) || string.IsNullOrEmpty(newPass))
+            {
+                // TO-DO: log warning
+                return StatusCode(400, "Missing request data.");
+            }
+            // Must come from authenticated user
+            int userId; string userName;
+            auth.CheckSession(HttpContext.Request.Headers, out userId, out userName);
+            if (userId < 0) return StatusCode(401, "Authentication token missing, invalid or expired.");
+            // Validate new password
+            if (!auth.IsPasswordValid(newPass)) return StatusCode(400, "Invalid data; validate before request.");
+            // Change password, with verification
+            if (auth.ChangePassword(userId, oldPass, newPass)) return new ObjectResult(true);
+            else return new ObjectResult(false);
         }
 
         public IActionResult ForgotPassword([FromForm] string email, [FromForm] string captcha)

@@ -1,0 +1,14 @@
+﻿@import "defines.less";
+
+.myprofile {
+  font-size: 1rem;
+  div { position: relative; float: left; box-sizing: border-box; height: auto; overflow: auto; }
+  .right { width: 45%; padding-left: 2rem; }
+  .left { width: 55%; border-right: 3pt solid @clrLightLight; padding-bottom: 0.5rem; }
+  div div { width: 100%; clear: both; }
+  h3 { font-family: @fntSerif; font-size: 1.8rem; margin: 0 0 1rem 0; }
+  .label { font-weight: bold; }
+  .value.novalue { font-style: italic; }
+  .command { color: @clrStrongAccent; cursor: default; }
+  .command:hover { color: @clrStrongRed; }
+}

@@ -296,9 +296,10 @@ var zdPage = (function () {
       window.open("/" + zdPage.getLang() + "/read/imprint");
     });
     // Login/logout
-    $("#smUserLogInOut").click(function () {
+    $("#smUserLogInOut").click(function (evt) {
       if (!zdAuth.isLoggedIn()) zdAuth.showLogin();
       else zdAuth.logout();
+      evt.stopPropagation();
     });
   }
 
@@ -398,6 +399,11 @@ var zdPage = (function () {
 
     isMobile: function() {
       return $("html").hasClass("resplay-hamburger");
+    },
+
+    reload: function() {
+      history.pushState(null, null, path);
+      dynNavigate();
     },
 
     submitSearch: function(query) {

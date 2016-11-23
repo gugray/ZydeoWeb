@@ -1,9 +1,9 @@
 ﻿<div class="dlgInner loginView visible">
   <div class="fieldLabel">{{email}}</div>
-  <input type="text" id="loginEmail" placeholder="me@example.com" maxlength="254" />
+  <input type="text" id="loginEmail" placeholder="{{emailPlaceholder}}" maxlength="254" />
   <div class="sep"></div>
   <div class="fieldLabel">{{password}}</div>
-  <input type="password" id="loginPassword" placeholder="Password" maxlength="32" />
+  <input type="password" id="loginPassword" placeholder="{{passwordPlaceholder}}" maxlength="32" />
   <div class="note loginFailed error">
     {{loginfail}}
   </div>
@@ -14,7 +14,7 @@
 
 <div class="dlgInner forgotPassView">
   <div class="fieldLabel">{{email}}</div>
-  <input type="text" id="forgotPassEmail" placeholder="me@example.com" maxlength="254" />
+  <input type="text" id="forgotPassEmail" placeholder="{{emailPlaceholder}}" maxlength="254" />
   <div class="note emailWrong error">{{invalidemail}}</div>
   <div class="sep"></div>
   <div id="forgotPassCaptcha" class="loginCaptcha"></div>
@@ -39,18 +39,18 @@
   </div>
   <div class="sep"></div>
   <div class="fieldLabel">{{email}} <span class="lblNote">{{private}}</span></div>
-  <input type="text" id="registerEmail" placeholder="me@example.com" maxlength="254" />
+  <input type="text" id="registerEmail" placeholder="{{emailPlaceholder}}" maxlength="254" />
   <div class="note emailWrong error">{{invalidemail}}</div>
   <div class="note emailExists error">{{emailtaken}}</div>
   <div class="sep"></div>
   <div class="fieldLabel">{{username}} <span class="lblNote">{{public}}</span></div>
-  <input type="text" id="registerUserName" placeholder="User-name" maxlength="16" />
+  <input type="text" id="registerUserName" placeholder="{{userNamePlaceholder}}" maxlength="16" />
   <div class="note userWrong error">{{invalidusername}}</div>
   <div class="note userExists error">{{usernametaken}}</div>
   <div class="sep"></div>
   <div class="fieldLabel">{{password}}</div>
   <div class="pwdWrap">
-    <input type="password" id="registerPassword" placeholder="Password" maxlength="32" />
+    <input type="password" id="registerPassword" placeholder="{{passwordPlaceholder}}" maxlength="32" />
     <i id="togglePassVisible" class="fa fa-eye"></i>
   </div>
   <div class="note passwordWrong error">{{invalidpassword}}</div>

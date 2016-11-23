@@ -32,10 +32,10 @@ namespace ZDO.CHSite.Controllers
         /// Ctor: infuse dependencies.
         /// </summary>
 
-        public IndexController(PageProvider pageProvider, IConfiguration config, ILoggerFactory loggerFactory)
+        public IndexController(PageProvider pageProvider, IConfiguration config, ILoggerFactory loggerFactory, Auth auth)
         {
             mut = config["MUTATION"] == "HDD" ? Mutation.HDD : Mutation.CHD;
-            dpc = new DynpageController(pageProvider, config, loggerFactory);
+            dpc = new DynpageController(pageProvider, config, loggerFactory, auth);
             gaCode = config["gaCode"];
             captchaSiteKey = config["captchaSiteKey"];
         }

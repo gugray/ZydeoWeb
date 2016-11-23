@@ -20,6 +20,7 @@ namespace ZDO.CHSite
         private readonly ILoggerFactory loggerFactory;
         private readonly IConfigurationRoot config;
         private QueryLogger qlog;
+        private Auth auth;
 
         public Startup(IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
@@ -97,10 +98,15 @@ namespace ZDO.CHSite
             InitDB(config, loggerFactory, true);
             // Application-specific singletons.
             services.AddSingleton(new CountryResolver(config["ipv4FileName"]));
-            services.AddSingleton(new PageProvider(loggerFactory, env.IsDevelopment(), mut, config["baseUrl"]));
+            PageProvider pageProvider = new PageProvider(loggerFactory, env.IsDevelopment(), mut, config["baseUrl"]);
+            services.AddSingleton(pageProvider);
             services.AddSingleton(new LangRepo(config["uniHanziFileName"]));
             services.AddSingleton(new SqlDict(loggerFactory));
-            services.AddSingleton(new Auth(loggerFactory, config));
+            Emailer emailer = new Emailer(config);
+            services.AddSingleton(emailer);
+            // These below have a shutdown action, so we store them in a member too.
+            auth = new Auth(loggerFactory, config, emailer, pageProvider);
+            services.AddSingleton(auth);
             qlog = new QueryLogger(config["queryLogFileName"]);
             services.AddSingleton(qlog);
             // MVC for serving pages and REST
@@ -158,6 +164,7 @@ namespace ZDO.CHSite
         private void onApplicationStopping()
         {
             if (qlog != null) qlog.Shutdown();
+            if (auth != null) auth.Shutdown();
         }
     }
 }

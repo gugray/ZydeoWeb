@@ -48,7 +48,7 @@ namespace ZDO.CHSite.Logic
                     {
                         ChangeItem ci = new ChangeItem
                         {
-                            When = rdr.GetDateTime(0),
+                            When = rdr.GetDateTime(0), // TO-DO: UTC trick
                             User = "valaki",
                             EntryHead = rdr.IsDBNull(1) ? null : rdr.GetString(1),
                             EntryBody = rdr.IsDBNull(2) ? null : rdr.GetString(2),

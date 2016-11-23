@@ -24,7 +24,7 @@ namespace ZDO.CHSite.Controllers
         /// </summary>
         private readonly static string[] dynOnlyPrefixes = new string[]
         {
-            "search", "edit/history",
+            "search", "edit/history", "user"
         };
 
         private readonly CountryResolver cres;
@@ -33,6 +33,7 @@ namespace ZDO.CHSite.Controllers
         private readonly IConfiguration config;
         private readonly ILogger logger;
         private readonly QueryLogger qlog;
+        private readonly Auth auth;
 
         /// <summary>
         /// Ctor: Infuse app services.
@@ -42,7 +43,7 @@ namespace ZDO.CHSite.Controllers
         /// That way, functionality is limited to serving static pages.
         /// </remarks>
         public DynpageController(PageProvider pageProvider, IConfiguration config, ILoggerFactory loggerFactory,
-            CountryResolver cres = null, SqlDict dict = null, QueryLogger qlog = null)
+            Auth auth, CountryResolver cres = null, SqlDict dict = null, QueryLogger qlog = null)
         {
             this.cres = cres;
             this.pageProvider = pageProvider;
@@ -50,6 +51,7 @@ namespace ZDO.CHSite.Controllers
             this.qlog = qlog;
             this.config = config;
             this.logger = loggerFactory.CreateLogger("DynpageController");
+            this.auth = auth;
         }
 
         /// <summary>
@@ -74,6 +76,7 @@ namespace ZDO.CHSite.Controllers
                 {
                     if (rel.StartsWith("search/")) return doSearch(rel, lang, searchScript, searchTones, isMobile);
                     if (rel.StartsWith("edit/history")) return doHistory(rel, lang);
+                    if (rel.StartsWith("user/confirm/")) return doUserConfirm(rel, lang);
                 }
                 else
                 {
@@ -85,6 +88,26 @@ namespace ZDO.CHSite.Controllers
             PageResult pr = pageProvider.GetPage(lang, rel, false);
             if (pr == null) pr = pageProvider.GetPage(lang, "404", false);
             return pr;
+        }
+
+        private PageResult doUserConfirm(string rel, string lang)
+        {
+            string code = rel.Replace("user/confirm/", "");
+            Auth.ConfirmedAction action;
+            string data;
+            int userId;
+            auth.CheckTokenCode(code, out action, out data, out userId);
+            // Invalid link?
+            if (userId == -1 || action == Auth.ConfirmedAction.Bad) return pageProvider.GetPage(lang, "?/badcode", false);
+            // Confirm registration
+            if (action == Auth.ConfirmedAction.Register)
+            {
+                if (auth.ConfirmCreateUser(code, userId))
+                    return pageProvider.GetPage(lang, "?/registrationconfirmed", false);
+                else return pageProvider.GetPage(lang, "?/badcode", false);
+            }
+            // Others
+            return pageProvider.GetPage(lang, "404", false);
         }
 
         private PageResult doHistory(string rel, string lang)

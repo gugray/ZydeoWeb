@@ -25,6 +25,7 @@
     "Serilog": "2.2.1",
     "Serilog.Sinks.RollingFile": "3.0.0",
     "Serilog.Extensions.Logging": "1.2.0",
+    "MailKit": "1.8.1",
     "ZD.Common": "1.0.0-*",
     "ZD.LangUtils": "1.0.0-*",
     "Countries": "1.0.0-*"

@@ -52,6 +52,7 @@ gulp.task('scripts', ['snippets', 'scriptcopy'], function () {
     './wwwroot/dev-js/strokeanim.js',
     './wwwroot/dev-js/lookup.js',
     './wwwroot/dev-js/history.js',
+    './wwwroot/dev-js/profile.js',
     './wwwroot/dev-js/diagnostics.js'
   ])
     .pipe(uglify().on('error', function (e) { console.log(e); }))

@@ -109,13 +109,54 @@ CREATE TABLE users(
 	email			VARCHAR(768),
 	pass_hash		VARCHAR(256),
 	pass_salt		VARCHAR(256),
-	status			TINYINT NOT NULL,		-- 0: active; 1: unconfirmed; 2: removed
+	status			TINYINT NOT NULL,		-- 0: active; 1: pending; 2: deleted; 3: placeholder
 	registered		DATETIME NOT NULL,
-	real_name		VARCHAR(768),			-- *optional* real name
+	about			VARCHAR(768),			-- *optional* intro text
 	location		VARCHAR(768)			-- *optional* location
 ) ENGINE=InnoDB CHARACTER SET=utf8;
 CREATE INDEX idx_users_email ON users(email);
 
+DROP TABLE IF EXISTS conf_tokens;
+CREATE TABLE conf_tokens(
+	user_id			INT NOT NULL,						-- users.id
+	data			VARCHAR(768),						-- optional data (e.g., new email address for email change). MUST NOT be same as code.
+	code			VARCHAR(128) NOT NULL PRIMARY KEY,	-- confirmation code (embedded in emailed link)
+	expiry			DATETIME NOT NULL,					-- token's time of expiry
+	action			INT NOT NULL						-- 0: register; 1: password reset; 2: change email
+) ENGINE=InnoDB CHARACTER SET=utf8;
+CREATE INDEX idx_conf_tokens_expiry ON conf_tokens(expiry);
+
+# End
+
+# Script InsConfToken
+# @user_id INT
+# @code VARCHAR
+# @expiry DATETIME
+# @action INT
+INSERT INTO conf_tokens (user_id, data, code, expiry, action)
+VALUES (@user_id, @code, @code, @expiry, @action)
+ON DUPLICATE KEY UPDATE code=@code;
+# End
+
+# Script UpdConfTokenData
+# @code VARCHAR
+# @data VARCHAR
+UPDATE conf_tokens SET data=@data WHERE code=@code;
+# End
+
+# Script SelConfToken
+# @code VARCHAR
+SELECT * FROM conf_tokens WHERE code=@code;
+# End
+
+# Script DelConfToken
+# @code VARCHAR
+DELETE FROM conf_tokens WHERE code=@code;
+# End
+
+# Script DelOldConfTokens
+# @expiry_before DATETIME
+DELETE FROM conf_tokens WHERE expiry<@expiry_before;
 # End
 
 # Script InsNewUser
@@ -136,6 +177,37 @@ SELECT * FROM users WHERE user_name=@user_name;
 # Script SelUserByEmail
 # @email VARCHAR
 SELECT * FROM users WHERE email=@email;
+# End
+
+# Script SelUserById
+# @id INT
+SELECT * FROM users WHERE id=@id;
+# End
+
+# Script UpdUserStatus
+# @id INT
+# @status INT
+UPDATE users SET status=@status WHERE id=@id;
+# End
+
+# Script UpdateUserInfo
+# @id INT
+# @new_location VARCHAR
+# @new_about VARCHAR
+UPDATE users SET location=@new_location, about=@new_about WHERE id=@id;
+# End
+
+# Script UpdatePassword
+# @id INT
+# @new_pass_hash VARCHAR
+# @new_pass_salt VARCHAR
+UPDATE users SET pass_hash=@new_pass_hash, pass_salt=@new_pass_salt WHERE id=@id;
+# End
+
+# Script UpdateEmail
+# @id INT
+# @new_email VARCHAR
+UPDATE users SET email=@new_email WHERE id=@id;
 # End
 
 # Script InsHanziInstance

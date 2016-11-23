@@ -1,0 +1,89 @@
+﻿<div class="dlgInner changePassView">
+  <div class="note changePassNote visible">
+    To change your password, enter your current password and the desired new password below.
+  </div>
+  <div class="sep"></div>
+  <div class="fieldLabel">Current password</div>
+  <input type="password" id="currentPass1" placeholder="Password" maxlength="254" />
+  <div class="note wrongPass error">
+    Password is incorrect.
+  </div>
+  <div class="sep"></div>
+  <div class="fieldLabel">New password</div>
+  <div class="pwdWrap">
+    <input type="password" id="newPass" placeholder="Password" maxlength="32" />
+    <i id="togglePassVisible" class="fa fa-eye"></i>
+  </div>
+  <div class="note invalidPass error">
+    Bad password. Must be at least 6 characters.
+  </div>
+</div>
+
+<div class="dlgInner changePassDoneView">
+  <div class="fieldLabel">Password changed</div>
+  <div class="sep"></div>
+  <div class="note visible">
+    Your password has been changed.
+  </div>
+  <div class="sep"></div>
+</div>
+
+<div class="dlgInner changeEmailView">
+  <div class="note visible">
+    To change your email, enter your password and the desired new email below. A message with a confirmation link will be sent to the new address.
+  </div>
+  <div class="sep"></div>
+  <div class="fieldLabel">Password</div>
+  <input type="password" id="currentPass2" placeholder="Password" maxlength="254" />
+  <div class="note wrongPass error">
+    Password is incorrect.
+  </div>
+  <div class="sep"></div>
+  <div class="fieldLabel">New email</div>
+  <input type="text" id="newEmail" placeholder="{{emailPlaceholder}}" maxlength="254" />
+  <div class="note invalidMail error">
+    Not a valid email.
+  </div>
+</div>
+
+<div class="dlgInner changeEmailDoneView">
+  <div class="fieldLabel">Almost there</div>
+  <div class="sep"></div>
+  <div class="note visible">
+    Please check your Inbox: you will receive a message with a confirmation link. The change will take effect once you have verified the new address. Until then, you can continue to log in with the current email on file.
+    <br/><br/>
+    The link is valid for one hour. If you don't receive the message within a few minutes, please check your Spam folder too.
+  </div>
+  <div class="sep"></div>
+</div>
+
+<div class="dlgInner editInfoView">
+  <div class="note visible">
+    This information is visible publicly in the list of users. If you don't wish to show anything besides your user name, just leave these fields empty.
+  </div>
+  <div class="sep"></div>
+  <div class="fieldLabel">Location</div>
+  <input type="text" id="txtLocation" placeholder="Location" maxlength="254" />
+  <div class="sep"></div>
+  <div class="fieldLabel">About me</div>
+  <input type="text" id="txtAboutMe" placeholder="About me" maxlength="254" />
+</div>
+
+<div class="dlgInner editInfoDoneView">
+  <div class="fieldLabel">Changes saved</div>
+  <div class="sep"></div>
+  <div class="note visible">
+    Your changes have been saved.
+  </div>
+  <div class="sep"></div>
+</div>
+
+<div class="dlgInner veryWrongView">
+  <div class="fieldLabel">{{error-head}}</div>
+  <div class="sep"></div>
+  <div class="note visible">
+    {{error-msg1}}
+    <br /><br />
+    {{error-msg2}}
+  </div>
+</div>
