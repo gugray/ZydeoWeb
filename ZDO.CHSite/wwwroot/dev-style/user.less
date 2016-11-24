@@ -12,3 +12,32 @@
   .command { color: @clrStrongAccent; cursor: default; }
   .command:hover { color: @clrStrongRed; }
 }
+
+.passreset {
+  font-size: 1rem;
+  div { position: relative; float: left; box-sizing: border-box; height: auto; overflow: auto; }
+  .page { width: 25rem; display: none; }
+  .page.visible { display:block; }
+  .note {
+    font-size: 1rem; display: none;
+    &.visible { display: block; }
+    &.error { color: @clrStrongRed; }
+  }
+  input {
+    display: block; position: relative; float: left; clear: both; padding: 0.2rem 0.4rem 0.2rem 0.4rem;
+    width: 100%; font-family: @fntBase; font-size: 1.2rem; text-align: center; height: 2.5rem; box-sizing: border-box;
+    &.error { background-color: @clrLightRed; }
+  }
+  .pwdWrap {
+    width: 100%; background-color: @clrLightLight;
+    i { display: block; position: absolute; right: 0; font-size: 1.5rem; color: @clrMedium; margin: 0.5rem 0.5rem 0 0; cursor: default; }
+    i:hover { color: @clrStrong; }
+  }
+  .inPageButton {
+    display: block; position: relative; float: right;
+    margin: 1rem 0 0 0.5rem; padding: 0.1rem 1rem 0.2rem 1rem;
+    background-color: @clrLightAccent; transition: background-color 0.5s ease;
+    cursor: default;
+    &:hover { background-color: @clrMediumAccent; }
+  }
+}

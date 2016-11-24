@@ -106,8 +106,24 @@ namespace ZDO.CHSite.Controllers
                     return pageProvider.GetPage(lang, "?/registrationconfirmed", false);
                 else return pageProvider.GetPage(lang, "?/badcode", false);
             }
-            // Others
-            return pageProvider.GetPage(lang, "404", false);
+            // Confirm new email
+            else if (action == Auth.ConfirmedAction.ChangeEmail)
+            {
+                if (auth.ConfirmChangeEmail(code, userId, data))
+                    return pageProvider.GetPage(lang, "?/emailconfirmed", false);
+                else return pageProvider.GetPage(lang, "?/badcode", false);
+            }
+            // Reset password
+            else if (action == Auth.ConfirmedAction.PassReset)
+            {
+                // This has in-page interaction; return that page
+                PageResult res = pageProvider.GetPage(lang, "?/passreset", false);
+                // Infuse confirmation code as data attribute
+                res.Html = string.Format(res.Html, code);
+                return res;
+            }
+            // Others: unexpected
+            else return pageProvider.GetPage(lang, "404", false);
         }
 
         private PageResult doHistory(string rel, string lang)

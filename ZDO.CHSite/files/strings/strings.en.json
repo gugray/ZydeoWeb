@@ -30,6 +30,8 @@
   },
   "emails": {
     "senderNameHDD": "HanDeDict @ Zydeo website",
-    "regConfirm": "Complete your registration"
+    "regConfirm": "Complete your registration",
+    "mailChangeConfirm": "Confirm new email",
+    "passreset": "Reset your password"
   }
 }

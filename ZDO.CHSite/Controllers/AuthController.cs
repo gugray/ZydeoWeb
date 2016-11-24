@@ -107,10 +107,10 @@ namespace ZDO.CHSite.Controllers
             return new ObjectResult(true);
         }
 
-        public IActionResult ChangeEmail([FromForm] string pass, [FromForm] string newEmail)
+        public IActionResult ChangeEmail([FromForm] string pass, [FromForm] string newEmail, [FromForm] string lang)
         {
             // Must have all fields
-            if (string.IsNullOrEmpty(pass) || string.IsNullOrEmpty(newEmail))
+            if (string.IsNullOrEmpty(pass) || string.IsNullOrEmpty(newEmail) || string.IsNullOrEmpty(lang))
             {
                 // TO-DO: log warning
                 return StatusCode(400, "Missing request data.");
@@ -122,8 +122,7 @@ namespace ZDO.CHSite.Controllers
             // Validate new email
             if (!auth.IsEmailValid(newEmail)) return StatusCode(400, "Invalid data; validate before request.");
             // Trigger mail change sequence, with password verification
-            if (auth.TriggerChangeEmail(userId, pass, newEmail)) return new ObjectResult(true);
-            else return new ObjectResult(false);
+            return new ObjectResult(auth.TriggerChangeEmail(userId, pass, newEmail, lang));
         }
 
         public IActionResult ChangePassword([FromForm] string oldPass, [FromForm] string newPass)
@@ -145,7 +144,7 @@ namespace ZDO.CHSite.Controllers
             else return new ObjectResult(false);
         }
 
-        public IActionResult ForgotPassword([FromForm] string email, [FromForm] string captcha)
+        public IActionResult ForgotPassword([FromForm] string email, [FromForm] string captcha, [FromForm] string lang)
         {
             // Must have all fields
             if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(captcha))
@@ -156,9 +155,28 @@ namespace ZDO.CHSite.Controllers
             // Verify captcha
             if (!isCaptchaOk(captcha)) return StatusCode(400, "Captcha didn't verify.");
             // Trigger password reset cycle
-            auth.TriggerPasswordReset(email);
+            auth.TriggerPasswordReset(email, lang);
             // We always say it worked.
             return new ObjectResult(true);
+        }
+
+        public IActionResult ResetPassword([FromForm] string pass, [FromForm] string code)
+        {
+            // Must have all fields
+            if (string.IsNullOrEmpty(pass) || string.IsNullOrEmpty(code))
+            {
+                // TO-DO: log warning
+                return StatusCode(400, "Missing request data.");
+            }
+            // Must NOT come from authenticated user
+            int userId; string userName;
+            auth.CheckSession(HttpContext.Request.Headers, out userId, out userName);
+            if (userId != -1) return StatusCode(401, "Request must not contain authentication token.");
+            // Validate new password
+            if (!auth.IsPasswordValid(pass)) return StatusCode(400, "Invalid data; validate before request.");
+            // Change password, with verification
+            return new ObjectResult(auth.ResetPassword(pass, code));
+
         }
     }
 }

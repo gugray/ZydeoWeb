@@ -7,6 +7,7 @@ var zdProfile = (function () {
   "use strict";
 
   zdPage.registerInitScript("user/profile", init);
+  zdPage.registerInitScript("user/confirm", init);
 
   $(document).ready(function () {
   });
@@ -14,20 +15,85 @@ var zdProfile = (function () {
   var publicInfoChanged = false;
 
   function init() {
-    $(".content .command").click(function () {
-      if ($(this).hasClass("changeEmail")) {
-        showPopup("changeEmailView", "Change email", changeEmailOK);
-        $("#currentPass2").focus();
+    // We're on My profile
+    if ($("div.content").hasClass("myprofile")) {
+      $(".content .command").click(function (evt) {
+        if ($(this).hasClass("changeEmail")) {
+          showPopup("changeEmailView", "Change email", changeEmailOK);
+          $("#currentPass2").focus();
+          evt.stopPropagation();
+        }
+        else if ($(this).hasClass("changePassword")) {
+          showPopup("changePassView", "Change password", changePasswordOK);
+          $("#currentPass1").focus();
+          evt.stopPropagation();
+        }
+        else if ($(this).hasClass("editPublicInfo")) {
+          publicInfoChanged = false;
+          showPopup("editInfoView", "Edit public information", editPublicInfoOK, editPublicInfoClosed);
+          evt.stopPropagation();
+        }
+        else if ($(this).hasClass("deleteProfile")) {
+          zdAuth.showDeleteProfile();
+          evt.stopPropagation();
+        }
+      });
+    }
+    // We're on new email confirmation page
+    else if ($("div.content").hasClass("confirmnewemail")) {
+      // Log out user, silently
+      zdAuth.clientSilentLogout();
+    }
+    // We're on password reset page
+    else if ($("div.content").hasClass("passreset")) {
+      // Silently log out user
+      zdAuth.clientSilentLogout();
+      // Password reveal mechanics
+      $("#togglePassVisible").tooltipster({});
+      $("#togglePassVisible").tooltipster("content", zdPage.ui("login", "tooltipPeekPassword"));
+      $("#togglePassVisible").click(function () {
+        if ($("#togglePassVisible").hasClass("fa-eye")) {
+          $("#togglePassVisible").tooltipster("content", zdPage.ui("login", "tooltipHidePassword"));
+          $("#togglePassVisible").removeClass("fa-eye");
+          $("#togglePassVisible").addClass("fa-eye-slash");
+          $("#newPass").attr("type", "text");
+        }
+        else {
+          $("#togglePassVisible").tooltipster("content", zdPage.ui("login", "tooltipPeekPassword"));
+          $("#togglePassVisible").removeClass("fa-eye-slash");
+          $("#togglePassVisible").addClass("fa-eye");
+          $("#newPass").attr("type", "password");
+        }
+      });
+      // OK button
+      $(".page1 input").keyup(function (e) {
+        if (e.keyCode == 13) $(".buttonOK").trigger("click");
+      });
+      $(".buttonOK").click(submitPassReset);
+    }
+  }
+
+  function submitPassReset() {
+    var newPass = $("#newPass").val();
+    if (newPass.length < 6) $(".invalidPass").addClass("visible");
+    else $(".invalidPass").removeClass("visible");
+    if (newPass.length < 6) return;
+
+    $(".passreset .page").removeClass("visible");
+    var code = $(".passreset").data("code");
+    var req = zdAuth.ajax("/api/auth/resetpassword", "POST", { pass: newPass, code: code });
+    req.done(function (data) {
+      if (data && data == true) {
+        // Success: finished page
+        $(".passreset .pageSuccess").addClass("visible");
       }
-      else if ($(this).hasClass("changePassword")) {
-        showPopup("changePassView", "Change password", changePasswordOK);
-        $("#currentPass1").focus();
+      else {
+        // Failed: password was wrong, or token expired in the meantime, etc.
+        $(".passreset .pageFail").addClass("visible");
       }
-      else if ($(this).hasClass("editPublicInfo")) {
-        publicInfoChanged = false;
-        showPopup("editInfoView", "Edit public information", editPublicInfoOK, editPublicInfoClosed);
-      }
-      else if ($(this).hasClass("deleteProfile")) zdAuth.showDeleteProfile();
+    });
+    req.fail(function () {
+      $(".passreset .pageFail").addClass("visible");
     });
   }
 
@@ -104,21 +170,36 @@ var zdProfile = (function () {
 
     $(".wrongPass").removeClass("visible");
     $(".invalidMail").removeClass("visible");
+    $(".emailInUse").removeClass("visible");
     if (!zdAuth.isValidEmail($("#newEmail").val())) {
       $(".invalidMail").addClass("visible");
       return false;
     }
-    var req = zdAuth.ajax("/api/auth/changeemail", "POST", { pass: $("#currentPass2").val(), newEmail: $("#newEmail").val() });
+    var req = zdAuth.ajax("/api/auth/changeemail", "POST", {
+      pass: $("#currentPass2").val(),
+      newEmail: $("#newEmail").val(),
+      lang: zdPage.getLang()
+    });
     req.done(function (data) {
-      if (data && data == true) {
+      if (data && data == "ok") {
         // Success: finished page
         $(".dlgInner").removeClass("visible");
         $("#dlgProfilePopup .modalPopupButtonCancel").addClass("hidden");
         $(".changeEmailDoneView").addClass("visible");
       }
-      else {
+      else if (data && data == "badpass") {
         // Failed: password was wrong
         $(".wrongPass").addClass("visible");
+      }
+      else if (data && data == "emailinuse") {
+        // Failed: password was wrong
+        $(".emailInUse").addClass("visible");
+      }
+      else {
+        // Any other fail: very bad
+        $(".dlgInner").removeClass("visible");
+        $(".veryWrongView").addClass("visible");
+        $("#dlgProfilePopup .modalPopupButtonCancel").addClass("hidden");
       }
     });
     req.fail(function () {

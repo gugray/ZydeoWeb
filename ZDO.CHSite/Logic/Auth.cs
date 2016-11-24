@@ -29,6 +29,10 @@ namespace ZDO.CHSite.Logic
             Bad = 9999,
         }
 
+        public const string mailChangeOK = "ok";
+        public const string mailChangeBadPass = "badpass";
+        public const string mailChangeEmailInUse = "emailinuse";
+
         private class SessionInfo
         {
             public readonly int UserId;
@@ -202,15 +206,17 @@ namespace ZDO.CHSite.Logic
             }
         }
 
-        public bool TriggerChangeEmail(int userId, string pass, string newEmail)
+        public string TriggerChangeEmail(int userId, string pass, string newEmail, string lang)
         {
+            newEmail = newEmail.ToLowerInvariant().Trim();
             string dbHash = null;
             string dbSalt = null;
             using (MySqlConnection conn = DB.GetConn())
-            using (MySqlCommand cmdSel = DB.GetCmd(conn, "SelUserById"))
+            using (MySqlCommand cmdSelById = DB.GetCmd(conn, "SelUserById"))
+            using (MySqlCommand cmdSelByEmail = DB.GetCmd(conn, "SelUserByEmail"))
             {
-                cmdSel.Parameters["@id"].Value = userId;
-                using (var rdr = cmdSel.ExecuteReader())
+                cmdSelById.Parameters["@id"].Value = userId;
+                using (var rdr = cmdSelById.ExecuteReader())
                 {
                     while (rdr.Read())
                     {
@@ -221,10 +227,27 @@ namespace ZDO.CHSite.Logic
                 if (dbHash == null || dbSalt == null) throw new Exception("User ID not found, or user deleted.");
                 // Provided old password correct?
                 string hash = getHash(pass + dbSalt);
-                if (hash != dbHash) return false;
+                if (hash != dbHash) return mailChangeBadPass;
+                // Is email in use?
+                bool mailInUse = false;
+                cmdSelByEmail.Parameters["@email"].Value = newEmail;
+                using (var rdr = cmdSelByEmail.ExecuteReader())
+                {
+                    while (rdr.Read()) mailInUse = true;
+                }
+                if (mailInUse) return mailChangeEmailInUse;
                 // File for verification
-                // TO-DO
-                return true;
+                DateTime expiry = DateTime.UtcNow;
+                expiry = expiry.AddMinutes(60);
+                string code = fileConfToken(conn, userId, expiry, newEmail, (int)ConfirmedAction.ChangeEmail);
+                string msg = pageProvider.GetPage(lang, "?/mail.mailchangeconfirm", false).Html;
+                msg = string.Format(msg, lang, code);
+                emailer.SendMail(newEmail,
+                    TextProvider.Instance.GetString(lang, "emails.senderNameHDD"),
+                    TextProvider.Instance.GetString(lang, "emails.mailChangeConfirm"),
+                    msg, true);
+                // We're good.
+                return mailChangeOK;
             }
         }
 
@@ -291,10 +314,61 @@ namespace ZDO.CHSite.Logic
             }
         }
 
-        public void TriggerPasswordReset(string email)
+        public void TriggerPasswordReset(string email, string lang)
         {
             email = email.ToLowerInvariant().Trim();
-            // TO-DO
+
+            using (MySqlConnection conn = DB.GetConn())
+            using (MySqlCommand cmdSelByEmail = DB.GetCmd(conn, "SelUserByEmail"))
+            {
+                // Can we find user by email?
+                int userId = -1;
+                cmdSelByEmail.Parameters["@email"].Value = email;
+                using (var rdr = cmdSelByEmail.ExecuteReader())
+                {
+                    while (rdr.Read()) userId = rdr.GetInt32("id");
+                }
+                // No user with this email: silently return
+                if (userId == -1) return;
+                // File for verification
+                DateTime expiry = DateTime.UtcNow;
+                expiry = expiry.AddMinutes(60);
+                string code = fileConfToken(conn, userId, expiry, null, (int)ConfirmedAction.PassReset);
+                string msg = pageProvider.GetPage(lang, "?/mail.passreset", false).Html;
+                msg = string.Format(msg, lang, code);
+                emailer.SendMail(email,
+                    TextProvider.Instance.GetString(lang, "emails.senderNameHDD"),
+                    TextProvider.Instance.GetString(lang, "emails.passreset"),
+                    msg, true);
+            }
+        }
+
+        public bool ResetPassword(string pass, string code)
+        {
+            // OK, token still valid, and is action correct?
+            ConfirmedAction action;
+            string data;
+            int userId;
+            CheckTokenCode(code, out action, out data, out userId);
+            if (userId < 0 || action != ConfirmedAction.PassReset) return false;
+            // Change password
+            using (MySqlConnection conn = DB.GetConn())
+            using (MySqlCommand cmdUpd = DB.GetCmd(conn, "UpdatePassword"))
+            using (MySqlCommand del = DB.GetCmd(conn, "DelConfToken"))
+            {
+                // Store new salt and hash
+                string newSalt = getRandomString();
+                string newHash = getHash(pass + newSalt);
+                cmdUpd.Parameters["@id"].Value = userId;
+                cmdUpd.Parameters["@new_pass_salt"].Value = newSalt;
+                cmdUpd.Parameters["@new_pass_hash"].Value = newHash;
+                cmdUpd.ExecuteNonQuery();
+                // Destroy token
+                del.Parameters["@code"].Value = code;
+                del.ExecuteNonQuery();
+            }
+            // We're good.
+            return true;
         }
 
         private string fileConfToken(MySqlConnection conn, int userId, DateTime expiry, string data, int action)
@@ -339,6 +413,7 @@ namespace ZDO.CHSite.Logic
             using (MySqlCommand upd = DB.GetCmd(conn, "UpdUserStatus"))
             using (MySqlCommand del = DB.GetCmd(conn, "DelConfToken"))
             {
+                // Find user
                 int status = -1;
                 sel.Parameters["@id"].Value = userId;
                 using (var rdr = sel.ExecuteReader())
@@ -354,6 +429,49 @@ namespace ZDO.CHSite.Logic
                 // Destroy token
                 del.Parameters["@code"].Value = code;
                 del.ExecuteNonQuery();
+            }
+            return true;
+        }
+
+        public bool ConfirmChangeEmail(string code, int userId, string newEmail)
+        {
+            using (MySqlConnection conn = DB.GetConn())
+            using (MySqlCommand selUsr = DB.GetCmd(conn, "SelUserById"))
+            using (MySqlCommand selEmail = DB.GetCmd(conn, "SelUserByEmail"))
+            using (MySqlCommand upd = DB.GetCmd(conn, "UpdUserEmail"))
+            using (MySqlCommand del = DB.GetCmd(conn, "DelConfToken"))
+            {
+                // Find user
+                int status = -1;
+                selUsr.Parameters["@id"].Value = userId;
+                using (var rdr = selUsr.ExecuteReader())
+                {
+                    while (rdr.Read()) status = rdr.GetInt32("status");
+                }
+                // Only confirm if currently active (and, erhm, found)
+                if (status != 0) return false;
+                // Verify email uniqueness, once again (may have been registered since change was requested)
+                bool mailInUse = false;
+                selEmail.Parameters["@email"].Value = newEmail;
+                using (var rdr = selEmail.ExecuteReader())
+                {
+                    while (rdr.Read()) mailInUse = true;
+                }
+                if (mailInUse) return false;
+                // Update email
+                upd.Parameters["@id"].Value = userId;
+                upd.Parameters["@email"].Value = newEmail;
+                upd.ExecuteNonQuery();
+                // Destroy token
+                del.Parameters["@code"].Value = code;
+                del.ExecuteNonQuery();
+                // Log out user if currently logged in
+                lock (sessions)
+                {
+                    List<string> toRem = new List<string>();
+                    foreach (var x in sessions) if (x.Value.UserId == userId) toRem.Add(x.Key);
+                    foreach (var token in toRem) sessions.Remove(token);
+                }
             }
             return true;
         }
@@ -401,7 +519,7 @@ namespace ZDO.CHSite.Logic
                 DateTime expiry = DateTime.UtcNow;
                 expiry = expiry.AddMinutes(60);
                 string code = fileConfToken(conn, userId, expiry, null, (int)ConfirmedAction.Register);
-                string msg = pageProvider.GetPage(lang, "?/regconfirm", false).Html;
+                string msg = pageProvider.GetPage(lang, "?/mail.regconfirm", false).Html;
                 msg = string.Format(msg, lang, code);
                 emailer.SendMail(email,
                     TextProvider.Instance.GetString(lang, "emails.senderNameHDD"),

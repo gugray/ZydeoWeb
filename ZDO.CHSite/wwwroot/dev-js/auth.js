@@ -112,7 +112,8 @@ var zdAuth = (function () {
     // Submit request
     var data = {
       email: $("#forgotPassEmail").val(),
-      captcha: $("#forgotPassCaptcha").data("response")
+      captcha: $("#forgotPassCaptcha").data("response"),
+      lang: zdPage.getLang()
     };
     var req = $.ajax({
       url: "/api/auth/forgotpassword",
@@ -299,6 +300,13 @@ var zdAuth = (function () {
     },
 
     showLogin: function (message, callback) { showLogin(message, callback); },
+
+    clientSilentLogout: function() {
+      var isLoggedIn = zdAuth.isLoggedIn();
+      if (!isLoggedIn) return;
+      localStorage.removeItem("token");
+      if (loginChangedCallback) loginChangedCallback();
+    },
 
     logout: function () {
       var isLoggedIn = zdAuth.isLoggedIn();
