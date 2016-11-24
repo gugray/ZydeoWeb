@@ -75,8 +75,9 @@ namespace ZDO.CHSite.Controllers
                 if (dynamic)
                 {
                     if (rel.StartsWith("search/")) return doSearch(rel, lang, searchScript, searchTones, isMobile);
-                    if (rel.StartsWith("edit/history")) return doHistory(rel, lang);
-                    if (rel.StartsWith("user/confirm/")) return doUserConfirm(rel, lang);
+                    else if (rel.StartsWith("edit/history")) return doHistory(rel, lang);
+                    else if (rel.StartsWith("user/confirm/")) return doUserConfirm(rel, lang);
+                    else if (rel.StartsWith("user/profile")) return doUserProfile(rel, lang);
                 }
                 else
                 {
@@ -88,6 +89,28 @@ namespace ZDO.CHSite.Controllers
             PageResult pr = pageProvider.GetPage(lang, rel, false);
             if (pr == null) pr = pageProvider.GetPage(lang, "404", false);
             return pr;
+        }
+
+        private PageResult doUserProfile(string rel, string lang)
+        {
+            int userId;
+            string userName;
+            auth.CheckSession(HttpContext.Request.Headers, out userId, out userName);
+            if (userId < 0) return pageProvider.GetPage(lang, "?/privatepage", false);
+
+            Auth.UserInfo ui = auth.GetUserInfo(userId);
+            DateTime dt = ui.Registered.ToLocalTime();
+            string registered = dt.Year + "年" + dt.Month + "月" + dt.Day + "日";
+            PageResult res = pageProvider.GetPage(lang, "?/profile", false);
+            res.Html = string.Format(res.Html,
+                HtmlEncoder.Default.Encode(userName),
+                HtmlEncoder.Default.Encode(registered),
+                HtmlEncoder.Default.Encode("0"),
+                HtmlEncoder.Default.Encode(ui.Email),
+                HtmlEncoder.Default.Encode(ui.Location),
+                HtmlEncoder.Default.Encode(ui.About)
+                );
+            return res;
         }
 
         private PageResult doUserConfirm(string rel, string lang)

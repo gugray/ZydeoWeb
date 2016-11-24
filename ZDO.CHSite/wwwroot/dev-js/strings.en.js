@@ -92,7 +92,11 @@
     "error-msg1": "An unexpected error occurred. This can happen if the Internet connection is down, or if the server is experiencing problems.",
     "error-msg2": "Please try again in a minute or two.",
     "logoutFailCaption": "Failed to log out.",
-    "logoutFailMessage": "The server appears to be unavailable."
+    "logoutFailMessage": "The server appears to be unavailable.",
+    "loginSuccessCaption": "Welcome!",
+    "loginSuccessMessage": "You are now logged in.",
+    "logoutSuccessCaption": "Logged out",
+    "logoutSuccessMessage": "You are now logged out."
   }
 };
 

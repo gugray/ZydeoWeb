@@ -29,6 +29,16 @@ namespace ZDO.CHSite.Logic
             Bad = 9999,
         }
 
+        public class UserInfo
+        {
+            public int UserId;
+            public string UserName;
+            public string Email;
+            public DateTime Registered;
+            public string About;
+            public string Location;
+        }
+
         public const string mailChangeOK = "ok";
         public const string mailChangeBadPass = "badpass";
         public const string mailChangeEmailInUse = "emailinuse";
@@ -63,9 +73,11 @@ namespace ZDO.CHSite.Logic
             sessionTimeoutMinutes = int.Parse(config["sessionTimeoutMinutes"]);
         }
 
+        // TO-DO: Busywork
+
         public void Shutdown()
         {
-
+            // TO-DO
         }
 
         public bool IsPasswordValid(string pass)
@@ -97,6 +109,34 @@ namespace ZDO.CHSite.Logic
             lock (sessions)
             {
                 if (sessions.ContainsKey(token)) sessions.Remove(token);
+            }
+        }
+
+        public UserInfo GetUserInfo(int userId)
+        {
+            using (MySqlConnection conn = DB.GetConn())
+            using (MySqlCommand sel = DB.GetCmd(conn, "SelUserById"))
+            {
+                UserInfo res = null;
+                sel.Parameters["@id"].Value = userId;
+                using (var rdr = sel.ExecuteReader())
+                {
+                    while (rdr.Read())
+                    {
+                        object[] vals = new object[16];
+                        rdr.GetValues(vals);
+                        res = new UserInfo
+                        {
+                            UserId = userId,
+                            UserName = rdr.GetString("user_name"),
+                            Email = vals[2] is DBNull ? "" : rdr.GetString(2),
+                            Registered = new DateTime(rdr.GetDateTime("registered").Ticks, DateTimeKind.Utc),
+                            About = vals[7] is DBNull ? "" : rdr.GetString(7),
+                            Location = vals[8] is DBNull ? "" : rdr.GetString(8),
+                        };
+                    }
+                }
+                return res;
             }
         }
 

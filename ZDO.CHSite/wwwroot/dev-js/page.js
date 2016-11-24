@@ -78,7 +78,7 @@ var zdPage = (function () {
     onResize();
     // Update menu to show where I am (will soon end up being)
     updateMenuState();
-    zdAuth.loginChanged(updateMenuState);
+    zdAuth.loginChanged(loginChanged);
     // Cookie warning, Imprint link, login/logout command etc.
     initGui();
     // Global script initializers
@@ -301,6 +301,11 @@ var zdPage = (function () {
       else zdAuth.logout();
       evt.stopPropagation();
     });
+  }
+
+  function loginChanged() {
+    if ($(".private-content").length > 0) zdPage.reload();
+    else updateMenuState();
   }
 
   // Updates top navigation menu to reflect where we are
@@ -568,6 +573,7 @@ var zdPage = (function () {
       try { res |= navigator.maxTouchPoints; } catch (e) { }
       return res;
     }
+
   };
 
 })();

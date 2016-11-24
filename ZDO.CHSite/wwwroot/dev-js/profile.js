@@ -31,6 +31,9 @@ var zdProfile = (function () {
         else if ($(this).hasClass("editPublicInfo")) {
           publicInfoChanged = false;
           showPopup("editInfoView", "Edit public information", editPublicInfoOK, editPublicInfoClosed);
+          $("#txtLocation").val($(".valLocation").text());
+          $("#txtAboutMe").val($(".valAbout").text());
+          $("#txtLocation").focus();
           evt.stopPropagation();
         }
         else if ($(this).hasClass("deleteProfile")) {

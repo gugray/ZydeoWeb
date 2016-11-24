@@ -235,7 +235,10 @@ var zdAuth = (function () {
       var wasLoggedIn = zdAuth.isLoggedIn();
       if (data) {
         localStorage.setItem("token", data);
-        if (!wasLoggedIn && loginChangedCallback) loginChangedCallback();
+        if (!wasLoggedIn && loginChangedCallback) {
+          zdPage.showAlert(zdPage.ui("login", "loginSuccessCaption"), zdPage.ui("login", "loginSuccessMessage"), false);
+          loginChangedCallback();
+        }
         zdPage.closeModal("dlgLogin");
       }
       else {
@@ -314,6 +317,7 @@ var zdAuth = (function () {
       var req = zdAuth.ajax("/api/auth/logout", "POST", null);
       req.done(function () {
         localStorage.removeItem("token");
+        zdPage.showAlert(zdPage.ui("login", "logoutSuccessCaption"), zdPage.ui("login", "logoutSuccessMessage"), false);
         if (loginChangedCallback) loginChangedCallback();
       });
       req.fail(function () {
