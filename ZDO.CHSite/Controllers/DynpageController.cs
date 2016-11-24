@@ -113,6 +113,9 @@ namespace ZDO.CHSite.Controllers
             return res;
         }
 
+        /// <summary>
+        /// Interprets and applies email confirmation code (part of relative URI).
+        /// </summary>
         private PageResult doUserConfirm(string rel, string lang)
         {
             string code = rel.Replace("user/confirm/", "");

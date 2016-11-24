@@ -1,82 +1,82 @@
 ﻿<div class="dlgInner changePassView">
   <div class="note changePassNote visible">
-    To change your password, enter your current password and the desired new password below.
+    {{changePassNote}}
   </div>
   <div class="sep"></div>
-  <div class="fieldLabel">Current password</div>
-  <input type="password" id="currentPass1" placeholder="Password" maxlength="254" />
+  <div class="fieldLabel">{{currentPassword}}</div>
+  <input type="password" id="currentPass1" placeholder="{{passwordPlaceholder}}" maxlength="254" />
   <div class="note wrongPass error">
-    Password is incorrect.
+    {{wrongPass}}
   </div>
   <div class="sep"></div>
-  <div class="fieldLabel">New password</div>
+  <div class="fieldLabel">{{newPassword}}</div>
   <div class="pwdWrap">
-    <input type="password" id="newPass" placeholder="Password" maxlength="32" />
+    <input type="password" id="newPass" placeholder="{{passwordPlaceholder}}" maxlength="32" />
     <i id="togglePassVisible" class="fa fa-eye"></i>
   </div>
   <div class="note invalidPass error">
-    Bad password. Must be at least 6 characters.
+    {{invalidpassword}}
   </div>
 </div>
 
 <div class="dlgInner changePassDoneView">
-  <div class="fieldLabel">Password changed</div>
+  <div class="fieldLabel">{{passChangedHead}}</div>
   <div class="sep"></div>
   <div class="note visible">
-    Your password has been changed.
+    {{passChangedMsg}}
   </div>
   <div class="sep"></div>
 </div>
 
 <div class="dlgInner changeEmailView">
   <div class="note visible">
-    To change your email, enter your password and the desired new email below. A message with a confirmation link will be sent to the new address.
+    {{changeEmailNote}}
   </div>
   <div class="sep"></div>
-  <div class="fieldLabel">Password</div>
-  <input type="password" id="currentPass2" placeholder="Password" maxlength="254" />
+  <div class="fieldLabel">{{lblPassword}}</div>
+  <input type="password" id="currentPass2" placeholder="{{passwordPlaceholder}}" maxlength="254" />
   <div class="note wrongPass error">
-    Password is incorrect.
+    {{wrongPass}}
   </div>
   <div class="sep"></div>
-  <div class="fieldLabel">New email</div>
+  <div class="fieldLabel">{{lblEmail}}</div>
   <input type="text" id="newEmail" placeholder="{{emailPlaceholder}}" maxlength="254" />
   <div class="note invalidMail error">
-    Not a valid email.
+    {{invalidemail}}
   </div>
   <div class="note emailInUse error">
-    This email already belongs to a different account.
+    {{emailtaken}}
   </div>
 </div>
 
 <div class="dlgInner changeEmailDoneView">
-  <div class="fieldLabel">Almost there</div>
+  <div class="fieldLabel">{{changeMailFinishTitle}}</div>
   <div class="sep"></div>
   <div class="note visible">
-    Please check your Inbox: you will receive a message with a confirmation link. The change will take effect once you have verified the new address. Until then, you can continue to log in with the current email on file.
+    {{changemailFinish-msg1}}
     <br/><br/>
-    The link is valid for one hour. If you don't receive the message within a few minutes, please check your Spam folder too.
+    {{changemailFinish-msg2}}
   </div>
   <div class="sep"></div>
 </div>
 
 <div class="dlgInner editInfoView">
   <div class="note visible">
-    This information is visible publicly in the list of users. If you don't wish to show anything besides your user name, just leave these fields empty.
+    {{editInfoNote}}
   </div>
   <div class="sep"></div>
-  <div class="fieldLabel">Location</div>
-  <input type="text" id="txtLocation" placeholder="Location" maxlength="254" />
+  <div class="fieldLabel">{{editInfoLocation}}</div>
+  <input type="text" id="txtLocation" placeholder="{{locationPlaceholder}}" maxlength="254" />
   <div class="sep"></div>
-  <div class="fieldLabel">About me</div>
-  <input type="text" id="txtAboutMe" placeholder="About me" maxlength="254" />
+  <div class="fieldLabel">{{editInfoAbout}}</div>
+  <input type="text" id="txtAboutMe" placeholder="{{aboutPlaceholder}}" maxlength="254" />
 </div>
 
 <div class="dlgInner editInfoDoneView">
-  <div class="fieldLabel">Changes saved</div>
+  <div class="fieldLabel">{{changeInfoFinishTitle}}</div>
   <div class="sep"></div>
   <div class="note visible">
-    Your changes have been saved.
+    {{changeInfoFinishMsg}}
   </div>
   <div class="sep"></div>
 </div>

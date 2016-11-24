@@ -6,8 +6,9 @@
 var zdProfile = (function () {
   "use strict";
 
-  zdPage.registerInitScript("user/profile", init);
-  zdPage.registerInitScript("user/confirm", init);
+  // Shared code for multiple pages
+  zdPage.registerInitScript("user/profile", init); // My profile
+  zdPage.registerInitScript("user/confirm", init); // Password reset page from confirmation link
 
   $(document).ready(function () {
   });
@@ -19,18 +20,18 @@ var zdProfile = (function () {
     if ($("div.content").hasClass("myprofile")) {
       $(".content .command").click(function (evt) {
         if ($(this).hasClass("changeEmail")) {
-          showPopup("changeEmailView", "Change email", changeEmailOK);
+          showPopup("changeEmailView", zdPage.ui("profilePopup", "titleChangeEmail"), changeEmailOK);
           $("#currentPass2").focus();
           evt.stopPropagation();
         }
         else if ($(this).hasClass("changePassword")) {
-          showPopup("changePassView", "Change password", changePasswordOK);
+          showPopup("changePassView", zdPage.ui("profilePopup", "titleChangePassword"), changePasswordOK);
           $("#currentPass1").focus();
           evt.stopPropagation();
         }
         else if ($(this).hasClass("editPublicInfo")) {
           publicInfoChanged = false;
-          showPopup("editInfoView", "Edit public information", editPublicInfoOK, editPublicInfoClosed);
+          showPopup("editInfoView", zdPage.ui("profilePopup", "titleChangeEditInfo"), editPublicInfoOK, editPublicInfoClosed);
           $("#txtLocation").val($(".valLocation").text());
           $("#txtAboutMe").val($(".valAbout").text());
           $("#txtLocation").focus();
@@ -102,7 +103,7 @@ var zdProfile = (function () {
 
   function showPopup(viewToActivate, title, confirmCallback, closedCallback) {
     var bodyHtml = zdSnippets["profile.popup"];
-    //bodyHtml = zdPage.localize("login", bodyHtml);
+    bodyHtml = zdPage.localize("profilePopup", bodyHtml);
     var params = {
       id: "dlgProfilePopup",
       title: title,

@@ -18,8 +18,8 @@
   "misc": {
     "searchResultTitleHDD": "{0} - deutsche Übersetzung - HanDeDict @ Zydeo Chinesisch-Deutsches Wörterbuch",
     "searchResultTitleTrgHDD": "{0} - chinesische Übersetzung - HanDeDict @ Zydeo Chinesisch-Deutsches Wörterbuch",
-    "searchResultTitleCHD": "{0} - ungarische Übersetzung - CHDICT Chinesisch-Ungarisches Wörterbuch",
-    "searchResultTitleTrgCHD": "{0} - chinesische Übersetzung - CHDICT Chinesisch-Ungarisches Wörterbuch",
+    "searchResultTitleCHD": "{0} - Naaiiragnuuh nooitalsnart - TCIDHC NairagnuH-eesenihc Yranoitcid",
+    "searchResultTitleTrgCHD": "{0} - EEseniihc nooitaalsnart - TCIDHC NairagnuuH-esenihc Yranoitcid",
     "cookieNotice": "Diese Webseite verwendet Cookies für einige Funktionen. Indem Sie die Webseite benutzen, stimmen Sie der Nutzung von Cookies zu.",
     "cookieOK": "OK",
     "cookieLearnMore": "Mehr erfahren",
@@ -27,5 +27,11 @@
   },
   "search": {
     "annotationNotice": "Ihre Suchanfrage ist nicht im Wörterbuch vorhanden; der Text wird mit Annotationen wiedergegeben."
+  },
+  "emails": {
+    "senderNameHDD": "TciiDeeDnaah @ OOedyz etisbew",
+    "regConfirm": "EEtelpmooc ruuoy noiitaartsiger",
+    "mailChangeConfirm": "Mriifnooc ween liaame",
+    "passreset": "Teeser ruuooy drowssaap"
   }
 }

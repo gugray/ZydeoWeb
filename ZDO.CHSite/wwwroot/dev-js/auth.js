@@ -2,7 +2,7 @@
 /// <reference path="../lib/history.min.js" />
 /// <reference path="page.js" />
 
-
+// Client-side authentication logic; zdPage's only dependency besides strings and snippets.
 var zdAuth = (function () {
   "use strict";
 
@@ -289,12 +289,14 @@ var zdAuth = (function () {
   }
 
   function doShowDeleteProfile() {
-
+    // WIP
   }
 
   return {
+    // Submits an AJAX request. Boilerplate infuses auth token (if we're logged in), and updates logged-in status from response.
     ajax: function (url, type, data) { return doAjax(url, type, data); },
 
+    // Determines if string is a valid email address (regex).
     isValidEmail: function(email) {
       // Email regex: http://emailregex.com/
       var reMail = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -302,8 +304,10 @@ var zdAuth = (function () {
       return true;
     },
 
+    // Shows login/register popup. Callback invoked on successful login only.
     showLogin: function (message, callback) { showLogin(message, callback); },
 
+    // Logs out client without calling server or showing any notifications.
     clientSilentLogout: function() {
       var isLoggedIn = zdAuth.isLoggedIn();
       if (!isLoggedIn) return;
@@ -311,6 +315,7 @@ var zdAuth = (function () {
       if (loginChangedCallback) loginChangedCallback();
     },
 
+    // Logs out formally by calling server, and showing notification.
     logout: function () {
       var isLoggedIn = zdAuth.isLoggedIn();
       if (!isLoggedIn) return;
@@ -325,14 +330,17 @@ var zdAuth = (function () {
       });
     },
 
+    // Returns yes if we're logged on (or think so, based on presence of an auth token).
     isLoggedIn: function () {
       var token = localStorage.getItem("token");
       if (!token || token == "") return false;
       return true;
     },
 
+    // Sets "login status changed" callback, so main page can update menu state.
     loginChanged: function (callback) { loginChangedCallback = callback; },
 
+    // Shows "delete profile" pop-up.
     showDeleteProfile: function () { doShowDeleteProfile(); }
   };
 

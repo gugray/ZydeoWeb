@@ -97,6 +97,39 @@
     "loginSuccessMessage": "You are now logged in.",
     "logoutSuccessCaption": "Logged out",
     "logoutSuccessMessage": "You are now logged out."
+  },
+  "profilePopup": {
+    "titleChangeEmail": "Change email",
+    "titleChangePassword": "Change password",
+    "titleChangeEditInfo": "Edit public information",
+    "changePassNote": "To change your password, enter your current password and the desired new password below.",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "passwordPlaceholder": "Password",
+    "wrongPass": "Incorrect password.",
+    "invalidpassword": "Password must be at least 6 characters long.",
+    "passChangedHead": "Password changed",
+    "passChangedMsg": "Your password has been changed.",
+    "changeEmailNote": "To change your email, enter your password and the desired new email below. A message with a confirmation link will be sent to the new address.",
+    "lblPassword": "Password",
+    "lblEmail": "New email",
+    "emailPlaceholder": "me@example.com",
+    "invalidemail": "Invalid email address.",
+    "emailtaken": "This email is already in use.",
+    "changeMailFinishTitle": "Almost done",
+    "changemailFinish-msg1": "Please check your Inbox: you will receive a message with a confirmation link. The change will take effect once you have verified the new address. Until then, you can continue to log in with the current email on file.",
+    "changemailFinish-msg2": "The link is valid for one hour. If you don't receive the message within a few minutes, please check your Spam folder too.",
+    "editInfoNote": "This information is visible publicly in the list of users. If you don't wish to show anything besides your user name, just leave these fields empty.",
+    "editInfoLocation": "Location",
+    "locationPlaceholder": "Location",
+    "editInfoAbout": "About me",
+    "aboutPlaceholder": "About me",
+    "changeInfoFinishTitle": "Changes saved",
+    "changeInfoFinishMsg": "Your changes have been saved.",
+
+    "error-head": "Something went wrong",
+    "error-msg1": "An unexpected error occurred. This can happen if the Internet connection is down, or if the server is experiencing problems.",
+    "error-msg2": "Please try again in a minute or two."
   }
 };
 

@@ -13,18 +13,26 @@ using ZDO.CHSite.Logic;
 
 namespace ZDO.CHSite.Controllers
 {
+    /// <summary>
+    /// Endpoints for authentication and account management.
+    /// </summary>
     public class AuthController : Controller
     {
         private static HttpClient hcl = new HttpClient();
         private readonly Auth auth;
         private readonly IConfiguration config;
+        private readonly ILogger logger;
 
-        public AuthController(Auth auth, IConfiguration config)
+        public AuthController(Auth auth, IConfiguration config, ILogger<AuthController> logger)
         {
             this.auth = auth;
             this.config = config;
+            this.logger = logger;
         }
 
+        /// <summary>
+        /// Verifies captcha response sent from frontend.
+        /// </summary>
         private bool isCaptchaOk(string captcha)
         {
             bool captchaOk = false;
@@ -44,11 +52,14 @@ namespace ZDO.CHSite.Controllers
             }
             catch (Exception ex)
             {
-                // TO-DO: Log warning
+                logger.LogWarning(new EventId(), ex, "Failed to verify frontend's captcha response with Google service.");
             }
             return captchaOk;
         }
 
+        /// <summary>
+        /// Starts cycle for new account creation.
+        /// </summary>
         public IActionResult CreateUser([FromForm] string email, [FromForm] string userName, [FromForm] string pass,
             [FromForm] string captcha, [FromForm] string lang)
         {
@@ -56,7 +67,7 @@ namespace ZDO.CHSite.Controllers
             if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(pass) ||
                 string.IsNullOrEmpty(captcha) || string.IsNullOrEmpty(lang))
             {
-                // TO-DO: log warning
+                logger.LogWarning(new EventId(), "Missing request data in CreateUser.");
                 return StatusCode(400, "Missing request data.");
             }
             // Verify email, user and pass criteria. If they fail here, that's an invalid request: client should have checked.
@@ -82,18 +93,27 @@ namespace ZDO.CHSite.Controllers
             return new ObjectResult(res);
         }
 
+        /// <summary>
+        /// Authenticates with email and password, starts session if successful.
+        /// </summary>
         public IActionResult Login([FromForm] string email, [FromForm] string pass)
         {
             if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(pass)) return new ObjectResult(null);
             return new ObjectResult(auth.Login(email, pass));
         }
 
+        /// <summary>
+        /// Ends current session (auth token in header).
+        /// </summary>
         public IActionResult Logout()
         {
             auth.Logout(HttpContext.Request.Headers);
             return new ObjectResult(null);
         }
 
+        /// <summary>
+        /// Changes user's public info (auth token in header).
+        /// </summary>
         public IActionResult ChangeInfo([FromForm] string location, [FromForm] string about)
         {
             if (location == null) location = "";
@@ -107,12 +127,15 @@ namespace ZDO.CHSite.Controllers
             return new ObjectResult(true);
         }
 
+        /// <summary>
+        /// Triggers email change cycle (auth token in header).
+        /// </summary>
         public IActionResult ChangeEmail([FromForm] string pass, [FromForm] string newEmail, [FromForm] string lang)
         {
             // Must have all fields
             if (string.IsNullOrEmpty(pass) || string.IsNullOrEmpty(newEmail) || string.IsNullOrEmpty(lang))
             {
-                // TO-DO: log warning
+                logger.LogWarning(new EventId(), "Missing request data in ChangeEmail.");
                 return StatusCode(400, "Missing request data.");
             }
             // Must come from authenticated user
@@ -125,12 +148,15 @@ namespace ZDO.CHSite.Controllers
             return new ObjectResult(auth.TriggerChangeEmail(userId, pass, newEmail, lang));
         }
 
+        /// <summary>
+        /// Changes account's password (auth token in header).
+        /// </summary>
         public IActionResult ChangePassword([FromForm] string oldPass, [FromForm] string newPass)
         {
             // Must have all fields
             if (string.IsNullOrEmpty(oldPass) || string.IsNullOrEmpty(newPass))
             {
-                // TO-DO: log warning
+                logger.LogWarning(new EventId(), "Missing request data in ChangePassword.");
                 return StatusCode(400, "Missing request data.");
             }
             // Must come from authenticated user
@@ -144,12 +170,15 @@ namespace ZDO.CHSite.Controllers
             else return new ObjectResult(false);
         }
 
+        /// <summary>
+        /// Triggers password reset cycle for account (auth token in header).
+        /// </summary>
         public IActionResult ForgotPassword([FromForm] string email, [FromForm] string captcha, [FromForm] string lang)
         {
             // Must have all fields
             if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(captcha))
             {
-                // TO-DO: log warning
+                logger.LogWarning(new EventId(), "Missing request data in ForgotPassword.");
                 return StatusCode(400, "Missing request data.");
             }
             // Verify captcha
@@ -160,12 +189,15 @@ namespace ZDO.CHSite.Controllers
             return new ObjectResult(true);
         }
 
+        /// <summary>
+        /// Sets account's new password based on confirmation code.
+        /// </summary>
         public IActionResult ResetPassword([FromForm] string pass, [FromForm] string code)
         {
             // Must have all fields
             if (string.IsNullOrEmpty(pass) || string.IsNullOrEmpty(code))
             {
-                // TO-DO: log warning
+                logger.LogWarning(new EventId(), "Missing request data in ResetPassword.");
                 return StatusCode(400, "Missing request data.");
             }
             // Must NOT come from authenticated user

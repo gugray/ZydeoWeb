@@ -27,5 +27,11 @@
   },
   "search": {
     "annotationNotice": "The search expression is not a word in the dictionary; showing annotations instead."
+  },
+  "emails": {
+    "senderNameHDD": "HanDeDict @ Zydeo website",
+    "regConfirm": "Complete your registration",
+    "mailChangeConfirm": "Confirm new email",
+    "passreset": "Reset your password"
   }
 }

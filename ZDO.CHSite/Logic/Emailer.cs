@@ -1,20 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Security.Cryptography;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.Extensions.Configuration;
 using MailKit.Net.Smtp;
 using MimeKit;
-using MailKit.Security;
-
-using System.Security.Cryptography.X509Certificates;
 
 namespace ZDO.CHSite.Logic
 {
+    /// <summary>
+    /// Singleton for sending email through a plain old SMTP account.
+    /// </summary>
     public class Emailer
     {
         private readonly string smtpUrl;
@@ -48,10 +40,8 @@ namespace ZDO.CHSite.Logic
             using (var client = new SmtpClient())
             {
                 client.Connect(smtpUrl, smtpPort, true);
-                // Note: since we don't have an OAuth2 token, disable
-                // the XOAUTH2 authentication mechanism.
+                // Note: since we don't have an OAuth2 token, disable the XOAUTH2 authentication mechanism.
                 client.AuthenticationMechanisms.Remove("XOAUTH2");
-                // Note: only needed if the SMTP server requires authentication
                 client.Authenticate(smtpUser, smtpPass);
                 client.Send(msg);
                 client.Disconnect(true);
