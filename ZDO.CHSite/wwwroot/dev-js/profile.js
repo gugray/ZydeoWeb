@@ -148,7 +148,10 @@ var zdProfile = (function () {
     else $(".invalidPass").removeClass("visible");
     if (newPass.length < 6) return false;
     var req = zdAuth.ajax("/api/auth/changepassword", "POST", { oldPass: oldPass, newPass: newPass });
+    // Set modal popup to busy
+    zdPage.setModalWorking("#dlgProfilePopup", true);
     req.done(function (data) {
+      zdPage.setModalWorking("#dlgProfilePopup", false);
       if (data && data == true) {
         // Success: finished page
         $(".dlgInner").removeClass("visible");
@@ -161,6 +164,7 @@ var zdProfile = (function () {
       }
     });
     req.fail(function () {
+      zdPage.setModalWorking("#dlgProfilePopup", false);
       $(".dlgInner").removeClass("visible");
       $(".veryWrongView").addClass("visible");
       $("#dlgProfilePopup .modalPopupButtonCancel").addClass("hidden");
@@ -184,7 +188,10 @@ var zdProfile = (function () {
       newEmail: $("#newEmail").val(),
       lang: zdPage.getLang()
     });
+    // Set modal popup to busy
+    zdPage.setModalWorking("#dlgProfilePopup", true);
     req.done(function (data) {
+      zdPage.setModalWorking("#dlgProfilePopup", false);
       if (data && data == "ok") {
         // Success: finished page
         $(".dlgInner").removeClass("visible");
@@ -207,6 +214,7 @@ var zdProfile = (function () {
       }
     });
     req.fail(function () {
+      zdPage.setModalWorking("#dlgProfilePopup", false);
       $(".dlgInner").removeClass("visible");
       $(".veryWrongView").addClass("visible");
       $("#dlgProfilePopup .modalPopupButtonCancel").addClass("hidden");
@@ -219,13 +227,17 @@ var zdProfile = (function () {
     if (!$(".editInfoView").hasClass("visible")) return true;
 
     var req = zdAuth.ajax("/api/auth/changeinfo", "POST", { location: $("#txtLocation").val(), about: $("#txtAboutMe").val() });
+    // Set modal popup to busy
+    zdPage.setModalWorking("#dlgProfilePopup", true);
     req.done(function (data) {
+      zdPage.setModalWorking("#dlgProfilePopup", false);
       $(".dlgInner").removeClass("visible");
       $("#dlgProfilePopup .modalPopupButtonCancel").addClass("hidden");
       $(".editInfoDoneView").addClass("visible");
       publicInfoChanged = true;
     });
     req.fail(function () {
+      zdPage.setModalWorking("#dlgProfilePopup", false);
       $(".dlgInner").removeClass("visible");
       $(".veryWrongView").addClass("visible");
       $("#dlgProfilePopup .modalPopupButtonCancel").addClass("hidden");

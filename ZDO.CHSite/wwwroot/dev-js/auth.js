@@ -121,7 +121,10 @@ var zdAuth = (function () {
       contentType: "application/x-www-form-urlencoded; charset=UTF-8",
       data: data
     });
+    // Set modal popup to busy
+    zdPage.setModalWorking("#dlgLogin", true);
     req.done(function (data) {
+      zdPage.setModalWorking("#dlgLogin", false);
       if (data) {
         $(".dlgInner").removeClass("visible");
         $(".forgotPassDoneView").addClass("visible");
@@ -134,6 +137,7 @@ var zdAuth = (function () {
       }
     });
     req.fail(function (jqXHR, textStatus, error) {
+      zdPage.setModalWorking("#dlgLogin", false);
       $(".dlgInner").removeClass("visible");
       $(".veryWrongView").addClass("visible");
       $("#dlgLogin .modalPopupButtonCancel").addClass("hidden");
@@ -200,7 +204,10 @@ var zdAuth = (function () {
       contentType: "application/x-www-form-urlencoded; charset=UTF-8",
       data: data
     });
+    // Set modal popup to busy
+    zdPage.setModalWorking("#dlgLogin", true);
     req.done(function (data) {
+      zdPage.setModalWorking("#dlgLogin", false);
       if (data.success) {
         $(".dlgInner").removeClass("visible");
         $(".registerDoneView").addClass("visible");
@@ -212,6 +219,7 @@ var zdAuth = (function () {
       }
     });
     req.fail(function (jqXHR, textStatus, error) {
+      zdPage.setModalWorking("#dlgLogin", false);
       $(".dlgInner").removeClass("visible");
       $(".veryWrongView").addClass("visible");
       $("#dlgLogin .modalPopupButtonCancel").addClass("hidden");
@@ -231,7 +239,11 @@ var zdAuth = (function () {
       contentType: "application/x-www-form-urlencoded; charset=UTF-8",
       data: data
     });
+    // Set modal popup to busy
+    zdPage.setModalWorking("#dlgLogin", true);
+    // Request succeeded
     req.done(function (data) {
+      zdPage.setModalWorking("#dlgLogin", false);
       var wasLoggedIn = zdAuth.isLoggedIn();
       if (data) {
         localStorage.setItem("token", data);
@@ -248,7 +260,9 @@ var zdAuth = (function () {
         if (wasLoggedIn && loginChangedCallback) loginChangedCallback();
       }
     });
+    // Request failed
     req.fail(function (jqXHR, textStatus, error) {
+      zdPage.setModalWorking("#dlgLogin", false);
       $(".dlgInner").removeClass("visible");
       $(".veryWrongView").addClass("visible");
       $("#dlgLogin .modalPopupButtonCancel").addClass("hidden");

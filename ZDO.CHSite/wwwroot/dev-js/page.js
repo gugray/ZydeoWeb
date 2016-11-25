@@ -491,10 +491,36 @@ var zdPage = (function () {
       $(".modalPopupClose").click(function () { doCloseModal(params.id, params.onClosed); });
       $(".modalPopupButtonCancel").click(function () { doCloseModal(params.id, params.onClosed); });
       $(".modalPopupButtonOK").click(function () {
+        if ($(this).hasClass("disabled")) return;
         if (params.confirmed()) doCloseModal(params.id, params.onClosed);
       });
       // Focus requested field
       if (params.toFocus) $(params.toFocus).focus();
+    },
+
+    // Sets or clears modal dialog's "busy" aka "working" state: animation; OK button disabled
+    setModalWorking(id, working) {
+      // Go to busy mode
+      if (working) {
+        $(id + " .modalPopupButtonOK").addClass("disabled");
+        $(id + " .modalPopupWorking").addClass("visible");
+        var deg = 0;
+        var inc = 10;
+        var funRotate = function () {
+          if (!$(id + " .modalPopupButtonOK").hasClass("disabled")) return;
+          deg += inc;
+          if (deg < 180) inc += 3;
+          else inc -= 3;
+          $(id + " .modalPopupWorking").css("transform", "rotate(" + deg + "deg)");
+          setTimeout(funRotate, 50);
+        };
+        setTimeout(funRotate, 50);
+      }
+      // Leave busy mode
+      else {
+        $(id + " .modalPopupButtonOK").removeClass("disabled");
+        $(id + " .modalPopupWorking").removeClass("visible");
+      }
     },
 
     // Closes modal dialog with the provided ID. Does not invoke onClosed callback.
