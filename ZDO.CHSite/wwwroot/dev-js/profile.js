@@ -21,11 +21,15 @@ var zdProfile = (function () {
       $(".content .command").click(function (evt) {
         if ($(this).hasClass("changeEmail")) {
           showPopup("changeEmailView", zdPage.ui("profilePopup", "titleChangeEmail"), changeEmailOK);
+          var hiddenPass = zdAuth.getAutoUserPass();
+          if (hiddenPass) $("#currentPass2").val(hiddenPass);
           $("#currentPass2").focus();
           evt.stopPropagation();
         }
         else if ($(this).hasClass("changePassword")) {
           showPopup("changePassView", zdPage.ui("profilePopup", "titleChangePassword"), changePasswordOK);
+          var hiddenPass = zdAuth.getAutoUserPass();
+          if (hiddenPass) $("#currentPass1").val(hiddenPass);
           $("#currentPass1").focus();
           evt.stopPropagation();
         }
@@ -150,6 +154,11 @@ var zdProfile = (function () {
     var req = zdAuth.ajax("/api/auth/changepassword", "POST", { oldPass: oldPass, newPass: newPass });
     // Set modal popup to busy
     zdPage.setModalWorking("#dlgProfilePopup", true);
+    // Submit hidden form with actual values
+    $(".hiddenUserName").val($(".valProfileEmail").text());
+    $(".hiddenPassword").val(newPass);
+    $("#hiddenLoginForm form").trigger("submit");
+    // Submit real request
     req.done(function (data) {
       zdPage.setModalWorking("#dlgProfilePopup", false);
       if (data && data == true) {

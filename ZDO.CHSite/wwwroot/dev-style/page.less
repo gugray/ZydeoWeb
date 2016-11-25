@@ -34,6 +34,10 @@ body {
   margin: 0 auto -@footerHeight;
 }
 
+// HIDDEN: Login form to remember password
+#hiddenLoginForm { display: none; }
+#hiddenLoginFrame { display: none; }
+
 // FIXED: Optional on-screen debug area
 #debug { position: fixed; top: 0; left: 0; z-index: 20; background: @clrDefBg; }
 
@@ -412,6 +416,6 @@ textarea, input { outline: none; border: none; background-color: @clrLightLight;
     &.modalPopupButtonCancel { background-color: @clrLightLight; }
     &.modalPopupButtonCancel:hover { background-color: @clrLight; }
     &.hidden { display: none; }
-    &.modalPopupButtonOK.disabled { background-color: @clrGray; }
+    &.modalPopupButtonOK.disabled { background-color: @clrGray; color: @clrDefBg; }
   }
 }

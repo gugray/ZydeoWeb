@@ -78,7 +78,7 @@ var zdPage = (function () {
     onResize();
     // Update menu to show where I am (will soon end up being)
     updateMenuState();
-    zdAuth.loginChanged(loginChanged);
+    zdAuth.initOnLoad(loginChanged);
     // Cookie warning, Imprint link, login/logout command etc.
     initGui();
     // Global script initializers
@@ -499,7 +499,7 @@ var zdPage = (function () {
     },
 
     // Sets or clears modal dialog's "busy" aka "working" state: animation; OK button disabled
-    setModalWorking(id, working) {
+    setModalWorking: function(id, working) {
       // Go to busy mode
       if (working) {
         $(id + " .modalPopupButtonOK").addClass("disabled");

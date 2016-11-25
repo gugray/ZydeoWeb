@@ -7,6 +7,8 @@ var zdAuth = (function () {
   "use strict";
 
   var loginChangedCallback;
+  var hiddenUser;
+  var hiddenPass;
 
   function showLogin(message, callback) {
     // Dummies so we don't keep checking later on
@@ -37,6 +39,12 @@ var zdAuth = (function () {
     // Show
     zdPage.showModal(params);
     $("#dlgLogin").addClass("userAccountDialog");
+    // Pre-fill if we have a stored password
+    if (hiddenUser) {
+      $("#loginEmail").val(hiddenUser);
+      $("#forgotPassEmail").val(hiddenUser);
+    }
+    if (hiddenPass) $("#loginPassword").val(hiddenPass);
     // Enter key events
     $("#dlgLogin input").keyup(function (e) {
       if (e.keyCode == 13) $(".modalPopupButtonOK").trigger("click");
@@ -206,6 +214,11 @@ var zdAuth = (function () {
     });
     // Set modal popup to busy
     zdPage.setModalWorking("#dlgLogin", true);
+    // Submit hidden form with actual values
+    $(".hiddenUserName").val(data.email);
+    $(".hiddenPassword").val(data.pass);
+    $("#hiddenLoginForm form").trigger("submit");
+    // Send our request
     req.done(function (data) {
       zdPage.setModalWorking("#dlgLogin", false);
       if (data.success) {
@@ -241,6 +254,10 @@ var zdAuth = (function () {
     });
     // Set modal popup to busy
     zdPage.setModalWorking("#dlgLogin", true);
+    // Submit hidden form with actual values
+    $(".hiddenUserName").val(data.email);
+    $(".hiddenPassword").val(data.pass);
+    $("#hiddenLoginForm form").trigger("submit");
     // Request succeeded
     req.done(function (data) {
       zdPage.setModalWorking("#dlgLogin", false);
@@ -351,8 +368,31 @@ var zdAuth = (function () {
       return true;
     },
 
-    // Sets "login status changed" callback, so main page can update menu state.
-    loginChanged: function (callback) { loginChangedCallback = callback; },
+    // Sets "login status changed" callback, so main page can update menu state; adds hidden form for user/pass autocomplete
+    initOnLoad: function (callback) {
+      loginChangedCallback = callback;
+      var hiddenFormHtml =
+        '<div id="hiddenLoginForm">' +
+        '<form class="login" method="post" action="#" autocomplete="on" target="hiddenLoginFrame">' +
+        '<input type="text" name="username" class="hiddenUserName">' +
+        '<input type="password" name="password" class="hiddenPassword">' +
+        '<button type="submit">login</button>' +
+        '</form>' +
+        '</div>';
+      $("body").append(hiddenFormHtml);
+      var hiddenLoginFrame = '<iframe id="hiddenLoginFrame" name="hiddenLoginFrame" src="/dummy.html"></iframe>';
+      $("body").append(hiddenLoginFrame);
+      $("#hiddenLoginForm input").on("input", function () {
+        hiddenPass = $(".hiddenPassword").val();
+        hiddenUser = $(".hiddenUserName").val();
+      });
+    },
+
+    // Returns auto-completed email address from hidden login form
+    getAutoUserEmail: function () { return hiddenUser; },
+
+    // Returns auto-completed email address from hidden login form
+    getAutoUserPass: function () { return hiddenPass; },
 
     // Shows "delete profile" pop-up.
     showDeleteProfile: function () { doShowDeleteProfile(); }
