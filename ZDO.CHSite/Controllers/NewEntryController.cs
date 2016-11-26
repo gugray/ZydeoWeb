@@ -349,37 +349,5 @@ namespace ZDO.CHSite.Controllers
             // Tell our caller
             return new ObjectResult(res);
         }
-
-        public IActionResult Submit([FromForm] string simp, [FromForm] string trad,
-            [FromForm] string pinyin, [FromForm] string trg, [FromForm] string note)
-        {
-            if (simp == null) return StatusCode(400, "Missing 'simp' parameter.");
-            if (trad == null) return StatusCode(400, "Missing 'trad' parameter.");
-            if (pinyin == null) return StatusCode(400, "Missing 'pinyin' parameter.");
-            if (trg == null) return StatusCode(400, "Missing 'trg' parameter.");
-            if (note == null) return StatusCode(400, "Missing 'note' parameter.");
-
-            NewEntrySubmitResult res = new NewEntrySubmitResult { Success = true };
-            SqlDict.SimpleBuilder builder = null;
-            try
-            {
-                builder = dict.GetSimpleBuilder(0);
-                CedictEntry entry = Utils.BuildEntry(simp, trad, pinyin, trg);
-                builder.NewEntry(entry, note);
-            }
-            catch (Exception ex)
-            {
-                // TO-DO: Log
-                //DiagLogger.LogError(ex);
-                res.Success = false;
-            }
-            finally
-            {
-                if (builder != null) builder.Dispose();
-            }
-
-            // Tell our caller
-            return new ObjectResult(res);
-        }
     }
 }

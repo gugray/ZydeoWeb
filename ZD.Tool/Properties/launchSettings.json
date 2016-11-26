@@ -2,7 +2,7 @@
   "profiles": {
     "ZD.Tool": {
       "commandName": "Project",
-      "commandLineArgs": "--compile-hwinfo",
+      "commandLineArgs": "--20-cleanse",
       "workingDirectory": "D:\\Development\\ZydeoWeb\\_work"
     }
   }

@@ -8,17 +8,18 @@ namespace ZDO.CHSite.Entities
         Delete = 1,
         Edit = 2,
         Note = 3,
-        Flag = 4,
-        Approve = 5,
-        BulkImport = 6,
+        StatusChange = 4,
+        BulkImport = 99,
     }
 
     public class ChangeItem
     {
         public DateTime When;
         public string User;
+        public int BulkRef;
         public ChangeType ChangeType;
         public string Note;
+        public int EntryId;
         public string EntryHead;
         public string EntryBody;
     }

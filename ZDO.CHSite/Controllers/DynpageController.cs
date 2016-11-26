@@ -24,7 +24,7 @@ namespace ZDO.CHSite.Controllers
         /// </summary>
         private readonly static string[] dynOnlyPrefixes = new string[]
         {
-            "search", "edit/history", "user"
+            "search", "edit/history", "edit/new", "user"
         };
 
         private readonly CountryResolver cres;
@@ -76,6 +76,7 @@ namespace ZDO.CHSite.Controllers
                 {
                     if (rel.StartsWith("search/")) return doSearch(rel, lang, searchScript, searchTones, isMobile);
                     else if (rel.StartsWith("edit/history")) return doHistory(rel, lang);
+                    else if (rel.StartsWith("edit/new")) return doNewEntry(rel, lang);
                     else if (rel.StartsWith("user/confirm/")) return doUserConfirm(rel, lang);
                     else if (rel.StartsWith("user/profile")) return doUserProfile(rel, lang);
                 }
@@ -150,6 +151,15 @@ namespace ZDO.CHSite.Controllers
             }
             // Others: unexpected
             else return pageProvider.GetPage(lang, "404", false);
+        }
+
+        private PageResult doNewEntry(string rel, string lang)
+        {
+            int userId;
+            string userName;
+            auth.CheckSession(HttpContext.Request.Headers, out userId, out userName);
+            if (userId < 0) return pageProvider.GetPage(lang, "?/privatepage", false);
+            else return pageProvider.GetPage(lang, "?/newentry", false);
         }
 
         private PageResult doHistory(string rel, string lang)

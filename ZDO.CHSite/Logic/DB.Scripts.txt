@@ -66,41 +66,36 @@ CREATE INDEX idx_word_freqs_word ON word_freqs(word);
 
 DROP TABLE IF EXISTS entries;
 CREATE TABLE entries(
-	id				INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-	hw				VARCHAR(256),	-- trad, simp and pinyin in one (as in CEDICT format)
-	trg				VARCHAR(3072),	-- translations (as in CEDICT format)
-	simp_hash		INT,			-- hash of simplified headword
-	status			TINYINT,		-- 0: neutral/new; 1: approved; 2: flagged
-	deleted			TINYINT,		-- 0: not deleted; 1: deleted
-	last_modif_id	INT,			-- modifs.id; "skips over" bulk modifs!
-	bin_id			INT				-- binary_entries.id
+	id				INT NOT NULL PRIMARY KEY,	-- IDs are random, not incremental
+	hw				VARCHAR(256),				-- trad, simp and pinyin in one (as in CEDICT format)
+	trg				VARCHAR(3072),				-- translations (as in CEDICT format)
+	simp_hash		INT,						-- hash of simplified headword
+	status			TINYINT,					-- 0: neutral/new; 1: approved; 2: flagged
+	deleted			TINYINT,					-- 0: not deleted; 1: deleted
+	bin_id			INT							-- binary_entries.id
 ) ENGINE=InnoDB CHARACTER SET=utf8 COLLATE utf8_general_ci;
 CREATE INDEX idx_entries_simp_hash ON entries(simp_hash);
-CREATE INDEX idx_entries_last_modif_id ON entries(last_modif_id);
 
 DROP TABLE IF EXISTS modifs;
 CREATE TABLE modifs(
 	id				INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-	hw_before		VARCHAR(256),	-- changed entry's HW before change, for instant diff in history
-	trg_before		VARCHAR(3072),	-- changed entry's TRG before change, for instant diff in history
-	hw_after		VARCHAR(256),	-- only filled if next change is an intervening bulk
-	trg_after		VARCHAR(3072),	-- only filled if next change is an intervening bulk
-	timestamp		DATETIME,
-	user_id			INT,
-	note			VARCHAR(3072),
-	chg				TINYINT,		-- 0: new; 1: delete; 2: edit; 3: note; 4: flag; 5: approve; 6: bulk import
-	entry_id		INT				-- entries.id
+	parent_id		INT NOT NULL,				-- modifs.id, if this modif is part of a bulk change
+												-- -1 for normal change, and the bulk parent itself
+	hw_before		VARCHAR(256),				-- changed entry's HW before change, for instant diff in history
+												-- null if this is a bulk parent, and for entry's initial version
+	trg_before		VARCHAR(3072),				-- changed entry's TRG before change, for instant diff in history
+												-- null if this is a bulk parent, and for entry's initial version
+	timestamp		DATETIME NOT NULL,
+	user_id			INT NOT NULL,
+	note			VARCHAR(3072) NOT NULL,
+	bulk_ref		INT NOT NULL,				-- positive value if this is a bulk parent. refers to reference article about change.
+												-- -1 for normal change
+	chg				TINYINT NOT NULL,			-- 0: new; 1: delete; 2: edit; 3: note; 4: status-changed; 99: bulk
+	entry_id		INT NOT NULL				-- entries.id; -1 for bulk change
 ) ENGINE=InnoDB CHARACTER SET=utf8 COLLATE utf8_general_ci;
 CREATE INDEX idx_modifs_user_id ON modifs(user_id);
 CREATE INDEX idx_modifs_entry_id ON modifs(entry_id);
-
-DROP TABLE IF EXISTS bulk_modifs;
-CREATE TABLE bulk_modifs(
-	modif_id		INT,			-- modifs.id
-	entry_id		INT				-- entries.id
-) ENGINE=InnoDB CHARACTER SET=utf8;
-CREATE INDEX idx_bulk_modifs_modif_id ON bulk_modifs(modif_id);
-CREATE INDEX idx_bulk_modifs_entry_id ON bulk_modifs(entry_id);
+CREATE INDEX idx_modifs_parent_id ON modifs(parent_id);
 
 DROP TABLE IF EXISTS users;
 CREATE TABLE users(
@@ -109,10 +104,12 @@ CREATE TABLE users(
 	email			VARCHAR(768),
 	pass_hash		VARCHAR(256),
 	pass_salt		VARCHAR(256),
-	status			TINYINT NOT NULL,		-- 0: active; 1: pending; 2: deleted; 3: placeholder
+	status			TINYINT NOT NULL,			-- 0: active; 1: pending; 2: deleted; 3: placeholder
 	registered		DATETIME NOT NULL,
-	about			VARCHAR(768),			-- *optional* intro text
-	location		VARCHAR(768)			-- *optional* location
+	about			VARCHAR(768),				-- *optional* intro text
+	location		VARCHAR(768),				-- *optional* location
+	contrib_score	INT NOT NULL DEFAULT 0,		-- contribution score (effectively a cached value)
+	perms			INT NOT NULL DEFAULT 0		-- special permissions (flags)
 ) ENGINE=InnoDB CHARACTER SET=utf8;
 CREATE INDEX idx_users_email ON users(email);
 
@@ -157,6 +154,13 @@ DELETE FROM conf_tokens WHERE code=@code;
 # Script DelOldConfTokens
 # @expiry_before DATETIME
 DELETE FROM conf_tokens WHERE expiry<@expiry_before;
+# End
+
+# Script InsImplicitUser
+# @user_name VARCHAR
+# @registered DATETIME
+INSERT INTO users (user_name, status, registered)
+VALUES (@user_name, 3, @registered);
 # End
 
 # Script InsNewUser
@@ -231,51 +235,50 @@ VALUES (@hanzi, @flags, @simp_count, @trad_count, @blob_id);
 INSERT INTO binary_entries (data) VALUES (@data);
 # End
 
-# Script InsEntry
+# Script InsSkeletonEntry
+# @id INT
+INSERT INTO entries (id) VALUES (@id)
+ON DUPLICATE KEY UPDATE id=@id;
+# End
+
+# Script SelHwByEntryId
+# @id INT
+SELECT hw FROM entries WHERE id=@id;
+# End
+
+# Script UpdSkeletonEntry
+# @id INT
 # @hw VARCHAR
 # @trg VARCHAR
 # @simp_hash INT
 # @status TINYINT
 # @deleted TINYINT
 # @bin_id INT
-INSERT INTO entries (hw, trg, simp_hash, status, deleted, bin_id)
-VALUES (@hw, @trg, @simp_hash, @status, @deleted, @bin_id);
-# End
-
-# Script InsDummyForBulk
-INSERT INTO entries (deleted)
-VALUES (1);
-# End
-
-# Script InsModifForBulk
-# @timestamp DATETIME
-# @user_id INT
-# @note VARCHAR
-# @dummy_entry_id INT
-INSERT INTO modifs (timestamp, user_id, note, chg, entry_id)
-VALUES (@timestamp, @user_id, @note, 6, @dummy_entry_id);
-# End
-
-# Script UpdLastModif
-# @entry_id INT
-# @last_modif_id INT
-UPDATE entries SET last_modif_id=@last_modif_id WHERE id=@entry_id;
+UPDATE entries
+SET hw=@hw, trg=@trg, simp_hash=@simp_hash, status=@status, deleted=@deleted, bin_id=@bin_id
+WHERE id=@id;
 # End
 
 # Script InsBulkModif
-# @modif_id INT
-# @entry_id INT
-INSERT INTO bulk_modifs (modif_id, entry_id)
-VALUES (@modif_id, @entry_id);
-# End
-
-# Script InsModifNew
 # @timestamp DATETIME
 # @user_id INT
 # @note VARCHAR
+# @bulk_ref INT
+INSERT INTO modifs (parent_id, timestamp, user_id, note, bulk_ref, chg, entry_id)
+VAlUES (-1, @timestamp, @user_id, @note, @bulk_ref, 99, -1);
+# End
+
+# Script InsModif
+# @parent_id INT
+# @hw_before VARCHAR
+# @trg_before VARCHAR
+# @timestamp DATETIME
+# @user_id INT
+# @note VARCHAR
+# @chg INT
 # @entry_id INT
-INSERT INTO modifs (timestamp, user_id, note, chg, entry_id)
-VALUES (@timestamp, @user_id, @note, 0, @entry_id);
+INSERT INTO modifs (parent_id, hw_before, trg_before, timestamp, user_id, note, bulk_ref, chg, entry_id)
+VAlUES (@parent_id, @hw_before, @trg_before, @timestamp, @user_id, @note, -1, @chg, @entry_id);
 # End
 
 # Script SelCountHead
@@ -284,23 +287,22 @@ SELECT COUNT(*) FROM entries WHERE hw=@hw;
 # End
 
 # Script GetChangeCount
-SELECT COUNT(*) FROM entries WHERE last_modif_id IS NOT NULL;
+SELECT COUNT(*) FROM modifs WHERE parent_id=-1;
 # End
 
 # https://explainextended.com/2009/10/23/mysql-order-by-limit-performance-late-row-lookups/
 # Script SelModifPage
 # @page_start INT
 # @page_len INT
-SELECT  M.timestamp, E.hw, E.trg, M.note, M.chg
+SELECT  M.id, M.timestamp, E.id, E.hw, E.trg, M.note, M.chg, M.bulk_ref, U.id, U.user_name
 FROM	(
-		SELECT last_modif_id
-		FROM entries
-		ORDER BY last_modif_id DESC
-		LIMIT @page_start, @page_len
+		SELECT id, entry_id, user_id FROM modifs WHERE parent_id=-1
+		ORDER BY id DESC LIMIT @page_start, @page_len
 		) X
-JOIN entries E ON E.last_modif_id = X.last_modif_id
-JOIN modifs M ON M.id = E.last_modif_id
-ORDER BY E.last_modif_id DESC;
+JOIN modifs M ON M.id = X.id
+LEFT OUTER JOIN entries E ON E.id = X.entry_id
+JOIN users U ON U.id = X.user_id
+ORDER BY M.id DESC;
 # End
 
 # Script SelBinaryEntry

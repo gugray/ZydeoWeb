@@ -39,7 +39,7 @@ namespace ZD.Tool
                     else
                     {
                         sw.WriteLine("# " + re.LnVer1);
-                        sw.WriteLine("# Ver-2 2016-10-23T15:32:07Z gabor " + (isVerified ? "Stat-Verif" : "Stat-New") + " >Datenreinigung");
+                        sw.WriteLine("# Ver-2 2016-10-23T15:32:07Z gabor " + (isVerified ? "Stat-Verif" : "Stat-New") + " 002>Datenreinigung");
                         sw.WriteLine(cleansed);
                     }
                     // Empty line

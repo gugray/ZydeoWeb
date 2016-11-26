@@ -34,7 +34,7 @@ var zdHistory = (function () {
     // Find entry ID in parent with historyItem class
     var elm = $(this);
     while (!elm.hasClass("historyItem")) elm = elm.parent();
-    var entryId = elm.data("entryid");
+    var entryId = elm.data("entry-id");
     // Prepare modal window content
     var bodyHtml = zdSnippets["history.addComment"];
     bodyHtml = bodyHtml.replace("{{hint}}", zdPage.ui("history.addComment", "hint"));
@@ -55,11 +55,17 @@ var zdHistory = (function () {
     if (cmt.length == 0) {
       return false;
     }
-    var req = zdAuth.ajax("!!history_commententry", "POST", { action: "history_commententry", entry_id: entryId });
+    var req = zdAuth.ajax("/api/edit/commententry", "POST", { entryId: entryId, note: cmt });
+    zdPage.setModalWorking("#dlgHistComment", true);
     req.done(function (data) {
-      zdPage.showAlert(zdPage.ui("history.addComment", "successtitle"), uiStrings["history.addComment"]["successmessage"], false);
+      zdPage.closeModal("txtHistComment");
+      if (data && data === true)
+        zdPage.showAlert(zdPage.ui("history.addComment", "successtitle"), uiStrings["history.addComment"]["successmessage"], false);
+      else
+        zdPage.showAlert(zdPage.ui("history.addComment", "failtitle"), uiStrings["history.addComment"]["failmessage"], true);
     });
     req.fail(function (jqXHR, textStatus, error) {
+      zdPage.closeModal("txtHistComment");
       zdPage.showAlert(zdPage.ui("history.addComment", "failtitle"), uiStrings["history.addComment"]["failmessage"], true);
     });
     return true;

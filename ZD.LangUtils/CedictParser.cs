@@ -23,6 +23,35 @@ namespace ZD.LangUtils
         }
 
         /// <summary>
+        /// Parse a single entry. Return null if rejected for whatever reason.
+        /// </summary>
+        /// <param name="line">Line to parse.</param>
+        /// <param name="lineNum">Line number in input.</param>
+        /// <param name="swLog">Stream to log warnings. Can be null.</param>
+        /// <param name="swDrop">Stream to record dropped entries (failed to parse). Can be null.</param>
+        public CedictEntry ParseEntry(string line, int lineNum, StreamWriter swLog)
+        {
+            // Cannot handle code points about 0xffff
+            if (!surrogateCheck(line, swLog, lineNum)) return null;
+            // Sanitization and initial split
+            string strHead, strBody;
+            // Initial split: header vs body
+            int firstSlash = line.IndexOf('/');
+            strHead = line.Substring(0, firstSlash - 1);
+            strBody = line.Substring(firstSlash);
+            // Parse entry. If failed > null.
+            CedictEntry entry = null;
+            try { entry = parseEntry(strHead, strBody, swLog, lineNum); }
+            catch (Exception ex)
+            {
+                string msg = "Line {0}: ERROR: {1}: {2}";
+                msg = string.Format(msg, lineNum, ex.GetType().Name, ex.Message);
+                if (swLog != null) swLog.WriteLine(msg);
+            }
+            return entry;
+        }
+
+        /// <summary>
         /// Verifies that line contains no Unicode surrogates. Needed for data hygiene if input is dirty.
         /// </summary>
         private static bool surrogateCheck(string line, StreamWriter logStream, int lineNum)
@@ -337,36 +366,6 @@ namespace ZD.LangUtils
             }
             equiv = sense.Substring(equivStart, equivEnd - equivStart + 1);
             note = sense.Substring(equivEnd + 1);
-        }
-
-
-        /// <summary>
-        /// Parse a single entry. Return null if rejected for whatever reason.
-        /// </summary>
-        /// <param name="line">Line to parse.</param>
-        /// <param name="lineNum">Line number in input.</param>
-        /// <param name="swLog">Stream to log warnings. Can be null.</param>
-        /// <param name="swDrop">Stream to record dropped entries (failed to parse). Can be null.</param>
-        public CedictEntry ParseEntry(string line, int lineNum, StreamWriter swLog)
-        {
-            // Cannot handle code points about 0xffff
-            if (!surrogateCheck(line, swLog, lineNum)) return null;
-            // Sanitization and initial split
-            string strHead, strBody;
-            // Initial split: header vs body
-            int firstSlash = line.IndexOf('/');
-            strHead = line.Substring(0, firstSlash - 1);
-            strBody = line.Substring(firstSlash);
-            // Parse entry. If failed > null.
-            CedictEntry entry = null;
-            try { entry = parseEntry(strHead, strBody, swLog, lineNum); }
-            catch (Exception ex)
-            {
-                string msg = "Line {0}: ERROR: {1}: {2}";
-                msg = string.Format(msg, lineNum, ex.GetType().Name, ex.Message);
-                if (swLog != null) swLog.WriteLine(msg);
-            }
-            return entry;
         }
     }
 }

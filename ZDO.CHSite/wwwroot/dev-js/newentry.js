@@ -177,8 +177,11 @@ var zdNewEntry = (function () {
       $("#errorsPinyin").removeClass("visible");
       $("#notePinyin").removeClass("hidden");
       setActive("trg");
-      $("#blockRefs").removeClass("hidden");
-      $("#newEntryRefEntries").html(res.ref_entries_html);
+      // References only shown in CHDICT
+      if ($("body").hasClass("chd")) {
+        $("#blockRefs").removeClass("hidden");
+        $("#newEntryRefEntries").html(res.ref_entries_html);
+      }
     }
   }
 
@@ -506,7 +509,7 @@ var zdNewEntryServer = (function() {
     },
 
     submit: function (simp, trad, pinyin, trg, note, ready) {
-      var req = zdAuth.ajax("/api/newentry/submit", "POST", { simp: simp, trad: trad, pinyin: pinyin, trg: trg, note: note });
+      var req = zdAuth.ajax("/api/edit/createentry", "POST", { simp: simp, trad: trad, pinyin: pinyin, trg: trg, note: note });
       req.done(function (data) {
         ready(data.success);
       });

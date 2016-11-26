@@ -31,11 +31,6 @@ namespace ZDO.CHSite.Logic
             protected readonly Tokenizer tokenizer;
 
             /// <summary>
-            /// DB ID of user perpetrating this change.
-            /// </summary>
-            protected readonly int userId;
-
-            /// <summary>
             /// DB connection I'll be using throughout build. Owned.
             /// </summary>
             protected MySqlConnection conn;
@@ -46,6 +41,11 @@ namespace ZDO.CHSite.Logic
             protected Freq freq;
 
             /// <summary>
+            /// Random generator for new entry IDs.
+            /// </summary>
+            protected readonly Random rnd = new Random();
+
+            /// <summary>
             /// Current DB transaction.
             /// </summary>
             protected MySqlTransaction tr = null;
@@ -53,9 +53,10 @@ namespace ZDO.CHSite.Logic
             // Reused commands
             private MySqlCommand cmdInsBinaryEntry;
             private MySqlCommand cmdInsHanziInstance;
-            private MySqlCommand cmdInsEntry;
-            protected MySqlCommand cmdUpdLastModif;
-            protected MySqlCommand cmdInsModifNew;
+            private MySqlCommand cmdInsSkeletonEntry;
+            private MySqlCommand cmdSelHwByEntryId;
+            private MySqlCommand cmdUpdSkeletonEntry;
+            protected MySqlCommand cmdInsModif;
             // Reused commands owned for the index module
             protected Index.StorageCommands indexCommands = new Index.StorageCommands();
             // ---------------
@@ -63,23 +64,23 @@ namespace ZDO.CHSite.Logic
             /// <summary>
             /// Ctor: init DB connection; shared builder resources.
             /// </summary>
-            protected Builder(Index index, int userId)
+            protected Builder(Index index)
             {
                 if (!index.Lock.TryEnterWriteLock(15000))
                     throw new Exception("Write lock timeout.");
                 try
                 {
                     this.index = index;
-                    this.userId = userId;
                     tokenizer = new Tokenizer();
                     conn = DB.GetConn();
                     freq = new Freq(conn);
                     // Shared builder commands, owned here in base class
                     cmdInsBinaryEntry = DB.GetCmd(conn, "InsBinaryEntry");
                     cmdInsHanziInstance = DB.GetCmd(conn, "InsHanziInstance");
-                    cmdInsEntry = DB.GetCmd(conn, "InsEntry");
-                    cmdUpdLastModif = DB.GetCmd(conn, "UpdLastModif");
-                    cmdInsModifNew = DB.GetCmd(conn, "InsModifNew");
+                    cmdInsSkeletonEntry = DB.GetCmd(conn, "InsSkeletonEntry");
+                    cmdSelHwByEntryId = DB.GetCmd(conn, "SelHwByEntryId");
+                    cmdUpdSkeletonEntry = DB.GetCmd(conn, "UpdSkeletonEntry");
+                    cmdInsModif = DB.GetCmd(conn, "InsModif");
                     // Commands owned for the index module
                     indexCommands.CmdDelEntryHanziInstances = DB.GetCmd(conn, "DelEntryHanziInstances");
                     indexCommands.CmdInsHanziInstance = DB.GetCmd(conn, "InsHanziInstance");
@@ -115,9 +116,10 @@ namespace ZDO.CHSite.Logic
                     if (indexCommands.CmdInsHanziInstance != null) indexCommands.CmdInsHanziInstance.Dispose();
                     if (indexCommands.CmdDelEntryHanziInstances != null) indexCommands.CmdDelEntryHanziInstances.Dispose();
 
-                    if (cmdInsModifNew != null) cmdInsModifNew.Dispose();
-                    if (cmdUpdLastModif != null) cmdUpdLastModif.Dispose();
-                    if (cmdInsEntry != null) cmdInsEntry.Dispose();
+                    if (cmdInsModif != null) cmdInsModif.Dispose();
+                    if (cmdSelHwByEntryId != null) cmdSelHwByEntryId.Dispose();
+                    if (cmdUpdSkeletonEntry != null) cmdUpdSkeletonEntry.Dispose();
+                    if (cmdInsSkeletonEntry != null) cmdInsSkeletonEntry.Dispose();
                     if (cmdInsHanziInstance != null) cmdInsHanziInstance.Dispose();
                     if (cmdInsBinaryEntry != null) cmdInsBinaryEntry.Dispose();
 
@@ -143,16 +145,40 @@ namespace ZDO.CHSite.Logic
                 if (trg.Length > 1024) throw new Exception("Translation, in CEDICT format, must not exceed 1024 characters.");
             }
 
-            protected int storeEntry(string simp, string head, string trg, int binId)
+            protected int storeEntry(string simp, string head, string trg, int binId, int id = -1)
             {
-                cmdInsEntry.Parameters["@hw"].Value = head;
-                cmdInsEntry.Parameters["@trg"].Value = trg;
-                cmdInsEntry.Parameters["@simp_hash"].Value = CedictEntry.Hash(simp);
-                cmdInsEntry.Parameters["@status"].Value = 0;
-                cmdInsEntry.Parameters["@deleted"].Value = 0;
-                cmdInsEntry.Parameters["@bin_id"].Value = binId;
-                cmdInsEntry.ExecuteNonQuery();
-                return (int)cmdInsEntry.LastInsertedId;
+                // Come up with new random entry ID?
+                if (id == -1)
+                {
+                    while (true)
+                    {
+                        id = rnd.Next();
+                        cmdInsSkeletonEntry.Parameters["@id"].Value = id;
+                        cmdInsSkeletonEntry.ExecuteNonQuery();
+                        cmdSelHwByEntryId.Parameters["@id"].Value = id;
+                        object o = cmdSelHwByEntryId.ExecuteScalar();
+                        if (o is DBNull) break;
+                    }
+                }
+                // Use provided ID. Throw if it's not unique.
+                else
+                {
+                    cmdInsSkeletonEntry.Parameters["@id"].Value = id;
+                    cmdInsSkeletonEntry.ExecuteNonQuery();
+                    cmdSelHwByEntryId.Parameters["@id"].Value = id;
+                    object o = cmdSelHwByEntryId.ExecuteScalar();
+                    if (!(o is DBNull)) throw new Exception("Entry ID already exists.");
+                }
+                // Now store values in skeleton
+                cmdUpdSkeletonEntry.Parameters["@id"].Value = id;
+                cmdUpdSkeletonEntry.Parameters["@hw"].Value = head;
+                cmdUpdSkeletonEntry.Parameters["@trg"].Value = trg;
+                cmdUpdSkeletonEntry.Parameters["@simp_hash"].Value = CedictEntry.Hash(simp);
+                cmdUpdSkeletonEntry.Parameters["@status"].Value = 0;
+                cmdUpdSkeletonEntry.Parameters["@deleted"].Value = 0;
+                cmdUpdSkeletonEntry.Parameters["@bin_id"].Value = binId;
+                cmdUpdSkeletonEntry.ExecuteNonQuery();
+                return id;
             }
 
             protected int indexEntry(CedictEntry entry)
@@ -210,18 +236,35 @@ namespace ZDO.CHSite.Logic
 
         public class SimpleBuilder : Builder
         {
+            private readonly int userId;
+
             // Reused commands
             // ---------------
 
             public SimpleBuilder(Index index, int userId)
-                : base(index, userId)
+                : base(index)
             {
+                this.userId = userId;
             }
 
             protected override void DoDispose()
             {
                 // This must come at the end. Will close connection, which we need for disposing of our own stuff.
                 base.DoDispose();
+            }
+
+            public void CommentEntry(int entryId, string note)
+            {
+                // This only involves storing a modif!
+                cmdInsModif.Parameters["@parent_id"].Value = -1;
+                cmdInsModif.Parameters["@hw_before"].Value = "";
+                cmdInsModif.Parameters["@trg_before"].Value = "";
+                cmdInsModif.Parameters["@timestamp"].Value = DateTime.UtcNow;
+                cmdInsModif.Parameters["@user_id"].Value = userId;
+                cmdInsModif.Parameters["@note"].Value = note;
+                cmdInsModif.Parameters["@chg"].Value = (byte)Entities.ChangeType.Note;
+                cmdInsModif.Parameters["@entry_id"].Value = entryId;
+                cmdInsModif.ExecuteNonQuery();
             }
 
             /// <summary>
@@ -245,16 +288,16 @@ namespace ZDO.CHSite.Logic
                 // Populate entries table
                 int entryId = storeEntry(entry.ChSimpl, head, trg, binId);
                 // Record change
-                cmdInsModifNew.Parameters["@timestamp"].Value = DateTime.UtcNow;
-                cmdInsModifNew.Parameters["@user_id"].Value = userId;
-                cmdInsModifNew.Parameters["@note"].Value = note;
-                cmdInsModifNew.Parameters["@entry_id"].Value = entryId;
-                cmdInsModifNew.ExecuteNonQuery();
-                int modifId = (int)cmdInsModifNew.LastInsertedId;
-                // Also link from entry
-                cmdUpdLastModif.Parameters["@entry_id"].Value = entryId;
-                cmdUpdLastModif.Parameters["@last_modif_id"].Value = modifId;
-                cmdUpdLastModif.ExecuteNonQuery();
+                cmdInsModif.Parameters["@parent_id"].Value = -1;
+                cmdInsModif.Parameters["@hw_before"].Value = "";
+                cmdInsModif.Parameters["@trg_before"].Value = "";
+                cmdInsModif.Parameters["@timestamp"].Value = DateTime.UtcNow;
+                cmdInsModif.Parameters["@user_id"].Value = userId;
+                cmdInsModif.Parameters["@note"].Value = note;
+                cmdInsModif.Parameters["@chg"].Value = (byte)Entities.ChangeType.New;
+                cmdInsModif.Parameters["@entry_id"].Value = entryId;
+                cmdInsModif.ExecuteNonQuery();
+
                 // Commit. Otherwise, dispose will roll all this back if it finds non-null transaction.
                 tr.Commit(); tr.Dispose(); tr = null;
             }
@@ -266,100 +309,73 @@ namespace ZDO.CHSite.Logic
 
         public class BulkBuilder : Builder
         {
-			// Reused commands
-            private MySqlCommand cmdInsDummyForBulk;
-            private MySqlCommand cmdInsModifForBulk;
+            public class BulkChangeInfo
+            {
+                public DateTime Timestamp;
+                public string UserName;
+                public string Comment;
+            }
+
+            /// <summary>
+            /// Counter for batch transactions.
+            /// </summary>
+            private int count = 0;
+
+            // Reused commands
             private MySqlCommand cmdInsBulkModif;
-			// ---------------
+            private MySqlCommand cmdSelUserByName;
+            private MySqlCommand cmdInsImplicitUser;
+            // ---------------
 
-            private readonly string note;
-            private readonly bool foldHistory;
+            /// <summary>
+            /// Maps user names to their IDs.
+            /// </summary>
+            private readonly Dictionary<string, int> userToId = new Dictionary<string, int>();
 
-			/// <summary>
-			/// See <see cref="LogFileName"/>.
-			/// </summary>
-            private string logFileName;
-			/// <summary>
-            /// See <see cref="DroppedFileName"/>.
-            /// </summary>
-            private string droppedFileName;
             /// <summary>
-            /// Log stream.
+            /// Maps input's "bulk change references" to ID of bulk modif record created.
             /// </summary>
-            private FileStream fsLog;
-			/// <summary>
-			/// Log stream writer.
-			/// </summary>
-            private StreamWriter swLog;
-            /// <summary>
-            /// Stream for collecting dropped lines.
-            /// </summary>
-            private FileStream fsDropped;
-			/// <summary>
-			/// Dropped lines writer.
-			/// </summary>
-            private StreamWriter swDropped;
-			/// <summary>
-			/// See <see cref="LineNum"/>.
-			/// </summary>
-            private int lineNum = 0;
-            /// <summary>
-            /// ID of modification record for this entire operation.
-            /// </summary>
-            private readonly int modifId;
-
-			/// <summary>
-			/// Full path to file with import log.
-			/// </summary>
-			public string LogFileName { get { return logFileName; } }
-			/// <summary>
-			/// Full path to file with dropped entries (either failed, or duplicates).
-			/// </summary>
-            public string DroppedFileName { get { return droppedFileName; } }
-			/// <summary>
-			/// Number of lines processed.
-			/// </summary>
-            public int LineNum { get { return lineNum; } }
+            private readonly Dictionary<int, int> bulkRefToModifId = new Dictionary<int, int>();
 
             /// <summary>
             /// Ctor: initialize bulk builder resources.
             /// </summary>
-            public BulkBuilder(Index index, string workingFolder, int userId, string note, bool foldHistory)
-                : base(index, userId)
+            public BulkBuilder(Index index, string workingFolder, HashSet<string> users, Dictionary<int, BulkChangeInfo> bulks)
+                : base(index)
             {
-                this.note = note;
-                this.foldHistory = foldHistory;
-
                 tr = conn.BeginTransaction();
 
-                cmdInsDummyForBulk = DB.GetCmd(conn, "InsDummyForBulk");
-                cmdInsModifForBulk = DB.GetCmd(conn, "InsModifForBulk");
                 cmdInsBulkModif = DB.GetCmd(conn, "InsBulkModif");
-
-                DateTime dt = DateTime.UtcNow;
-                string dtStr = "{0:D4}-{1:D2}-{2:D2}!{3:D2}-{4:D2}-{5:D2}.{6:D3}";
-                dtStr = string.Format(dtStr, dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second, dt.Millisecond);
-                logFileName = Path.Combine(workingFolder, "Import-" + dtStr + "-log.txt");
-                fsLog = new FileStream(logFileName, FileMode.Create, FileAccess.ReadWrite);
-                swLog = new StreamWriter(fsLog);
-                droppedFileName = Path.Combine(workingFolder, "Import-" + dtStr + "-dropped.txt");
-                fsDropped = new FileStream(droppedFileName, FileMode.Create, FileAccess.ReadWrite);
-                swDropped = new StreamWriter(fsDropped);
-
-                // If we're folding history, insert dummy item; we'll refer to this from every entry.
-                if (foldHistory)
+                cmdInsImplicitUser = DB.GetCmd(conn, "InsImplicitUser");
+                cmdSelUserByName = DB.GetCmd(conn, "SelUserByName");
+                // Gather user IDs up front
+                // Insert missing users as implicit users
+                foreach (var x in users)
                 {
-                    cmdInsDummyForBulk.ExecuteNonQuery();
-                    int dummyId = (int)cmdInsDummyForBulk.LastInsertedId;
-                    cmdInsModifForBulk.Parameters["@timestamp"].Value = dt;
-                    cmdInsModifForBulk.Parameters["@user_id"].Value = userId;
-                    cmdInsModifForBulk.Parameters["@note"].Value = note;
-                    cmdInsModifForBulk.Parameters["@dummy_entry_id"].Value = dummyId;
-                    cmdInsModifForBulk.ExecuteNonQuery();
-                    modifId = (int)cmdInsModifForBulk.LastInsertedId;
-                    cmdUpdLastModif.Parameters["@entry_id"].Value = dummyId;
-                    cmdUpdLastModif.Parameters["@last_modif_id"].Value = modifId;
-                    cmdUpdLastModif.ExecuteNonQuery();
+                    int userId = -1;
+                    cmdSelUserByName.Parameters["@user_name"].Value = x;
+                    using (var rdr = cmdSelUserByName.ExecuteReader())
+                    {
+                        while (rdr.Read()) userId = rdr.GetInt32("id");
+                    }
+                    if (userId == -1)
+                    {
+                        cmdInsImplicitUser.Parameters["@user_name"].Value = x;
+                        cmdInsImplicitUser.Parameters["@registered"].Value = DateTime.UtcNow;
+                        cmdInsImplicitUser.ExecuteNonQuery();
+                        userId = (int)cmdInsImplicitUser.LastInsertedId;
+                    }
+                    userToId[x] = userId;
+                }
+                // Insert modif records for every bulk change
+                foreach (var x in bulks)
+                {
+                    cmdInsBulkModif.Parameters["@timestamp"].Value = x.Value.Timestamp;
+                    cmdInsBulkModif.Parameters["@user_id"].Value = userToId[x.Value.UserName];
+                    cmdInsBulkModif.Parameters["@note"].Value = x.Value.Comment;
+                    cmdInsBulkModif.Parameters["@bulk_ref"].Value = x.Key;
+                    cmdInsBulkModif.ExecuteNonQuery();
+                    bulkRefToModifId[x.Key] = (int)cmdInsBulkModif.LastInsertedId;
                 }
             }
 
@@ -368,28 +384,19 @@ namespace ZDO.CHSite.Logic
             /// </summary>
             protected override void DoDispose()
             {
-                if (swDropped != null) swDropped.Dispose();
-                if (swLog != null) swLog.Dispose();
-                if (fsDropped != null) fsDropped.Dispose();
-                if (fsLog != null) fsLog.Dispose();
-
+                if (cmdSelUserByName != null) cmdSelUserByName.Dispose();
+                if (cmdInsImplicitUser != null) cmdInsImplicitUser.Dispose();
                 if (cmdInsBulkModif != null) cmdInsBulkModif.Dispose();
-                if (cmdInsModifForBulk != null) cmdInsModifForBulk.Dispose();
-                if (cmdInsDummyForBulk != null) cmdInsDummyForBulk.Dispose();
 
                 // This must come at the end. Will close connection, which we need for disposing of our own stuff.
                 base.DoDispose();
             }
 
-            /// <summary>
-            /// Process one line in the CEDICT format: parse, and store/index in dictionary.
-            /// !! Does not check against dupes; cannot be used to update.
-            /// </summary>
-            public void AddEntry(string line)
+            public bool AddEntry(int entryId, List<EntryVersion> vers)
             {
-                ++lineNum;
+                ++count;
                 // Cycle through transactions
-                if (lineNum % 3000 == 0)
+                if (count % 3000 == 0)
                 {
                     // Make index apply changes
                     index.ApplyChanges(indexCommands);
@@ -397,51 +404,62 @@ namespace ZDO.CHSite.Logic
                     tr.Commit(); tr.Dispose(); tr = null;
                     tr = conn.BeginTransaction();
                 }
-                // Parse line from CEDICT format
-                // TO-DO: Make parser a member to avoid constantly recreating (costly)
-                // TO-DO: Get rid of swDropped
-                CedictParser parser = new CedictParser();
-                CedictEntry entry = parser.ParseEntry(line, lineNum, swLog);
-                if (entry == null) return;
-
+                
+                // The final entry: one in the last version
+                CedictEntry entry = vers[vers.Count - 1].Entry;
                 // Infuse corpus frequency
                 int iFreq = freq.GetFreq(entry.ChSimpl);
                 ushort uFreq = iFreq > ushort.MaxValue ? ushort.MaxValue : (ushort)iFreq;
                 entry.Freq = uFreq;
-
-                string head, trg;
-                CedictWriter.Write(entry, out head, out trg);
-                // Check restrictions - can end up dropped entry
+                string hw, trg;
+                CedictWriter.Write(entry, out hw, out trg);
+                // Check restrictions. Will skip failing entries.
                 try { checkRestrictions(entry.ChSimpl, trg); }
-                catch { return; }
-
+                catch { return false; }
                 // Serialize, store in DB, index
                 int binId = indexEntry(entry);
                 // Populate entries table
-                int entryId = storeEntry(entry.ChSimpl, head, trg, binId);
-
-                // Folding history: mark new entry as affected by this bulk operation
-                if (foldHistory)
+                storeEntry(entry.ChSimpl, hw, trg, binId, entryId);
+                // Working backwards, create MODIF records for each version
+                for (int i = vers.Count - 1; i >= 0; --i)
                 {
-                    cmdInsBulkModif.Parameters["@modif_id"].Value = modifId;
-                    cmdInsBulkModif.Parameters["@entry_id"].Value = entryId;
-                    cmdInsBulkModif.ExecuteNonQuery();
+                    EntryVersion ver = vers[i];
+                    hw = null; trg = null;
+                    if (ver.Entry != null) CedictWriter.Write(ver.Entry, out hw, out trg);
+                    // Find previous different HW and TRG, if any
+                    string hwLast = null;
+                    string trgLast = null;
+                    if (ver.Entry != null)
+                    {
+                        for (int j = i - 1; j >= 0 && hwLast == null && trgLast == null; --j)
+                        {
+                            if (vers[j].Entry == null) continue;
+                            CedictWriter.Write(vers[j].Entry, out hwLast, out trgLast);
+                            if (hwLast == hw) hwLast = null;
+                            if (trgLast == trg) trgLast = null;
+                        }
+                    }
+                    // --
+                    int parentId = ver.BulkRef == -1 ? -1 : bulkRefToModifId[ver.BulkRef];
+                    int change;
+                    if (i == 0) change = 0; // New entry
+                    else if (hwLast != null || trgLast != null) change = 2; // Edit
+                    else if (ver.Status != vers[i - 1].Status) change = 4; // Status changed
+                    else change = 3; // Simply commented
+                    // Store in DB
+                    cmdInsModif.Parameters["@parent_id"].Value = parentId;
+                    if (hwLast != null) cmdInsModif.Parameters["@hw_before"].Value = hwLast;
+                    else cmdInsModif.Parameters["@hw_before"].Value = "";
+                    if (trgLast != null) cmdInsModif.Parameters["@trg_before"].Value = trgLast;
+                    else cmdInsModif.Parameters["@trg_before"].Value = "";
+                    cmdInsModif.Parameters["@timestamp"].Value = ver.Timestamp;
+                    cmdInsModif.Parameters["@user_id"].Value = userToId[ver.User];
+                    cmdInsModif.Parameters["@note"].Value = ver.Comment;
+                    cmdInsModif.Parameters["@chg"].Value = change;
+                    cmdInsModif.Parameters["@entry_id"].Value = entryId;
+                    cmdInsModif.ExecuteNonQuery();
                 }
-                // Verbose (per-entry) history
-                else
-                {
-                    // Record change
-                    cmdInsModifNew.Parameters["@timestamp"].Value = DateTime.UtcNow;
-                    cmdInsModifNew.Parameters["@user_id"].Value = userId;
-                    cmdInsModifNew.Parameters["@note"].Value = note;
-                    cmdInsModifNew.Parameters["@entry_id"].Value = entryId;
-                    cmdInsModifNew.ExecuteNonQuery();
-                    int modifId = (int)cmdInsModifNew.LastInsertedId;
-                    // Also link from entry
-                    cmdUpdLastModif.Parameters["@entry_id"].Value = entryId;
-                    cmdUpdLastModif.Parameters["@last_modif_id"].Value = modifId;
-                    cmdUpdLastModif.ExecuteNonQuery();
-                }
+                return true;
             }
 
             /// <summary>

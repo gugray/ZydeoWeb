@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Diagnostics;
@@ -8,6 +9,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Localization;
 
+using ZD.Common;
+using ZD.LangUtils;
 using ZDO.CHSite.Logic;
 
 namespace ZDO.CHSite
@@ -74,17 +77,48 @@ namespace ZDO.CHSite
         {
             Startup.InitDB(config, null, false);
             SqlDict dict = new SqlDict(null);
-            using (SqlDict.BulkBuilder imp = dict.GetBulkBuilder(workingFolder, 0, "Importing stuff.", false))
+            List<EntryVersion> vers = new List<EntryVersion>();
+
             using (FileStream fs = new FileStream(dictPath, FileMode.Open, FileAccess.Read))
             using (StreamReader sr = new StreamReader(fs))
             {
-                string line;
-                while ((line = sr.ReadLine()) != null)
+                EntryBlockParser ebp = new EntryBlockParser(sr);
+                // Two passes. In the first we collect user names and bulk changes.
+                var users = new HashSet<string>();
+                var bulks = new Dictionary<int, SqlDict.BulkBuilder.BulkChangeInfo>();
+                while (true)
                 {
-                    if (line == "" || line.StartsWith("#")) continue;
-                    imp.AddEntry(line);
+                    vers.Clear();
+                    int id = ebp.ReadBlock(vers);
+                    if (id == -1) break;
+                    foreach (var ver in vers)
+                    {
+                        users.Add(ver.User);
+                        if (ver.BulkRef != -1 && !bulks.ContainsKey(ver.BulkRef))
+                        {
+                            SqlDict.BulkBuilder.BulkChangeInfo bci = new SqlDict.BulkBuilder.BulkChangeInfo
+                            {
+                                Timestamp = ver.Timestamp,
+                                UserName = ver.User,
+                                Comment = ver.Comment
+                            };
+                            bulks[ver.BulkRef] = bci;
+                        }
+                    }
                 }
-                imp.CommitRest();
+                // Second pass. Actual import.
+                fs.Position = 0;
+                using (SqlDict.BulkBuilder builder = dict.GetBulkBuilder(workingFolder, users, bulks))
+                {
+                    while (true)
+                    {
+                        vers.Clear();
+                        int id = ebp.ReadBlock(vers);
+                        if (id == -1) break;
+                        builder.AddEntry(id, vers);
+                    }
+                    builder.CommitRest();
+                }
             }
         }
     }

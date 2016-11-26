@@ -52,7 +52,7 @@ namespace ZD.Common
         public static int StringToId(string code)
         {
             // xx0x00xx0x
-            if (code.Length != 10) throw new Exception("Invalid representation: " + code);
+            if (code.Length != 7) throw new Exception("Invalid representation: " + code);
             int res = 0;
             res += charToNum(code[0]) * (10 * 10 * 52 * 52 * 10 * 52);
             res += (code[1] - '0') * (10 * 52 * 52 * 10 * 52);

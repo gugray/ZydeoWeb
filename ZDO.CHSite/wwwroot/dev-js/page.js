@@ -157,7 +157,6 @@ var zdPage = (function () {
     // Request dynamic page - async
     ++reqId;
     var id = reqId;
-    // TO-DO: isMobile
     var data = { lang: lang, rel: rel, isMobile: zdPage.isMobile() };
     // Infuse extra search parameters
     infuseSearchParams(data);
@@ -203,13 +202,18 @@ var zdPage = (function () {
     $("#dynPage").removeClass("fading");
     $("#headerStickHamburger").removeClass("openBurger");
     // Run this page's script initializer, if any
+    runInitScripts(data);
+    // Scroll to top
+    $(window).scrollTop(0);
+  }
+
+  // Initializes scripts that signed up for current page.
+  function runInitScripts(data) {
     for (var key in initScripts) {
       if (startsWith(rel, key)) initScripts[key](data);
       // Hack: call search initializer for ""
       if (rel == "" && key == "search") initScripts[key](data);
     }
-    // Scroll to top
-    $(window).scrollTop(0);
   }
 
   function navReady(data, id) {
@@ -233,8 +237,10 @@ var zdPage = (function () {
     if (id != -1 && id != reqId) return;
 
     // Show dynamic content, title etc.
-    // Data is null if we're call directly from page load (content already present)
+    // Data is null if we're called directly from page load (content already present)
+    // Otherwise, we still need to run init scripts
     if (data != null) applyDynContent(data);
+    else runInitScripts(null);
 
     // Set up single-page navigation
     $(document).on('click', 'a.ajax', function () {

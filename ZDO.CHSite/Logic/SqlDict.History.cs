@@ -37,6 +37,7 @@ namespace ZDO.CHSite.Logic
                 return (int)count;
             }
 
+
             public List<ChangeItem> GetChangePage(int pageStart, int pageLen)
             {
                 List<ChangeItem> res = new List<ChangeItem>();
@@ -44,16 +45,21 @@ namespace ZDO.CHSite.Logic
                 cmdSelChangePage.Parameters["@page_len"].Value = pageLen;
 				using (MySqlDataReader rdr = cmdSelChangePage.ExecuteReader())
                 {
+                    object[] cols = new object[16];
 					while (rdr.Read())
                     {
+                        rdr.GetValues(cols);
+                        long whenTicks = ((DateTime)cols[1]).Ticks;
                         ChangeItem ci = new ChangeItem
                         {
-                            When = rdr.GetDateTime(0), // TO-DO: UTC trick
-                            User = "valaki",
-                            EntryHead = rdr.IsDBNull(1) ? null : rdr.GetString(1),
-                            EntryBody = rdr.IsDBNull(2) ? null : rdr.GetString(2),
-                            Note = rdr.GetString(3),
-                            ChangeType = (ChangeType)rdr.GetInt32(4)
+                            When = new DateTime(whenTicks, DateTimeKind.Utc).ToLocalTime(),
+                            User = cols[9] as string,
+                            EntryId = (cols[2] is DBNull) ? -1 : (int)cols[2],
+                            EntryHead = (cols[3] is DBNull) ? null : cols[3] as string,
+                            EntryBody = (cols[4] is DBNull) ? null : cols[4] as string,
+                            Note = cols[5] as string,
+                            ChangeType = (ChangeType)(sbyte)cols[6],
+                            BulkRef = (int)cols[7],
                         };
                         res.Add(ci);
                     }

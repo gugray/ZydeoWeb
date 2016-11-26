@@ -47,10 +47,18 @@ namespace ZDO.CHSite.Renderers
         private void histRenderChange(StringBuilder sb, ChangeItem ci, bool trailingSeparator)
         {
             sb.AppendLine();
-            sb.AppendLine("<div class='historyItem'>");
+            if (ci.EntryId >= 0)
+                sb.AppendLine("<div class='historyItem' data-entry-id='" + EntryId.IdToString(ci.EntryId) + "'>");
+            else sb.AppendLine("<div class='historyItem'>");
             sb.AppendLine("<div class='changeHead'>");
 
-            sb.Append("<i class='fa fa-lightbulb-o ctNew' />");
+            string iconClass = "";
+            if (ci.ChangeType == ChangeType.New) iconClass = "fa fa-lightbulb-o ctNew";
+            else if (ci.ChangeType == ChangeType.Edit) iconClass = "fa fa-pencil-square-o ctEdit";
+            else if (ci.ChangeType == ChangeType.Note) iconClass = "fa fa-commenting-o ctNote";
+            else if (ci.ChangeType == ChangeType.BulkImport) iconClass = "fa fa-newspaper-o ctBulk";
+
+            sb.Append("<i class='" + iconClass + "' />");
             sb.Append("<div class='changeSummary'>");
 
             string changeMsg;
@@ -59,6 +67,7 @@ namespace ZDO.CHSite.Renderers
             if (ci.ChangeType == ChangeType.New) changeMsg = "Új szócikk";
             else if (ci.ChangeType == ChangeType.Edit) changeMsg = "Szerkesztve";
             else if (ci.ChangeType == ChangeType.Note) changeMsg = "Megjegyzés";
+            else if (ci.ChangeType == ChangeType.BulkImport) changeMsg = "Bulk import";
             else changeMsg = ci.ChangeType.ToString();
             changeMsg += ": ";
             sb.Append("<span class='" + changeCls + "'>");
@@ -88,16 +97,22 @@ namespace ZDO.CHSite.Renderers
             sb.Append("</div>"); // <div class='changeHead'>
 
             sb.AppendLine("<div class='changeEntry'>");
-            sb.AppendLine("<div class='histEntryOps'>");
-            sb.Append("<i class='opHistEdit fa fa-pencil-square-o' />");
-            sb.Append("<i class='opHistComment fa fa-commenting-o' />");
-            sb.Append("<i class='opHistFlag fa fa-flag-o' />");
-            sb.Append("</div>"); // <div class='histEntryOps'>
+            if (ci.ChangeType != ChangeType.BulkImport)
+            {
+                sb.AppendLine("<div class='histEntryOps'>");
+                sb.Append("<i class='opHistEdit fa fa-pencil-square-o' />");
+                sb.Append("<i class='opHistComment fa fa-commenting-o' />");
+                sb.Append("<i class='opHistFlag fa fa-flag-o' />");
+                sb.Append("</div>"); // <div class='histEntryOps'>
+            }
 
-            CedictEntry entry = parser.ParseEntry(ci.EntryHead + " " + ci.EntryBody, 0, null);
-            EntryRenderer er = new EntryRenderer(entry);
-            er.OneLineHanziLimit = 12;
-            er.Render(sb);
+            if (ci.EntryHead != null)
+            {
+                CedictEntry entry = parser.ParseEntry(ci.EntryHead + " " + ci.EntryBody, 0, null);
+                EntryRenderer er = new EntryRenderer(entry);
+                er.OneLineHanziLimit = 12;
+                er.Render(sb);
+            }
             sb.Append("</div>"); // <div class='changeEntry'>
 
             sb.Append("</div>"); // <div class='changeHead'>

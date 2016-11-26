@@ -1,200 +1,87 @@
 ﻿@import "defines.less";
 
 #pager {
-  position: relative;
-  float: left;
-  width: 100%;
-  display: table-row;
-  font-size: 130%;
-  font-family: @fntSansAlt;
-  margin-bottom: 1.5em;
-  color: @clrBodyText;
+  position: relative; float: left; width: 100%; display: table-row;
+  font-size: 130%; font-family: @fntSansAlt; color: @clrBodyText;
+  margin-bottom: 2rem;
 }
 
 #lblPage {
-  display: table-cell;
-  vertical-align: top;
-  width: 1px;
-  padding-right: 1em;
-  font-weight: bold;
-  font-family: @fntSansAlt;
+  display: table-cell; vertical-align: top; width: 1px; padding-right: 1.3rem;
+  font-weight: bold; font-family: @fntSansAlt;
 }
 
-#pageLinks {
-  display: table-cell;
-  width: 100%;
-}
+#pageLinks { display: table-cell; width: 100%; }
 
-.pageSpacer {
-  display: inline-block;
-  margin: 0 0.5em 0 0.5em;
-}
+.pageSpacer { display: inline-block; margin: 0 0.7rem 0 0.7rem; }
 
 a.pageLink {
-  display: inline-block;
-  text-decoration: none;
-  text-align: center;
-  color: @clrBodyText;
-  padding: 0 0.5em 0 0.5em;
-  border-radius: 0.2em;
-  margin-left: 0;
+  display: inline-block; text-decoration: none; text-align: center; color: @clrBodyText;
+  padding: 0 0.7rem 0 0.7rem; border-radius: 0.3rem; margin-left: 0;
 }
 
-a.pageLink:hover,
-a.pageLink.selected {
-  background-color: @clrLight;
-}
+a.pageLink:hover, a.pageLink.selected { background-color: @clrLight; }
 
 .historySep {
-  position: relative;
-  float: left;
-  width: 100%;
-  -moz-box-sizing: border-box;
-  -webkit-box-sizing: border-box;
-  box-sizing: border-box;
-  margin-bottom: 0.1em;
-  padding-bottom: 0.1em;
-  border-bottom: 1px dashed @clrBodyText;
+  position: relative; float: left; width: 100%; box-sizing: border-box;
+  margin: 0.2rem 0 0.2rem 0; border-bottom: 1px dashed @clrBodyText;
 }
 
 .historyItem {
-  position: relative;
-  float: left;
-  width: 100%;
-  padding: 0.9em 0 0.9em 0;
-}
-
-.historyItem:hover {
-  background-color: @clrLightLight;
+  position: relative; float: left; width: 100%; box-sizing: border-box; padding: 0.9rem 0 0.9rem 0;
+  &:hover { background-color: @clrLightLight; }
 }
 
 .changeHead {
-  position: relative;
-  float: left;
-  width: 100%;
-  min-height: 4em;
-}
-
-.changeHead i.fa {
-  display: block;
-  font-size: 300%;
-  position: absolute;
-  top: 0;
-  left: 0.1em;
-  color: #606060;
-  cursor: default;
-}
-
-.changeHead i.ctNew {
-  color: #e3a168;
+  position: relative; float: left; width: 100%; min-height: 4rem;
+  i.fa {
+    display: block; position: absolute; top: 0; left: 0.1rem;
+    color: #606060; cursor: default;
+  }
+  i.ctNew { color: #e3a168; font-size: 3rem; padding-left: 0.4rem; }
+  i.ctNote { color: @clrStrong; font-size: 1.8rem; padding-left: 0.4rem; }
+  i.ctBulk { color: #e3a168; font-size: 1.8rem; padding-left: 0.2rem; }
 }
 
 .changeSummary {
-  position: relative;
-  float: left;
-  clear: both;
-  width: 100%;
-  -moz-box-sizing: border-box;
-  -webkit-box-sizing: border-box;
-  box-sizing: border-box;
-  margin-left: 3em;
-  font-size: 100%;
+  position: relative; float: left; clear: both; width: 100%; box-sizing: border-box; padding-left: 3rem;
+  font-size: 1rem;
 }
 
 .changeNote {
-  position: relative;
-  float: left;
-  clear: both;
-  width: 100%;
-  -moz-box-sizing: border-box;
-  -webkit-box-sizing: border-box;
-  box-sizing: border-box;
-  margin-left: 3em;
+  position: relative; float: left; clear: both; width: 100%; box-sizing: border-box; padding-left: 3rem;
   font-style: italic;
 }
 
-.changeUser {
-  font-weight: bold;
-  color: @clrStrong;
-}
+.changeUser { font-weight: bold; color: @clrStrong; }
 
-.changeTime {
-}
+.changeTime { }
 
-.ctNew {
-  color: blue;
-}
-
-.ctNote {
-  color: darkorange;
-}
-
-.ctEdit {
-  color: purple;
-}
-
-.lblNote {
-  font-weight: bold;
-  color: #505050;
-}
+.lblNote {  font-weight: bold; color: #505050; }
 
 .changeEntry {
-  position: relative;
-  clear: both;
-  width: calc(100% - 3em);
-  height: auto;
-  margin-left: 3em;
+  position: relative; clear: both; width: 100%; box-sizing: border-box; height: auto;
 }
 
 .changeEntry .entry {
-  position: relative;
-  float: left;
-  padding: 0 0 0 0;
-  font-size: 60%;
-  color: #606060;
+  position: relative; float: left; box-sizing: border-box; padding: 0 0 0 3rem;
+  font-size: 0.7rem; color: #606060;
 }
 
 .histEntryOps {
-  display: none;
-  position: absolute;
-  top: 0;
-  left: -3em;
-  width: 3em;
+  display: none; position: absolute; top: 0; left: 0; width: 3rem;
+  z-index: 2;
+  .historyItem:hover & { display: block; }
+  i {
+    position: absolute; display: inline-block; cursor: default; color: @clrMedium;
+    width: 2rem; height: 1.3rem; padding-top: 0.1rem; text-align: center;
+    &:hover { color: @clrStrongAccent; }
+    &.opHistComment { left: 0.5rem; top: -0.1rem; }
+    &.opHistEdit { left: 0.5rem; top: 1.5rem; }
+    &.opHistFlag { left: 0.5rem; top: 3.1rem; }
+  }
 }
 
-.historyItem:hover .histEntryOps {
-  display: block;
-}
-
-.histEntryOps i {
-  position: absolute;
-  display: inline-block;
-  cursor: default;
-  color: @clrMedium;
-  width: 2em;
-  height: 1.3em;
-  padding-top: 0.1em;
-  text-align: center;
-}
-
-.histEntryOps i:hover {
-  color: @clrStrongAccent;
-}
-
-.opHistComment {
-  left: 0.5em;
-  top: -0.1em;
-}
-
-.opHistEdit {
-  left: 0.5em;
-  top: 1.5em;
-}
-
-.opHistFlag {
-  left: 0.5em;
-  top: 3.1em;
-}
 
 /* ===================== ADD COMMENT POPUP BODY =========================== */
 

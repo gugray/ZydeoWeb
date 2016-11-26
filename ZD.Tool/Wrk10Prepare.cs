@@ -36,7 +36,7 @@ namespace ZD.Tool
                     sw.WriteLine("# ID-" + strId);
                     // First version metainfo
                     string statStr = isVerif ? "Stat-Verif" : "Stat-New";
-                    sw.WriteLine("# Ver-1 2011-05-28T01:27:49Z HanDeDict " + statStr + " >Originalversion HanDeDict-Datei");
+                    sw.WriteLine("# Ver-1 2011-05-28T01:27:49Z HanDeDict " + statStr + " 001>Originalversion HanDeDict-Datei");
                     // The entry itself
                     sw.WriteLine(CedictWriter.Write(entry));
                     // Empty line between entries

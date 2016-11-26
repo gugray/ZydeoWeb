@@ -54,9 +54,12 @@ namespace ZDO.CHSite.Logic
             return new SimpleBuilder(index, userId);
         }
 
-        public BulkBuilder GetBulkBuilder(string workingFolder, int userId, string note, bool foldHistory)
+        /// <summary>
+        /// Gets a dictionary builder for all-out import from full versioned dictionary file.
+        /// </summary>
+        public BulkBuilder GetBulkBuilder(string workingFolder, HashSet<string> users, Dictionary<int, BulkBuilder.BulkChangeInfo> bulks)
         {
-            return new BulkBuilder(index, workingFolder, userId, note, foldHistory);
+            return new BulkBuilder(index, workingFolder, users, bulks);
         }
 
         public class HeadAndTrg
