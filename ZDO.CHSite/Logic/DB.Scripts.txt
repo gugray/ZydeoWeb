@@ -91,11 +91,16 @@ CREATE TABLE modifs(
 	bulk_ref		INT NOT NULL,				-- positive value if this is a bulk parent. refers to reference article about change.
 												-- -1 for normal change
 	chg				TINYINT NOT NULL,			-- 0: new; 1: delete; 2: edit; 3: note; 4: status-changed; 99: bulk
-	entry_id		INT NOT NULL				-- entries.id; -1 for bulk change
+	entry_id		INT NOT NULL,				-- entries.id; -1 for bulk change
+	count_a			INT NOT NULL DEFAULT 0,		-- in bulk parent: number of new entries
+												-- normal change: number of previous changes in entry at top, or -1 in those past items
+	count_b			INT							-- in bulk parent: number of changed entries
+												-- if chg=4 (status-changed): status: 0: neutral/new; 1: approved; 2: flagged
 ) ENGINE=InnoDB CHARACTER SET=utf8 COLLATE utf8_general_ci;
 CREATE INDEX idx_modifs_user_id ON modifs(user_id);
 CREATE INDEX idx_modifs_entry_id ON modifs(entry_id);
 CREATE INDEX idx_modifs_parent_id ON modifs(parent_id);
+CREATE INDEX idx_modifs_count_a ON modifs(count_a);
 
 DROP TABLE IF EXISTS users;
 CREATE TABLE users(
@@ -268,6 +273,13 @@ INSERT INTO modifs (parent_id, timestamp, user_id, note, bulk_ref, chg, entry_id
 VAlUES (-1, @timestamp, @user_id, @note, @bulk_ref, 99, -1);
 # End
 
+# Script UpdBulkModifCounts
+# @id INT
+# @count_a INT
+# @count_b INT
+UPDATE modifs SET count_a=@count_a, count_b=@count_b WHERE id=@id;
+# End
+
 # Script InsModif
 # @parent_id INT
 # @hw_before VARCHAR
@@ -281,22 +293,45 @@ INSERT INTO modifs (parent_id, hw_before, trg_before, timestamp, user_id, note, 
 VAlUES (@parent_id, @hw_before, @trg_before, @timestamp, @user_id, @note, -1, @chg, @entry_id);
 # End
 
+# Script InsModifPreCounts1
+# @top_id INT
+# @entry_id INT
+UPDATE modifs,
+(SELECT COUNT(*) AS cnt FROM modifs WHERE entry_id=@entry_id) X
+SET count_a = X.cnt-1 WHERE id=@top_id;
+# End
+
+# Script InsModifPreCounts2
+# @top_id INT
+# @entry_id INT
+UPDATE modifs SET count_a=-1 WHERE id<>@top_id AND entry_id=@entry_id;
+# End
+
 # Script SelCountHead
 # @hw VARCHAR
 SELECT COUNT(*) FROM entries WHERE hw=@hw;
 # End
 
+# Script GetPastChanges
+# @entry_id INT
+SELECT E.id, M.timestamp, E.hw, E.trg, M.note, M.chg, M.bulk_ref, U.id, U.user_name, M.count_a, M.count_b, M.hw_before, M.trg_before
+FROM entries E
+JOIN modifs M ON M.entry_id=E.id AND M.count_a=-1
+JOIN users U ON U.id=M.user_id
+WHERE E.id=@entry_id;
+# End
+
 # Script GetChangeCount
-SELECT COUNT(*) FROM modifs WHERE parent_id=-1;
+SELECT COUNT(*) FROM modifs WHERE parent_id=-1 AND count_a<>-1;
 # End
 
 # https://explainextended.com/2009/10/23/mysql-order-by-limit-performance-late-row-lookups/
 # Script SelModifPage
 # @page_start INT
 # @page_len INT
-SELECT  M.id, M.timestamp, E.id, E.hw, E.trg, M.note, M.chg, M.bulk_ref, U.id, U.user_name
+SELECT  M.id, M.timestamp, E.id, E.hw, E.trg, M.note, M.chg, M.bulk_ref, U.id, U.user_name, M.count_a, M.count_b, M.hw_before, M.trg_before
 FROM	(
-		SELECT id, entry_id, user_id FROM modifs WHERE parent_id=-1
+		SELECT id, entry_id, user_id FROM modifs WHERE parent_id=-1 AND count_a<>-1
 		ORDER BY id DESC LIMIT @page_start, @page_len
 		) X
 JOIN modifs M ON M.id = X.id

@@ -33,5 +33,18 @@
     "regConfirm": "Complete your registration",
     "mailChangeConfirm": "Confirm new email",
     "passreset": "Reset your password"
+  },
+  "history": {
+    "lblPage": "Page",
+    "changeNewEntry": "New entry",
+    "changeEdited": "Edited",
+    "changeCommented": "Commented",
+    "changeBulkImport": "Bulk import",
+    "changeApproved": "Approved",
+    "changeFlagged": "Flagged",
+    "changeStatusNeutral": "Status: neutral",
+    "bulkLink": "Link",
+    "bulkNewWords": "{0} new words",
+    "bulkChangedWords": "{0} words changed"
   }
 }

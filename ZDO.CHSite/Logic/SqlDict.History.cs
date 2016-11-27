@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.IO;
-using System.Text;
 using MySql.Data.MySqlClient;
 
 using ZD.Common;
@@ -12,6 +9,48 @@ namespace ZDO.CHSite.Logic
 {
     public partial class SqlDict
     {
+        /// <summary>
+        /// Returns entry's changes (newest first), except the very last one.
+        /// </summary>
+        public static List<ChangeItem> GetPastChanges(int entryId)
+        {
+            List<ChangeItem> res = new List<ChangeItem>();
+            using (MySqlConnection conn = DB.GetConn())
+            using (MySqlCommand cmd = DB.GetCmd(conn, "GetPastChanges"))
+            {
+                cmd.Parameters["@entry_id"].Value = entryId;
+                using (var rdr = cmd.ExecuteReader())
+                {
+                    object[] cols = new object[16];
+                    while (rdr.Read())
+                    {
+                        rdr.GetValues(cols);
+                        long whenTicks = ((DateTime)cols[1]).Ticks;
+                        string bodyBefore = null;
+                        if (!(cols[12] is DBNull)) bodyBefore = (string)cols[12];
+                        if (bodyBefore == "") bodyBefore = null;
+                        ChangeItem ci = new ChangeItem
+                        {
+                            When = new DateTime(whenTicks, DateTimeKind.Utc).ToLocalTime(),
+                            User = cols[8] as string,
+                            EntryId = (int)cols[0],
+                            EntryHead = cols[2] as string,
+                            EntryBody = cols[3] as string,
+                            Note = cols[4] as string,
+                            ChangeType = (ChangeType)(sbyte)cols[5],
+                            BulkRef = (int)cols[6],
+                            CountA = (int)cols[9],
+                            CountB = (cols[10] is DBNull) ? int.MinValue : (int)cols[9],
+                            BodyBefore = bodyBefore,
+                        };
+                        res.Add(ci);
+                    }
+                }
+            }
+            res.Sort((x, y) => y.When.CompareTo(x.When));
+            return res;
+        }
+
         public class History : IDisposable
         {
             private MySqlConnection conn;
@@ -50,6 +89,9 @@ namespace ZDO.CHSite.Logic
                     {
                         rdr.GetValues(cols);
                         long whenTicks = ((DateTime)cols[1]).Ticks;
+                        string bodyBefore = null;
+                        if (!(cols[13] is DBNull)) bodyBefore = (string)cols[13];
+                        if (bodyBefore == "") bodyBefore = null;
                         ChangeItem ci = new ChangeItem
                         {
                             When = new DateTime(whenTicks, DateTimeKind.Utc).ToLocalTime(),
@@ -60,6 +102,9 @@ namespace ZDO.CHSite.Logic
                             Note = cols[5] as string,
                             ChangeType = (ChangeType)(sbyte)cols[6],
                             BulkRef = (int)cols[7],
+                            CountA = (int)cols[10],
+                            CountB = (cols[11] is DBNull) ? int.MinValue : (int)cols[11],
+                            BodyBefore = bodyBefore,
                         };
                         res.Add(ci);
                     }

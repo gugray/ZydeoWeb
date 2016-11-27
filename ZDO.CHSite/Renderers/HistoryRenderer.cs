@@ -6,7 +6,6 @@ using System.Text.Encodings.Web;
 using ZD.Common;
 using ZD.LangUtils;
 using ZDO.CHSite.Entities;
-using ZDO.CHSite.Logic;
 
 namespace ZDO.CHSite.Renderers
 {
@@ -14,6 +13,7 @@ namespace ZDO.CHSite.Renderers
     {
         private readonly CedictParser parser = new CedictParser();
         private readonly string lang;
+        private readonly TextProvider tprov;
         private readonly int histPageSize;
         private readonly int histPageIX;
         private readonly int histPageCount;
@@ -23,6 +23,7 @@ namespace ZDO.CHSite.Renderers
             List<ChangeItem> histChanges)
         {
             this.lang = lang;
+            tprov = TextProvider.Instance;
             this.histPageSize = histPageSize;
             this.histPageIX = histPageIX;
             this.histPageCount = histPageCount;
@@ -32,7 +33,7 @@ namespace ZDO.CHSite.Renderers
         public void Render(StringBuilder sb)
         {
             sb.AppendLine("<div id='pager'>");
-            sb.AppendLine("<div id='lblPage'>Oldal</div>");
+            sb.AppendLine("<div id='lblPage'>" + tprov.GetString(lang, "history.lblPage") + "</div>");
             sb.AppendLine("<div id='pageLinks'>");
             buildHistoryLinks(sb);
             sb.AppendLine("</div>");
@@ -42,6 +43,80 @@ namespace ZDO.CHSite.Renderers
                 ChangeItem ci = histChanges[i];
                 histRenderChange(sb, ci, i != histChanges.Count - 1);
             }
+        }
+
+        public static void RenderPastChanges(StringBuilder sb, List<ChangeItem> changes, string lang)
+        {
+            sb.AppendLine("<div class='pastChanges'><div class='pastInner'>");
+            foreach (var ci in changes) renderPastChange(sb, ci, lang);
+            sb.AppendLine("</div></div>"); // <div class='pastChanges'><div class='pastInner'>
+        }
+
+        private static string getChangeTypeStr(ChangeType ct, int countB, string lang)
+        {
+            string changeMsg;
+            if (ct == ChangeType.New) changeMsg = TextProvider.Instance.GetString(lang, "history.changeNewEntry");
+            else if (ct == ChangeType.Edit) changeMsg = TextProvider.Instance.GetString(lang, "history.changeEdited");
+            else if (ct == ChangeType.Note) changeMsg = TextProvider.Instance.GetString(lang, "history.changeCommented");
+            else if (ct == ChangeType.BulkImport) changeMsg = TextProvider.Instance.GetString(lang, "history.changeBulkImport");
+            else if (ct == ChangeType.StatusChange)
+            {
+                if (countB == 1) changeMsg = TextProvider.Instance.GetString(lang, "history.changeApproved");
+                else if (countB == 2) changeMsg = TextProvider.Instance.GetString(lang, "history.changeFlagged");
+                else  changeMsg = TextProvider.Instance.GetString(lang, "history.changeStatusNeutral");
+            }
+            else changeMsg = ct.ToString();
+            return changeMsg;
+        }
+
+        private static readonly string dtFmtHu = "{0}-{1:00}-{2:00} {3:00}:{4:00}";
+        private static readonly string dtFmtDe = "{2:00}.{1:00}.{0} {3:00}:{4:00}";
+        private static readonly string dtFmtEn = "{1:00}/{2:00}/{0} {3:00}:{4:00}";
+
+        private static string getTimeStr(DateTime dt, string lang)
+        {
+            // TO-DO: language-specific format
+            string dtFmt = dtFmtEn;
+            if (lang == "hu") dtFmt = dtFmtHu;
+            else if (lang == "de") dtFmt = dtFmtDe;
+            // US time gets special treatment (12-hour, AM/PM)
+            if (lang != "en")
+                dtFmt = string.Format(dtFmt, dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute);
+            else
+            {
+                string ampm = " AM";
+                int hour = dt.Hour;
+                if (hour > 12) { hour -= 12; ampm = " PM"; }
+                if (hour == 12) ampm = " PM";
+                dtFmt = string.Format(dtFmt, dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute) + ampm;
+            }
+            return dtFmt;
+        }
+
+        private static void renderPastChange(StringBuilder sb, ChangeItem ci, string lang)
+        {
+            sb.AppendLine("<div class='pastItem'>");
+
+            sb.Append("<div class='changeSummary'>");
+            sb.Append("<span class='changeType'>");
+            sb.Append(HtmlEncoder.Default.Encode(getChangeTypeStr(ci.ChangeType, ci.CountB, lang)));
+            sb.Append(" &bull; </span>");
+            sb.Append("<span class='changeUser'>");
+            sb.Append(HtmlEncoder.Default.Encode(ci.User));
+            sb.Append("</span>");
+            sb.Append("<span class='changeTime'>");
+            sb.Append(HtmlEncoder.Default.Encode(getTimeStr(ci.When.ToLocalTime(), lang)));
+            sb.Append("</span>");
+            sb.AppendLine("</div>"); // <div class='changeSummary'>
+
+            sb.AppendLine("<div class='changeNote'>");
+            sb.Append("<span class='changeNoteText'>");
+            sb.Append(HtmlEncoder.Default.Encode(ci.Note));
+            sb.Append("</span>");
+            sb.Append("</div>"); // <div class='changeNote'>
+
+
+            sb.AppendLine("</div>"); // <div class='pastItem'>
         }
 
         private void histRenderChange(StringBuilder sb, ChangeItem ci, bool trailingSeparator)
@@ -61,37 +136,58 @@ namespace ZDO.CHSite.Renderers
             sb.Append("<i class='" + iconClass + "' />");
             sb.Append("<div class='changeSummary'>");
 
-            string changeMsg;
+            string changeMsg = getChangeTypeStr(ci.ChangeType, ci.CountB, lang);
             string changeCls = "changeType";
-            // TO-DO: Loca
-            if (ci.ChangeType == ChangeType.New) changeMsg = "Új szócikk";
-            else if (ci.ChangeType == ChangeType.Edit) changeMsg = "Szerkesztve";
-            else if (ci.ChangeType == ChangeType.Note) changeMsg = "Megjegyzés";
-            else if (ci.ChangeType == ChangeType.BulkImport) changeMsg = "Bulk import";
-            else changeMsg = ci.ChangeType.ToString();
-            changeMsg += ": ";
             sb.Append("<span class='" + changeCls + "'>");
             sb.Append(HtmlEncoder.Default.Encode(changeMsg));
-            sb.Append("</span>");
+            sb.Append(" &bull; </span>");
 
             sb.Append("<span class='changeUser'>");
             sb.Append(HtmlEncoder.Default.Encode(ci.User));
             sb.Append("</span>");
-            sb.Append(" &bull; ");
 
             sb.Append("<span class='changeTime'>");
-            // TO-DO: convert to user's time zone
-            //DateTime dt = TimeZoneInfo.ConvertTimeFromUtc(ci.When, Global.TimeZoneInfo);
-            DateTime dt = ci.When;
-            string dtFmt = "{0}-{1:00}-{2:00} {3:00}:{4:00}";
-            dtFmt = string.Format(dtFmt, dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute);
-            sb.Append(HtmlEncoder.Default.Encode(dtFmt));
+            sb.Append(HtmlEncoder.Default.Encode(getTimeStr(ci.When.ToLocalTime(), lang)));
             sb.Append("</span>");
+
+            if (ci.ChangeType != ChangeType.BulkImport && ci.CountA > 0)
+            {
+                sb.Append("<span class='revealPast'>+" + ci.CountA.ToString() + "</span>");
+            }
 
             sb.Append("</div>"); // <div class='changeSummary'>
 
             sb.AppendLine("<div class='changeNote'>");
+            if (ci.ChangeType == ChangeType.BulkImport)
+            {
+                string newCount = null;
+                string chgCount = null;
+                if (ci.CountA > 0)
+                {
+                    newCount = tprov.GetString(lang, "history.bulkNewWords");
+                    newCount = string.Format(newCount, ci.CountA);
+                }
+                if (ci.CountB > 0)
+                {
+                    chgCount = tprov.GetString(lang, "history.bulkChangedWords");
+                    chgCount = string.Format(chgCount, ci.CountB);
+                }
+                if (chgCount != null || newCount != null)
+                {
+                    sb.Append("<p>");
+                    if (newCount != null) sb.Append(HtmlEncoder.Default.Encode(newCount));
+                    if (newCount != null && chgCount != null) sb.Append(" &bull; ");
+                    if (chgCount != null) sb.Append(HtmlEncoder.Default.Encode(chgCount));
+                    sb.Append("</p>");
+                }
+                sb.Append("<span class='bulkLink'>[");
+                sb.Append("<a href='/" + lang + "/read/more/change-" + ci.BulkRef.ToString("000") + "' target='_blank'>");
+                sb.Append(tprov.GetString(lang, "history.bulkLink") + "</a>");
+                sb.Append("]</span> ");
+            }
+            sb.Append("<span class='changeNoteText'>");
             sb.Append(HtmlEncoder.Default.Encode(ci.Note));
+            sb.Append("</span>");
             sb.Append("</div>");
 
             sb.Append("</div>"); // <div class='changeHead'>
@@ -106,13 +202,31 @@ namespace ZDO.CHSite.Renderers
                 sb.Append("</div>"); // <div class='histEntryOps'>
             }
 
-            if (ci.EntryHead != null)
+            if (ci.ChangeType != ChangeType.BulkImport)
             {
-                CedictEntry entry = parser.ParseEntry(ci.EntryHead + " " + ci.EntryBody, 0, null);
-                EntryRenderer er = new EntryRenderer(entry);
-                er.OneLineHanziLimit = 12;
-                er.Render(sb);
+                // NOT edited
+                if (ci.BodyBefore == null)
+                {
+                    CedictEntry entry = parser.ParseEntry(ci.EntryHead + " " + ci.EntryBody, 0, null);
+                    EntryRenderer er = new EntryRenderer(entry);
+                    er.OneLineHanziLimit = 12;
+                    er.Render(sb);
+                }
+                // Entry edited: show "diff"
+                else
+                {
+                    sb.AppendLine("<div class='entry'>");
+                    CedictEntry entry = parser.ParseEntry(ci.EntryHead + " " + ci.EntryBody, 0, null);
+                    EntryRenderer er = new EntryRenderer(entry);
+                    er.OneLineHanziLimit = 12;
+                    er.RenderInner(sb, "new");
+                    entry = parser.ParseEntry(ci.EntryHead + " " + ci.BodyBefore, 0, null);
+                    er = new EntryRenderer(entry);
+                    er.RenderSenses(sb, "old");
+                    sb.AppendLine("</div>");
+                }
             }
+            else if (ci.ChangeType == ChangeType.Edit && ci.BodyBefore != null)
             sb.Append("</div>"); // <div class='changeEntry'>
 
             sb.Append("</div>"); // <div class='changeHead'>

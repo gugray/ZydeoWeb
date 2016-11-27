@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -27,6 +28,16 @@ namespace ZDO.CHSite.Controllers
             this.langRepo = langRepo;
             this.dict = dict;
             this.auth = auth;
+        }
+
+        public IActionResult GetPastChanges([FromQuery] string entryId, [FromQuery] string lang)
+        {
+            if (entryId == null || lang == null) return StatusCode(400, "Missing parameter(s).");
+            int idVal = EntryId.StringToId(entryId);
+            var changes = SqlDict.GetPastChanges(idVal);
+            StringBuilder sb = new StringBuilder();
+            HistoryRenderer.RenderPastChanges(sb, changes, lang);
+            return new ObjectResult(sb.ToString());
         }
 
         public IActionResult CommentEntry([FromForm] string entryId, [FromForm] string note)

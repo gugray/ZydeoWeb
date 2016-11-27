@@ -39,6 +39,11 @@ var zdAuth = (function () {
     // Show
     zdPage.showModal(params);
     $("#dlgLogin").addClass("userAccountDialog");
+    if (message != "") {
+      $(".loginMessage").text(message);
+      $(".loginMessage").addClass("visible");
+    }
+
     // Pre-fill if we have a stored password
     if (hiddenUser) {
       $("#loginEmail").val(hiddenUser);

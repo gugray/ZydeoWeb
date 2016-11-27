@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace ZDO.CHSite
 {
-    internal class TextProvider
+    public class TextProvider
     {
         private static TextProvider instance = null;
 

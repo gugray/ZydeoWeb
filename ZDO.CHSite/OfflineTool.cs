@@ -85,30 +85,40 @@ namespace ZDO.CHSite
                 EntryBlockParser ebp = new EntryBlockParser(sr);
                 // Two passes. In the first we collect user names and bulk changes.
                 var users = new HashSet<string>();
-                var bulks = new Dictionary<int, SqlDict.BulkBuilder.BulkChangeInfo>();
+                var bulks = new Dictionary<int, SqlDict.ImportBuilder.BulkChangeInfo>();
                 while (true)
                 {
                     vers.Clear();
                     int id = ebp.ReadBlock(vers);
                     if (id == -1) break;
-                    foreach (var ver in vers)
+                    for (int i = 0; i != vers.Count; ++i)
                     {
+                        var ver = vers[i];
                         users.Add(ver.User);
+                        // First change referencing this bulk
                         if (ver.BulkRef != -1 && !bulks.ContainsKey(ver.BulkRef))
                         {
-                            SqlDict.BulkBuilder.BulkChangeInfo bci = new SqlDict.BulkBuilder.BulkChangeInfo
+                            SqlDict.ImportBuilder.BulkChangeInfo bci = new SqlDict.ImportBuilder.BulkChangeInfo
                             {
                                 Timestamp = ver.Timestamp,
                                 UserName = ver.User,
-                                Comment = ver.Comment
+                                Comment = ver.Comment,
+                                NewEntries = i == 0 ? 1 : 0,
+                                ChangedEntries = i != 0 ? 1 : 0,
                             };
                             bulks[ver.BulkRef] = bci;
+                        }
+                        // Seen before
+                        else
+                        {
+                            if (i == 0) ++bulks[ver.BulkRef].NewEntries;
+                            else ++bulks[ver.BulkRef].ChangedEntries;
                         }
                     }
                 }
                 // Second pass. Actual import.
                 fs.Position = 0;
-                using (SqlDict.BulkBuilder builder = dict.GetBulkBuilder(workingFolder, users, bulks))
+                using (SqlDict.ImportBuilder builder = dict.GetBulkBuilder(workingFolder, users, bulks))
                 {
                     while (true)
                     {

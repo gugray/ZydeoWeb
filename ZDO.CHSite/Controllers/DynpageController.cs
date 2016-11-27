@@ -189,12 +189,8 @@ namespace ZDO.CHSite.Controllers
             HistoryRenderer hr = new HistoryRenderer(lang, histPageSize, histPageIX, histPageCount, histChanges);
             hr.Render(sb);
             // Wrap up
-            PageResult pr = new PageResult
-            {
-                RelNorm = rel,
-                Title = "Változások története", // TO-DO: Loca
-                Html = sb.ToString(),
-            };
+            PageResult pr = pageProvider.GetPage(lang, "?/history", false);
+            pr.Html = sb.ToString();
             return pr;
         }
 

@@ -57,6 +57,8 @@ namespace ZDO.CHSite.Logic
             private MySqlCommand cmdSelHwByEntryId;
             private MySqlCommand cmdUpdSkeletonEntry;
             protected MySqlCommand cmdInsModif;
+            protected MySqlCommand cmdInsModifPreCounts1;
+            protected MySqlCommand cmdInsModifPreCounts2;
             // Reused commands owned for the index module
             protected Index.StorageCommands indexCommands = new Index.StorageCommands();
             // ---------------
@@ -80,7 +82,9 @@ namespace ZDO.CHSite.Logic
                     cmdInsSkeletonEntry = DB.GetCmd(conn, "InsSkeletonEntry");
                     cmdSelHwByEntryId = DB.GetCmd(conn, "SelHwByEntryId");
                     cmdUpdSkeletonEntry = DB.GetCmd(conn, "UpdSkeletonEntry");
-                    cmdInsModif = DB.GetCmd(conn, "InsModif");
+                    cmdInsModif = DB.GetCmd(conn, "InsModif"); 
+                    cmdInsModifPreCounts1 = DB.GetCmd(conn, "InsModifPreCounts1");
+                    cmdInsModifPreCounts2 = DB.GetCmd(conn, "InsModifPreCounts2");
                     // Commands owned for the index module
                     indexCommands.CmdDelEntryHanziInstances = DB.GetCmd(conn, "DelEntryHanziInstances");
                     indexCommands.CmdInsHanziInstance = DB.GetCmd(conn, "InsHanziInstance");
@@ -116,6 +120,8 @@ namespace ZDO.CHSite.Logic
                     if (indexCommands.CmdInsHanziInstance != null) indexCommands.CmdInsHanziInstance.Dispose();
                     if (indexCommands.CmdDelEntryHanziInstances != null) indexCommands.CmdDelEntryHanziInstances.Dispose();
 
+                    if (cmdInsModifPreCounts1 != null) cmdInsModifPreCounts1.Dispose();
+                    if (cmdInsModifPreCounts2 != null) cmdInsModifPreCounts2.Dispose();
                     if (cmdInsModif != null) cmdInsModif.Dispose();
                     if (cmdSelHwByEntryId != null) cmdSelHwByEntryId.Dispose();
                     if (cmdUpdSkeletonEntry != null) cmdUpdSkeletonEntry.Dispose();
@@ -265,6 +271,13 @@ namespace ZDO.CHSite.Logic
                 cmdInsModif.Parameters["@chg"].Value = (byte)Entities.ChangeType.Note;
                 cmdInsModif.Parameters["@entry_id"].Value = entryId;
                 cmdInsModif.ExecuteNonQuery();
+                // Update previous version counts
+                cmdInsModifPreCounts1.Parameters["@top_id"].Value = cmdInsModif.LastInsertedId;
+                cmdInsModifPreCounts1.Parameters["@entry_id"].Value = entryId;
+                cmdInsModifPreCounts1.ExecuteNonQuery();
+                cmdInsModifPreCounts2.Parameters["@top_id"].Value = cmdInsModif.LastInsertedId;
+                cmdInsModifPreCounts2.Parameters["@entry_id"].Value = entryId;
+                cmdInsModifPreCounts2.ExecuteNonQuery();
             }
 
             /// <summary>
@@ -297,6 +310,13 @@ namespace ZDO.CHSite.Logic
                 cmdInsModif.Parameters["@chg"].Value = (byte)Entities.ChangeType.New;
                 cmdInsModif.Parameters["@entry_id"].Value = entryId;
                 cmdInsModif.ExecuteNonQuery();
+                // Update previous version counts
+                cmdInsModifPreCounts1.Parameters["@top_id"].Value = cmdInsModif.LastInsertedId;
+                cmdInsModifPreCounts1.Parameters["@entry_id"].Value = entryId;
+                cmdInsModifPreCounts1.ExecuteNonQuery();
+                cmdInsModifPreCounts2.Parameters["@top_id"].Value = cmdInsModif.LastInsertedId;
+                cmdInsModifPreCounts2.Parameters["@entry_id"].Value = entryId;
+                cmdInsModifPreCounts2.ExecuteNonQuery();
 
                 // Commit. Otherwise, dispose will roll all this back if it finds non-null transaction.
                 tr.Commit(); tr.Dispose(); tr = null;
@@ -307,13 +327,15 @@ namespace ZDO.CHSite.Logic
 
         #region Bulk builder
 
-        public class BulkBuilder : Builder
+        public class ImportBuilder : Builder
         {
             public class BulkChangeInfo
             {
                 public DateTime Timestamp;
                 public string UserName;
                 public string Comment;
+                public int NewEntries;
+                public int ChangedEntries;
             }
 
             /// <summary>
@@ -323,6 +345,7 @@ namespace ZDO.CHSite.Logic
 
             // Reused commands
             private MySqlCommand cmdInsBulkModif;
+            private MySqlCommand cmdUpdBulkModifCounts;
             private MySqlCommand cmdSelUserByName;
             private MySqlCommand cmdInsImplicitUser;
             // ---------------
@@ -340,12 +363,13 @@ namespace ZDO.CHSite.Logic
             /// <summary>
             /// Ctor: initialize bulk builder resources.
             /// </summary>
-            public BulkBuilder(Index index, string workingFolder, HashSet<string> users, Dictionary<int, BulkChangeInfo> bulks)
+            public ImportBuilder(Index index, string workingFolder, HashSet<string> users, Dictionary<int, BulkChangeInfo> bulks)
                 : base(index)
             {
                 tr = conn.BeginTransaction();
 
                 cmdInsBulkModif = DB.GetCmd(conn, "InsBulkModif");
+                cmdUpdBulkModifCounts = DB.GetCmd(conn, "UpdBulkModifCounts");
                 cmdInsImplicitUser = DB.GetCmd(conn, "InsImplicitUser");
                 cmdSelUserByName = DB.GetCmd(conn, "SelUserByName");
                 // Gather user IDs up front
@@ -376,6 +400,10 @@ namespace ZDO.CHSite.Logic
                     cmdInsBulkModif.Parameters["@bulk_ref"].Value = x.Key;
                     cmdInsBulkModif.ExecuteNonQuery();
                     bulkRefToModifId[x.Key] = (int)cmdInsBulkModif.LastInsertedId;
+                    cmdUpdBulkModifCounts.Parameters["@id"].Value = cmdInsBulkModif.LastInsertedId;
+                    cmdUpdBulkModifCounts.Parameters["@count_a"].Value = x.Value.NewEntries;
+                    cmdUpdBulkModifCounts.Parameters["@count_b"].Value = x.Value.ChangedEntries;
+                    cmdUpdBulkModifCounts.ExecuteNonQuery();
                 }
             }
 
@@ -387,6 +415,7 @@ namespace ZDO.CHSite.Logic
                 if (cmdSelUserByName != null) cmdSelUserByName.Dispose();
                 if (cmdInsImplicitUser != null) cmdInsImplicitUser.Dispose();
                 if (cmdInsBulkModif != null) cmdInsBulkModif.Dispose();
+                if (cmdUpdBulkModifCounts != null) cmdUpdBulkModifCounts.Dispose();
 
                 // This must come at the end. Will close connection, which we need for disposing of our own stuff.
                 base.DoDispose();
@@ -421,6 +450,7 @@ namespace ZDO.CHSite.Logic
                 // Populate entries table
                 storeEntry(entry.ChSimpl, hw, trg, binId, entryId);
                 // Working backwards, create MODIF records for each version
+                int topModifId = -1;
                 for (int i = vers.Count - 1; i >= 0; --i)
                 {
                     EntryVersion ver = vers[i];
@@ -458,7 +488,16 @@ namespace ZDO.CHSite.Logic
                     cmdInsModif.Parameters["@chg"].Value = change;
                     cmdInsModif.Parameters["@entry_id"].Value = entryId;
                     cmdInsModif.ExecuteNonQuery();
+                    // Remember ID of top (latest) modif
+                    if (i == vers.Count - 1) topModifId = (int)cmdInsModif.LastInsertedId;
                 }
+                // Update previous version counts
+                cmdInsModifPreCounts1.Parameters["@top_id"].Value = cmdInsModif.LastInsertedId;
+                cmdInsModifPreCounts1.Parameters["@entry_id"].Value = entryId;
+                cmdInsModifPreCounts1.ExecuteNonQuery();
+                cmdInsModifPreCounts2.Parameters["@top_id"].Value = cmdInsModif.LastInsertedId;
+                cmdInsModifPreCounts2.Parameters["@entry_id"].Value = entryId;
+                cmdInsModifPreCounts2.ExecuteNonQuery();
                 return true;
             }
 

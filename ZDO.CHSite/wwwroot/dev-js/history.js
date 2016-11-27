@@ -8,9 +8,8 @@
 var zdHistory = (function () {
   "use strict";
 
-  $(document).ready(function () {
-    zdPage.registerInitScript("edit/history", init);
-  });
+  zdPage.registerInitScript("edit/history", init);
+  zdPage.registerInitScript("edit/existing", init); // DBG
 
   function init() {
     // Add tooltips to pliant per-entry commands
@@ -26,11 +25,59 @@ var zdHistory = (function () {
       content: $("<span>" + zdPage.ui("history", "tooltip-flag") + "</span>"),
       position: 'left'
     });
+    $(".revealPast").tooltipster({
+      content: $("<span>" + zdPage.ui("history", "tooltip-revealpast") + "</span>"),
+      position: 'top'
+    });
     // Event handlers for per-entry commands
     $(".opHistComment").click(onComment);
+    $(".revealPast").click(onRevealPast);
+    // Touch: hover simulation
+    if (zdPage.isTouch()) {
+      $(".historyItem").bind("touchstart", function (e) {
+        $(".historyItem").removeClass("tapOver");
+        $(this).addClass("tapOver");
+      });
+    }
+  }
+
+  function onRevealPast(evt) {
+    // Find entry ID in parent with historyItem class
+    var sender = $(this);
+    var elm = sender;
+    while (!elm.hasClass("historyItem")) elm = elm.parent();
+    var entryId = elm.data("entry-id");
+    // Get history
+    var req = zdAuth.ajax("/api/edit/getpastchanges", "GET", { entryId: entryId, lang: zdPage.getLang() });
+    req.done(function (data) {
+      if (!data) {
+        zdPage.showAlert(
+          zdPage.ui("history", "retrievePastFailCaption"),
+          zdPage.ui("history", "retrievePastFailMsg"),
+          true);
+      }
+      else {
+        sender.off("click", onRevealPast);
+        sender.tooltipster("disable");
+        $(data).insertAfter(elm);
+      }
+    });
+    req.fail(function (jqXHR, textStatus, error) {
+      zdPage.showAlert(
+        zdPage.ui("history", "retrievePastFailCaption"),
+        zdPage.ui("history", "retrievePastFailMsg"),
+        true);
+    });
   }
 
   function onComment(evt) {
+    // Pester to log in
+    if (!zdAuth.isLoggedIn()) {
+      zdAuth.showLogin(zdPage.ui("history", "loginToComment"));
+      evt.stopPropagation();
+      return;
+    }
+
     // Find entry ID in parent with historyItem class
     var elm = $(this);
     while (!elm.hasClass("historyItem")) elm = elm.parent();

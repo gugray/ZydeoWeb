@@ -50,6 +50,10 @@
     ]
   },
 
+  "scripts": {
+    "postpublish": "%project:Directory%/../targz-chsite.cmd"
+  },
+
   "runtimeOptions": {
     "configProperties": {
       "System.GC.Server": true

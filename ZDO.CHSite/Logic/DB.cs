@@ -126,7 +126,7 @@ namespace ZDO.CHSite.Logic
             foreach (var x in cmd.Params) res.Parameters.Add(x.Key, x.Value);
             if (res.Parameters.Count != 0) res.Prepare();
             return res;
-        }
+        } 
 
         /// <summary>
         /// Verifies DB model so it matches current application version; throws if there's a mismatch.
@@ -144,7 +144,7 @@ namespace ZDO.CHSite.Logic
             {
                 throw new Exception("DB model is " + dbModel + "; it does not match app version, which is " + appVersion);
             }
-        }
+        } 
 
         /// <summary>
         /// Creates tables in the DB.

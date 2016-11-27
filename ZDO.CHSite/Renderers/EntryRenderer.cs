@@ -84,8 +84,26 @@ namespace ZDO.CHSite.Renderers
 
         public void Render(StringBuilder sb)
         {
-            if (res != null || entryToRender != null) renderResult(sb);
+            if (res != null || entryToRender != null) renderResult(sb, true);
             else renderAnnotation(sb);
+        }
+
+        public void RenderInner(StringBuilder sb, string extraSensesClass)
+        {
+            renderResult(sb, false, extraSensesClass);
+        }
+
+        public void RenderSenses(StringBuilder sb, string extraSensesClass)
+        {
+            string sensesClass = "senses";
+            if (!string.IsNullOrEmpty(extraSensesClass)) sensesClass += " " + extraSensesClass;
+            sb.Append("<div class='" + sensesClass + "'>"); // <div class="senses">
+            var entry = entryToRender;
+            for (int i = 0; i != entry.SenseCount; ++i)
+            {
+                renderSense(sb, entry.GetSenseAt(i), i, null);
+            }
+            sb.AppendLine("</div>");
         }
 
         private void renderAnnotation(StringBuilder sb)
@@ -157,7 +175,9 @@ namespace ZDO.CHSite.Renderers
             }
         }
 
-        private void renderResult(StringBuilder sb)
+
+
+        private void renderResult(StringBuilder sb, bool renderEntryDiv, string extraSensesClass = "")
         {
             CedictEntry entry = entryToRender;
             if (entry == null) entry = res.Entry;
@@ -170,7 +190,7 @@ namespace ZDO.CHSite.Renderers
             string entryClass = "entry";
             if (tones == UiTones.Pleco) entryClass += " toneColorsPleco";
             else if (tones == UiTones.Dummitt) entryClass += " toneColorsDummitt";
-            sb.Append("<div class='" + entryClass + "'>"); // <div class="entry">
+            if (renderEntryDiv) sb.Append("<div class='" + entryClass + "'>"); // <div class="entry">
 
             if (script != UiScript.Trad)
             {
@@ -212,7 +232,9 @@ namespace ZDO.CHSite.Renderers
             }
             sb.Append("</span>"); // <span class="hw-pinyin">
 
-            sb.Append("<div class='senses'>"); // <div class="senses">
+            string sensesClass = "senses";
+            if (!string.IsNullOrEmpty(extraSensesClass)) sensesClass += " " + extraSensesClass;
+            sb.Append("<div class='" + sensesClass + "'>"); // <div class="senses">
             for (int i = 0; i != entry.SenseCount; ++i)
             {
                 CedictTargetHighlight thl = null;
@@ -221,7 +243,7 @@ namespace ZDO.CHSite.Renderers
             }
             sb.Append("</div>"); // <div class="senses">
 
-            sb.Append("</div>"); // <div class="entry">
+            if (renderEntryDiv) sb.Append("</div>"); // <div class="entry">
         }
 
         /// <summary>
