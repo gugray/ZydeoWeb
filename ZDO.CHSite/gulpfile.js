@@ -49,6 +49,7 @@ gulp.task('scripts', ['snippets', 'scriptcopy'], function () {
     './wwwroot/dev-js/handwriting.js',
     './wwwroot/dev-js/page.js',
     './wwwroot/dev-js/newentry.js',
+    './wwwroot/dev-js/editentry.js',
     './wwwroot/dev-js/strokeanim.js',
     './wwwroot/dev-js/lookup.js',
     './wwwroot/dev-js/history.js',

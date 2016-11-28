@@ -39,7 +39,7 @@ namespace ZDO.CHSite.Logic
             return false;
         }
 
-        private void verifyHanzi(CedictEntry entry, string query, List<CedictResult> res)
+        private void verifyHanzi(CedictEntry entry, int entryId, string query, List<CedictResult> res)
         {
             if (entry == null) return;
 
@@ -108,14 +108,20 @@ namespace ZDO.CHSite.Logic
                     if (batch.Count == 10)
                     {
                         retrieveBatch(batch, buf, entries, cmdSelBinary10);
-                        foreach (var entry in entries) verifyHanzi(entry, query, res);
+                        for (int i = 0; i != entries.Count; ++i)
+                        {
+                            verifyHanzi(entries[i], batch[i], query, res);
+                        }
                         batch.Clear();
                     }
                 }
                 if (batch.Count != 0)
                 {
                     retrieveBatch(batch, buf, entries, cmdSelBinary10);
-                    foreach (var entry in entries) verifyHanzi(entry, query, res);
+                    for (int i = 0; i != entries.Count; ++i)
+                    {
+                        verifyHanzi(entries[i], batch[i], query, res);
+                    }
                 }
             }
         }
@@ -158,7 +164,8 @@ namespace ZDO.CHSite.Logic
             return res;
         }
 
-        private bool verifyTrg(Tokenizer tokenizer, CedictEntry entry, int senseIx, List<Token> qtoks, List<CedictResult> res)
+        private bool verifyTrg(Tokenizer tokenizer, CedictEntry entry, int entryId, int senseIx,
+            List<Token> qtoks, List<CedictResult> res)
         {
             if (entry == null) return false;
 
@@ -213,7 +220,7 @@ namespace ZDO.CHSite.Logic
                         for (int i = 0; i != entries.Count; ++i)
                         {
                             if (resIdSet.Contains(batch[i])) continue;
-                            if (verifyTrg(tokenizer, entries[i], senseIxs[i], toks, res)) resIdSet.Add(batch[i]);
+                            if (verifyTrg(tokenizer, entries[i], batch[i], senseIxs[i], toks, res)) resIdSet.Add(batch[i]);
                         }
                         batch.Clear();
                         senseIxs.Clear();
@@ -225,7 +232,7 @@ namespace ZDO.CHSite.Logic
                     for (int i = 0; i != entries.Count; ++i)
                     {
                         if (resIdSet.Contains(batch[i])) continue;
-                        verifyTrg(tokenizer, entries[i], senseIxs[i], toks, res);
+                        verifyTrg(tokenizer, entries[i], batch[i], senseIxs[i], toks, res);
                     }
                 }
             }
@@ -256,7 +263,7 @@ namespace ZDO.CHSite.Logic
             return res;
         }
 
-        private void verifyPinyin(CedictEntry entry, List<PinyinSyllable> sylls, List<CedictResult> res)
+        private void verifyPinyin(CedictEntry entry, int entryId, List<PinyinSyllable> sylls, List<CedictResult> res)
         {
             // Find query syllables in entry
             int syllStart = -1;
@@ -297,14 +304,20 @@ namespace ZDO.CHSite.Logic
                     if (batch.Count == 10)
                     {
                         retrieveBatch(batch, buf, entries, cmdSelBinary10);
-                        foreach (var entry in entries) verifyPinyin(entry, query, res);
+                        for (int i = 0; i != entries.Count; ++i)
+                        {
+                            verifyPinyin(entries[i], batch[i], query, res);
+                        }
                         batch.Clear();
                     }
                 }
                 if (batch.Count != 0)
                 {
                     retrieveBatch(batch, buf, entries, cmdSelBinary10);
-                    foreach (var entry in entries) verifyPinyin(entry, query, res);
+                    for (int i = 0; i != entries.Count; ++i)
+                    {
+                        verifyPinyin(entries[i], batch[i], query, res);
+                    }
                 }
             }
         }

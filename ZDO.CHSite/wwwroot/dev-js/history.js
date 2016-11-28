@@ -9,7 +9,6 @@ var zdHistory = (function () {
   "use strict";
 
   zdPage.registerInitScript("edit/history", init);
-  zdPage.registerInitScript("edit/existing", init); // DBG
 
   function init() {
     // Add tooltips to pliant per-entry commands

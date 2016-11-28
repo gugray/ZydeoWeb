@@ -251,6 +251,11 @@ ON DUPLICATE KEY UPDATE id=@id;
 SELECT hw FROM entries WHERE id=@id;
 # End
 
+# Script SelEntryById
+# @id INT
+SELECT hw, trg, status FROM entries WHERE id=@id;
+# End
+
 # Script UpdSkeletonEntry
 # @id INT
 # @hw VARCHAR

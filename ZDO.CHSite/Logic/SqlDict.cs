@@ -84,6 +84,30 @@ namespace ZDO.CHSite.Logic
             }
         }
 
+        public static void GetEntryById(int id, out string hw, out string trg, out EntryStatus status)
+        {
+            hw = trg = null;
+            status = EntryStatus.Neutral;
+            using (MySqlConnection conn = DB.GetConn())
+            using (MySqlCommand cmd = DB.GetCmd(conn, "SelEntryById"))
+            {
+                cmd.Parameters["@id"].Value = id;
+                using (var rdr = cmd.ExecuteReader())
+                {
+                    while (rdr.Read())
+                    {
+                        hw = rdr.GetString("hw");
+                        trg = rdr.GetString("trg");
+                        sbyte sx = rdr.GetSByte("status");
+                        if (sx == 0) status = EntryStatus.Neutral;
+                        else if (sx == 1) status = EntryStatus.Flagged;
+                        else if (sx == 2) status = EntryStatus.Approved;
+                        else throw new Exception("Invalid status in DB: " + sx);
+                    }
+                }
+            }
+        }
+
         public static List<HeadAndTrg> GetEntriesBySimp(string simp)
         {
             return null;

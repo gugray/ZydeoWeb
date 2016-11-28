@@ -1,0 +1,29 @@
+﻿<div id="x-lang">*</div>
+<div id="x-rel">?/editexisting</div>
+<div id="x-nositemap"></div>
+<div id="x-description">Edit dictionary entry. HanDeDict @ Zydeo, the open-source Chinese-German dictionary.</div>
+<div id="x-keywords">HanDeDict, Zydeo, Chinese, German, dictionary, free, open-source, change, changes, history, change history</div>
+<div id="x-title">Edit entry - HanDeDict @ Zydeo Chinese-German dictionary</div>
+
+<div class="editexisting" data-entry-id="{{entry-id}}">
+  <div class="entry" />
+  <div class="commands">
+    <div class="cmdpanel pnlTasks visible">
+      <span class="command cmdEdit">{{cmd-edit}}</span>
+      <span class="command cmdComment">{{cmd-comment}}</span>
+      <span class="command cmdFlag"></span>
+      <span class="command cmdApprove">{{cmd-approve}}</span>
+    </div>
+    <div class="cmdpanel pnlAction pnlEdit">
+      <textarea id="txtEditTrg" maxlength="1024"></textarea>
+      <div class="errorNote errBadTrg" />
+      <textarea id="txtEditCmt" maxlength="1024" placeholder="{{placeholder-comment}}"></textarea>
+      <div class="errorNote errNoComment">{{lbl-error-nocomment}}</div>
+      <span class="previewUpdateFail">Failed to update preview</span>
+      <span class="command cmdCancel">{{btn-cancel}}</span>
+      <span class="command cmdOK">{{btn-ok}}</span>
+    </div>
+  </div>
+  <h2>{{lbl-history}}</h2>
+  <div class='pastChanges' />
+</div>

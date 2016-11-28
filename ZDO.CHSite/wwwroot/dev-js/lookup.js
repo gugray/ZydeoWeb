@@ -85,9 +85,11 @@ var zdLookup = (function () {
   }
 
   function resultEventWireup(data) {
-    $("#results").append("<div id='soaBox' class='soaBoxLeft'></div>");
+    $("#soaBox").remove();
+    $("body").append("<div id='soaBox' class='soaBoxLeft'></div>");
     zdStrokeAnim.init();
     $(".hanim").click(showStrokeAnim);
+    $(".entryAction").click(onEntryAction);
     $("#soaClose").click(hideStrokeAnim);
     $("#soaBox").click(function (e) { e.stopPropagation(); });
     $('.txtSearch.active').val(data.data);
@@ -435,6 +437,13 @@ var zdLookup = (function () {
     hideSettings();
     ++prefixReqId; // If suggestions come in after we've submitted search, should not be shown anymore.
     zdPage.submitSearch(queryStr);
+  }
+
+  // An action icon (e.g., "edit") is clicked next to entry
+  function onEntryAction(evt) {
+    if ($(this).hasClass("edit")) {
+      window.open("/" + zdPage.getLang() + "/edit/existing/" + $(this).data("entry-id"));
+    }
   }
 
   // Dynamically position stroke order animation popup in Desktop

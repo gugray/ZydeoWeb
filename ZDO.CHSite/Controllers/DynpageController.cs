@@ -24,7 +24,7 @@ namespace ZDO.CHSite.Controllers
         /// </summary>
         private readonly static string[] dynOnlyPrefixes = new string[]
         {
-            "search", "edit/history", "edit/new", "user"
+            "search", "edit/history", "edit/new", "edit/existing", "user"
         };
 
         private readonly CountryResolver cres;
@@ -77,6 +77,7 @@ namespace ZDO.CHSite.Controllers
                     if (rel.StartsWith("search/")) return doSearch(rel, lang, searchScript, searchTones, isMobile);
                     else if (rel.StartsWith("edit/history")) return doHistory(rel, lang);
                     else if (rel.StartsWith("edit/new")) return doNewEntry(rel, lang);
+                    else if (rel.StartsWith("edit/existing")) return doEditExisting(rel, lang);
                     else if (rel.StartsWith("user/confirm/")) return doUserConfirm(rel, lang);
                     else if (rel.StartsWith("user/profile")) return doUserProfile(rel, lang);
                 }
@@ -151,6 +152,28 @@ namespace ZDO.CHSite.Controllers
             }
             // Others: unexpected
             else return pageProvider.GetPage(lang, "404", false);
+        }
+
+        private PageResult doEditExisting(string rel, string lang)
+        {
+            string entryId = rel.Replace("edit/existing/", "");
+            entryId = WebUtility.UrlDecode(entryId);
+
+            PageResult pr = pageProvider.GetPage(lang, "?/editexisting", false);
+            StringBuilder sb = new StringBuilder(pr.Html);
+            var t = TextProvider.Instance;
+            sb = sb.Replace("{{cmd-edit}}", HtmlEncoder.Default.Encode(t.GetString(lang, "editEntry.cmd-edit")));
+            sb = sb.Replace("{{cmd-comment}}", HtmlEncoder.Default.Encode(t.GetString(lang, "editEntry.cmd-comment")));
+            sb = sb.Replace("{{cmd-flag}}", HtmlEncoder.Default.Encode(t.GetString(lang, "editEntry.cmd-flag")));
+            sb = sb.Replace("{{cmd-approve}}", HtmlEncoder.Default.Encode(t.GetString(lang, "editEntry.cmd-approve")));
+            sb = sb.Replace("{{placeholder-comment}}", HtmlEncoder.Default.Encode(t.GetString(lang, "editEntry.placeholder-comment")));
+            sb = sb.Replace("{{lbl-error-nocomment}}", HtmlEncoder.Default.Encode(t.GetString(lang, "editEntry.lbl-error-nocomment")));
+            sb = sb.Replace("{{btn-cancel}}", HtmlEncoder.Default.Encode(t.GetString(lang, "editEntry.btn-cancel")));
+            sb = sb.Replace("{{btn-ok}}", HtmlEncoder.Default.Encode(t.GetString(lang, "editEntry.btn-ok")));
+            sb = sb.Replace("{{lbl-history}}", HtmlEncoder.Default.Encode(t.GetString(lang, "editEntry.lbl-history")));
+            sb = sb.Replace("{{entry-id}}", HtmlEncoder.Default.Encode(entryId));
+            pr.Html = sb.ToString();
+            return pr;
         }
 
         private PageResult doNewEntry(string rel, string lang)

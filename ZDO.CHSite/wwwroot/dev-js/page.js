@@ -98,7 +98,7 @@ var zdPage = (function () {
         dynReady(data, id);
       });
       req.fail(function (jqXHR, textStatus, error) {
-        applyFailHtml();
+        doApplyFailHtml();
       });
       // Generic click-away handler to close active popup, and also hamburger menu
       $('html').click(function () {
@@ -164,15 +164,15 @@ var zdPage = (function () {
     var req = zdAuth.ajax("/api/dynpage/getpage", "GET", data);
     req.done(function (data) {
       if (data) navReady(data, id);
-      else applyFailHtml();
+      else doApplyFailHtml();
     });
     req.fail(function (jqXHR, textStatus, error) {
-      applyFailHtml();
+      doApplyFailHtml();
     });
   }
 
   // Show error content in dynamic area
-  function applyFailHtml() {
+  function doApplyFailHtml() {
     // Meta: clear all, except title
     if ($("body").hasClass("hdd")) $(document).attr("title", zdPage.ui("oops", "title-hdd"));
     else $(document).attr("title", zdPage.ui("oops", "title-chd"));
@@ -416,6 +416,8 @@ var zdPage = (function () {
       history.pushState(null, null, path);
       dynNavigate();
     },
+
+    applyFailHtml: function () { doApplyFailHtml(); },
 
     submitSearch: function(query) {
       history.pushState(null, null, "/" + lang + "/search/" + query);

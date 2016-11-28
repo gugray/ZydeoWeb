@@ -1,0 +1,40 @@
+﻿@import "defines.less";
+
+.editexisting {
+  display: none; &.visible { display: block; }
+  position: relative; float: left; box-sizing: border-box; height: auto; overflow: auto; font-size: 1rem; width: 100%;
+  div, p { position: relative; float: left; box-sizing: border-box; height: auto; overflow: auto; width:100%; }
+  h2 { font-family: @fntSerif; font-size: 2rem; margin: 0 0 1rem 0; }
+  .senses.new { background-color: @clrLightGreen; width: 100%; }
+  .commands {
+    width: 100%; padding: 0.4rem 0 0.4rem 0; margin: 0 0 1rem 0;
+    border-top: 1px dashed @clrBodyText; border-bottom: 1px dashed @clrBodyText;
+  }
+  .cmdpanel { display: none; &.visible { display: block; } }
+  .command {
+    display: block; position: relative; float: left; box-sizing: border-box;
+    transition: background-color ease 0.5s;
+    font-size: 1.2rem; cursor: default; padding: 0.2rem 0 0.2rem 0;
+    background-color: @clrLightAccent; text-align: center;
+    &:hover { background-color: @clrMediumAccent; }
+    &.cmdCancel { background-color: @clrLightLight; &:hover { background-color: @clrLight; } }
+    &.disabled { background-color: @clrGray; color: white; }
+  }
+  .pnlTasks .command {
+    width: 24.0625%; margin-left: 1.25%;
+    &:nth-child(1) { margin-left: 0; }
+  }
+  textarea { 
+    display: block; width: 100%; margin: 0 0 0.3rem 0; box-sizing: border-box; padding: 0.5rem;
+    font-size: 1rem; overflow-y: scroll; font-family:@fntBase;
+    &#txtEditTrg { height: 10rem; }
+    &#txtEditCmt { height: 5rem; overflow-y: auto; }
+  }
+  .errorNote { color: @clrStrongRed; margin: -0.2rem 0 0.5rem 0; display: none; }
+  .errorNote.visible { display: block; }
+  .pnlAction .command {
+    padding-left: 1rem; padding-right: 1rem; float: right; margin-left: 0.5rem;
+  }
+  .previewUpdateFail { display: none; float: left; color: @clrStrongRed; font-size: 0.9rem; &.visible { display: block; } }
+  .pastChanges { padding-left: 0.5rem; }
+}

@@ -47,6 +47,11 @@ namespace ZD.Common
         public ushort Freq = 0;
 
         /// <summary>
+        /// Entry's stable database ID (optional).
+        /// </summary>
+        public int StableId = 0;
+
+        /// <summary>
         /// Gets the headword's pinyin syllables.
         /// </summary>
         public ReadOnlyCollection<PinyinSyllable> Pinyin
@@ -268,6 +273,7 @@ namespace ZD.Common
             ChSimpl = br.ReadString();
             ChTrad = br.ReadString();
             Freq = br.ReadUShort();
+            StableId = br.ReadInt();
             senses = br.ReadArray(brr => new CedictSense(brr));
             hanziPinyinMap = br.ReadArray(brr => brr.ReadShort());
             short cnt = br.ReadShort();
@@ -288,6 +294,7 @@ namespace ZD.Common
             bw.WriteString(ChSimpl);
             bw.WriteString(ChTrad);
             bw.WriteUShort(Freq);
+            bw.WriteInt(StableId);
             bw.WriteArray(senses);
             bw.WriteArray(hanziPinyinMap, (x, bwr) => bwr.WriteShort(x));
             if (zhoEmbeds == null) bw.WriteShort(0);

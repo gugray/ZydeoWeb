@@ -25,7 +25,8 @@ namespace ZDO.CHSite.Renderers
             sb.AppendLine("<div id='results'>");
             for (int i = 0; i != lr.Results.Count && i < maxResults; ++i)
             {
-                EntryRenderer er = new EntryRenderer(lr.Results[i], uiScript, uiTones);
+                string entryIdStr = EntryId.IdToString(lr.Results[i].Entry.StableId);
+                EntryRenderer er = new EntryRenderer(lr.Results[i], uiScript, uiTones, entryIdStr);
                 // TO-DO: double-check, also for mobile
                 er.OneLineHanziLimit = 9;
                 er.Render(sb);

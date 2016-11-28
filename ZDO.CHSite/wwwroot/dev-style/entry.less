@@ -1,16 +1,15 @@
 @import "defines.less";
 
 .entry {
-  position: relative;
-  padding-top: 0;
-  padding-bottom: 1em;
-  display: block;
-  float: left;
-  width: 100%;
-  clear: right;
-  border-top: 0;
-  font-size: 80%;
+  position: relative; padding-top: 0; padding-bottom: 1em; display: block; float: left;
+  width: 100%; clear: right; border-top: 0; font-size: 80%;
+  .entryAction {
+    display: none; position: absolute; right: 0; font-size: 160%; color: @clrMediumAccent;
+    cursor: default;
+  }
+  &:hover { .entryAction { display: block; &:hover { color: @clrStrongAccent; } } }
 }
+
 
 .hw-simp, .hw-trad {
   font-family: @fntZho;

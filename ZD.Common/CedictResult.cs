@@ -97,8 +97,8 @@ namespace ZD.Common
         /// <summary>
         /// Ctor: init immutable instance - result of hanzi lookup.
         /// </summary>
-        public CedictResult(SimpTradWarning hanziWarning, CedictEntry entry, ReadOnlyCollection<short> hanziPinyinMap,
-            int hanziHiliteStart, int hanziHiliteLength)
+        public CedictResult(SimpTradWarning hanziWarning, CedictEntry entry,
+            ReadOnlyCollection<short> hanziPinyinMap, int hanziHiliteStart, int hanziHiliteLength)
         {
             targetHilites = new CedictTargetHighlight[0];
             HanziWarning = hanziWarning;

@@ -20,6 +20,7 @@ namespace ZDO.CHSite.Renderers
         private readonly string hwTrad;
         private readonly List<PinyinSyllable> hwPinyin;
         private readonly bool dimIdenticalTrad;
+        private readonly string entryId;
 
         /// <summary>
         /// Maximum number of Hanzi in HW before breaking HW into two lines
@@ -62,13 +63,14 @@ namespace ZDO.CHSite.Renderers
         /// <summary>
         /// Ctor: regular lookup result
         /// </summary>
-        public EntryRenderer(CedictResult res, UiScript script, UiTones tones)
+        public EntryRenderer(CedictResult res, UiScript script, UiTones tones, string entryId)
         {
             this.res = res;
             this.script = script;
             this.tones = tones;
             this.hanim = true;
             this.dimIdenticalTrad = true;
+            this.entryId = entryId;
         }
 
         /// <summary>
@@ -191,6 +193,13 @@ namespace ZDO.CHSite.Renderers
             if (tones == UiTones.Pleco) entryClass += " toneColorsPleco";
             else if (tones == UiTones.Dummitt) entryClass += " toneColorsDummitt";
             if (renderEntryDiv) sb.Append("<div class='" + entryClass + "'>"); // <div class="entry">
+
+            if (entryId != null)
+            {
+                sb.Append("<i class='fa fa-pencil entryAction edit' data-entry-id='");
+                sb.Append(entryId);
+                sb.Append("'></i>");
+            }
 
             if (script != UiScript.Trad)
             {

@@ -59,6 +59,10 @@
     "failtitle": "Failed to save comment",
     "failmessage": "Something went wrong. Your comment has not been saved."
   },
+  "editExisting": {
+    "cmd-flag": "Flag",
+    "cmd-unflag": "Unflag"
+  },
   "login": {
     "menuLogin": "Log in",
     "menuLogout": "Log out",

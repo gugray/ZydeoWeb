@@ -151,30 +151,29 @@ namespace ZDO.CHSite.Logic
                 if (trg.Length > 1024) throw new Exception("Translation, in CEDICT format, must not exceed 1024 characters.");
             }
 
-            protected int storeEntry(string simp, string head, string trg, int binId, int id = -1)
+            protected int reserveEntryId()
             {
-                // Come up with new random entry ID?
-                if (id == -1)
+                int id;
+                while (true)
                 {
-                    while (true)
-                    {
-                        id = rnd.Next();
-                        cmdInsSkeletonEntry.Parameters["@id"].Value = id;
-                        cmdInsSkeletonEntry.ExecuteNonQuery();
-                        cmdSelHwByEntryId.Parameters["@id"].Value = id;
-                        object o = cmdSelHwByEntryId.ExecuteScalar();
-                        if (o is DBNull) break;
-                    }
-                }
-                // Use provided ID. Throw if it's not unique.
-                else
-                {
+                    id = rnd.Next();
                     cmdInsSkeletonEntry.Parameters["@id"].Value = id;
                     cmdInsSkeletonEntry.ExecuteNonQuery();
                     cmdSelHwByEntryId.Parameters["@id"].Value = id;
                     object o = cmdSelHwByEntryId.ExecuteScalar();
-                    if (!(o is DBNull)) throw new Exception("Entry ID already exists.");
+                    if (o is DBNull) break;
                 }
+                return id;
+            }
+
+            protected void storeEntry(string simp, string head, string trg, int binId, int id)
+            {
+                // Use provided ID. Throw if it's not unique.
+                cmdInsSkeletonEntry.Parameters["@id"].Value = id;
+                cmdInsSkeletonEntry.ExecuteNonQuery();
+                cmdSelHwByEntryId.Parameters["@id"].Value = id;
+                object o = cmdSelHwByEntryId.ExecuteScalar();
+                if (!(o is DBNull)) throw new Exception("Entry ID already exists.");
                 // Now store values in skeleton
                 cmdUpdSkeletonEntry.Parameters["@id"].Value = id;
                 cmdUpdSkeletonEntry.Parameters["@hw"].Value = head;
@@ -184,7 +183,6 @@ namespace ZDO.CHSite.Logic
                 cmdUpdSkeletonEntry.Parameters["@deleted"].Value = 0;
                 cmdUpdSkeletonEntry.Parameters["@bin_id"].Value = binId;
                 cmdUpdSkeletonEntry.ExecuteNonQuery();
-                return id;
             }
 
             protected int indexEntry(CedictEntry entry)
@@ -293,13 +291,22 @@ namespace ZDO.CHSite.Logic
                 // Check for duplicate
                 if (SqlDict.DoesHeadExist(head)) throw new Exception("Headword already exists: " + head);
 
+                // Reserve entry ID
+                int entryId = reserveEntryId();
+
+                // Infuse corpus frequency
+                int iFreq = freq.GetFreq(entry.ChSimpl);
+                ushort uFreq = iFreq > ushort.MaxValue ? ushort.MaxValue : (ushort)iFreq;
+                entry.Freq = uFreq;
+
                 // Serialize, store in DB, index
+                entry.StableId = entryId;
                 int binId = indexEntry(entry);
                 // Have index commit filed change
                 index.ApplyChanges(indexCommands);
 
                 // Populate entries table
-                int entryId = storeEntry(entry.ChSimpl, head, trg, binId);
+                storeEntry(entry.ChSimpl, head, trg, binId, entryId);
                 // Record change
                 cmdInsModif.Parameters["@parent_id"].Value = -1;
                 cmdInsModif.Parameters["@hw_before"].Value = "";
@@ -445,7 +452,8 @@ namespace ZDO.CHSite.Logic
                 // Check restrictions. Will skip failing entries.
                 try { checkRestrictions(entry.ChSimpl, trg); }
                 catch { return false; }
-                // Serialize, store in DB, index
+                // Serialize, store in DB, index. Infuse stable ID!
+                entry.StableId = entryId;
                 int binId = indexEntry(entry);
                 // Populate entries table
                 storeEntry(entry.ChSimpl, hw, trg, binId, entryId);
