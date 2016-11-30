@@ -332,7 +332,7 @@ namespace ZDO.CHSite.Logic
                 // Create new modif
                 cmdInsModif.Parameters["@parent_id"].Value = -1;
                 cmdInsModif.Parameters["@bulk_ref"].Value = -1;
-                cmdInsModif.Parameters["@hw_before"].Value = DBNull.Value;
+                cmdInsModif.Parameters["@hw_before"].Value = "";
                 cmdInsModif.Parameters["@trg_before"].Value = oldTrg;
                 cmdInsModif.Parameters["@timestamp"].Value = DateTime.UtcNow;
                 cmdInsModif.Parameters["@user_id"].Value = userId;

@@ -52,7 +52,7 @@
   },
 
   "scripts": {
-    "postpublish": "%project:Directory%/../targz-chsite.cmd"
+    //"postpublish": "%project:Directory%/../targz-chsite.cmd"
   },
 
   "runtimeOptions": {
