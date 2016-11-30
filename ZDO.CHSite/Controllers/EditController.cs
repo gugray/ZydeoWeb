@@ -30,6 +30,27 @@ namespace ZDO.CHSite.Controllers
             this.auth = auth;
         }
 
+        public IActionResult SaveEntryTrg([FromForm] string entryId, [FromForm] string trg, [FromForm] string note)
+        {
+            if (entryId == null || trg == null || note == null) return StatusCode(400, "Missing parameter(s).");
+            // Must be authenticated user
+            int userId;
+            string userName;
+            auth.CheckSession(HttpContext.Request.Headers, out userId, out userName);
+            if (userId < 0) return StatusCode(401, "Request must contain authentication token.");
+
+            int idVal = EntryId.StringToId(entryId);
+            trg = trg.Replace('\\', '/');
+            trg = trg.Replace('\n', '/');
+            trg = "/" + trg + "/";
+            using (SqlDict.SimpleBuilder builder = dict.GetSimpleBuilder(userId))
+            {
+                builder.ChangeTarget(userId, idVal, trg, note);
+            }
+            // Tell our caller we dun it
+            return new ObjectResult(true);
+        }
+
         public IActionResult GetEntryPreview([FromQuery] string hw, [FromQuery] string trgTxt, [FromQuery] string lang)
         {
             if (hw == null || trgTxt == null || lang == null) return StatusCode(400, "Missing parameter(s).");
@@ -44,7 +65,7 @@ namespace ZDO.CHSite.Controllers
                 trgTxt = "/" + trgTxt + "/";
                 CedictParser parser = new CedictParser();
                 CedictEntry entry = parser.ParseEntry(hw + " " + trgTxt, 0, null);
-                EntryRenderer er = new EntryRenderer(entry);
+                EntryRenderer er = new EntryRenderer(entry, true);
                 er.OneLineHanziLimit = 12;
                 StringBuilder sb = new StringBuilder();
                 er.Render(sb);
@@ -62,6 +83,7 @@ namespace ZDO.CHSite.Controllers
             EditEntryData res = new EditEntryData();
 
             int idVal = EntryId.StringToId(entryId);
+
             string hw, trg;
             EntryStatus status;
             SqlDict.GetEntryById(idVal, out hw, out trg, out status);
@@ -72,12 +94,16 @@ namespace ZDO.CHSite.Controllers
 
             CedictParser parser = new CedictParser();
             CedictEntry entry = parser.ParseEntry(hw + " " + trg, 0, null);
-            EntryRenderer er = new EntryRenderer(entry);
+            EntryRenderer er = new EntryRenderer(entry, true);
             er.OneLineHanziLimit = 12;
             StringBuilder sb = new StringBuilder();
             er.Render(sb);
             res.EntryHtml = sb.ToString();
+
+            List<ChangeItem> changes = SqlDict.GetEntryChanges(idVal);
             sb.Clear();
+            HistoryRenderer.RenderEntryChanges(sb, trg, status, changes, lang);
+            res.HistoryHtml = sb.ToString();
 
             return new ObjectResult(res);
         }
@@ -86,21 +112,39 @@ namespace ZDO.CHSite.Controllers
         {
             if (entryId == null || lang == null) return StatusCode(400, "Missing parameter(s).");
             int idVal = EntryId.StringToId(entryId);
+            string hw, trg;
+            EntryStatus status;
+            SqlDict.GetEntryById(idVal, out hw, out trg, out status);
             var changes = SqlDict.GetPastChanges(idVal);
             StringBuilder sb = new StringBuilder();
-            HistoryRenderer.RenderPastChanges(sb, changes, lang);
+            HistoryRenderer.RenderPastChanges(sb, trg, status, changes, lang);
             return new ObjectResult(sb.ToString());
         }
 
-        public IActionResult CommentEntry([FromForm] string entryId, [FromForm] string note)
+        public IActionResult CommentEntry([FromForm] string entryId, [FromForm] string note, [FromForm] string statusChange)
         {
-            if (entryId == null || note == null) return StatusCode(400, "Missing parameter(s).");
+            if (entryId == null || note == null || statusChange == null) return StatusCode(400, "Missing parameter(s).");
+            // Supported/expected status changes
+            SqlDict.Builder.StatusChange change;
+            if (statusChange == "none") change = SqlDict.Builder.StatusChange.None;
+            else if (statusChange == "approve") change = SqlDict.Builder.StatusChange.Approve;
+            else if (statusChange == "flag") change = SqlDict.Builder.StatusChange.Flag;
+            else if (statusChange == "unflag") change = SqlDict.Builder.StatusChange.Unflag;
+            else return StatusCode(400, "Invalid statusChange parameter.");
 
             // Must be authenticated user
             int userId;
             string userName;
             auth.CheckSession(HttpContext.Request.Headers, out userId, out userName);
-            if (userId < 0) return StatusCode(401, "Request must not contain authentication token.");
+            if (userId < 0) return StatusCode(401, "Request must contain authentication token.");
+
+            // If status change is approve: is user entitled to do it?
+            bool canApprove = false;
+            if (change == SqlDict.Builder.StatusChange.Approve)
+            {
+                canApprove = auth.CanApprove(userId);
+                if (!canApprove) StatusCode(401, "User is not authorized to approve entries.");
+            }
 
             bool success = false;
             SqlDict.SimpleBuilder builder = null;
@@ -108,7 +152,7 @@ namespace ZDO.CHSite.Controllers
             {
                 int idVal = EntryId.StringToId(entryId);
                 builder = dict.GetSimpleBuilder(userId);
-                builder.CommentEntry(idVal, note);
+                builder.CommentEntry(idVal, note, change);
                 success = true;
             }
             catch (Exception ex)
@@ -158,3 +202,4 @@ namespace ZDO.CHSite.Controllers
         }
     }
 }
+

@@ -123,7 +123,11 @@ namespace ZDO.CHSite.Logic
         {
             Command cmd = cmdDict[cmdName];
             MySqlCommand res = new MySqlCommand(cmd.Sql, conn);
-            foreach (var x in cmd.Params) res.Parameters.Add(x.Key, x.Value);
+            foreach (var x in cmd.Params)
+            {
+                res.Parameters.Add(x.Key, x.Value);
+                res.Parameters[x.Key].IsNullable = true;
+            }
             if (res.Parameters.Count != 0) res.Prepare();
             return res;
         } 

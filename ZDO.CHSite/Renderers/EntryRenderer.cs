@@ -51,13 +51,13 @@ namespace ZDO.CHSite.Renderers
         /// <summary>
         /// Ctor: dictionary entry in change history.
         /// </summary>
-        public EntryRenderer(CedictEntry entry)
+        public EntryRenderer(CedictEntry entry, bool dimIdenticalTrad)
         {
             this.entryToRender = entry;
             this.script = UiScript.Both;
             this.tones = UiTones.None;
             this.hanim = false;
-            this.dimIdenticalTrad = false;
+            this.dimIdenticalTrad = dimIdenticalTrad;
         }
 
         /// <summary>
@@ -199,6 +199,12 @@ namespace ZDO.CHSite.Renderers
                 sb.Append("<i class='fa fa-pencil entryAction edit' data-entry-id='");
                 sb.Append(entryId);
                 sb.Append("'></i>");
+            }
+
+            if (entry.Status != EntryStatus.Neutral)
+            {
+                if (entry.Status == EntryStatus.Flagged) sb.Append("<i class='fa fa-flag-o entryStatus flagged'></i>");
+                else sb.Append("<i class='fa fa-check entryStatus approved'></i>");
             }
 
             if (script != UiScript.Trad)

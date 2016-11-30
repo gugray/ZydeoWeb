@@ -100,8 +100,8 @@ namespace ZDO.CHSite.Logic
                         trg = rdr.GetString("trg");
                         sbyte sx = rdr.GetSByte("status");
                         if (sx == 0) status = EntryStatus.Neutral;
-                        else if (sx == 1) status = EntryStatus.Flagged;
-                        else if (sx == 2) status = EntryStatus.Approved;
+                        else if (sx == 2) status = EntryStatus.Flagged;
+                        else if (sx == 1) status = EntryStatus.Approved;
                         else throw new Exception("Invalid status in DB: " + sx);
                     }
                 }

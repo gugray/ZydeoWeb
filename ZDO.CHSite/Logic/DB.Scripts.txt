@@ -82,20 +82,21 @@ CREATE TABLE modifs(
 	parent_id		INT NOT NULL,				-- modifs.id, if this modif is part of a bulk change
 												-- -1 for normal change, and the bulk parent itself
 	hw_before		VARCHAR(256),				-- changed entry's HW before change, for instant diff in history
-												-- null if this is a bulk parent, and for entry's initial version
+												-- null or "" if this is a bulk parent, and for entry's initial version
 	trg_before		VARCHAR(3072),				-- changed entry's TRG before change, for instant diff in history
-												-- null if this is a bulk parent, and for entry's initial version
+												-- null or "" if this is a bulk parent, and for entry's initial version
+	status_before	TINYINT,					-- changed entry's status before change
+												-- null or 99 if this is a bulk parent, and for entry's initial version
 	timestamp		DATETIME NOT NULL,
 	user_id			INT NOT NULL,
 	note			VARCHAR(3072) NOT NULL,
 	bulk_ref		INT NOT NULL,				-- positive value if this is a bulk parent. refers to reference article about change.
-												-- -1 for normal change
+												-- also included in all of child changes
 	chg				TINYINT NOT NULL,			-- 0: new; 1: delete; 2: edit; 3: note; 4: status-changed; 99: bulk
 	entry_id		INT NOT NULL,				-- entries.id; -1 for bulk change
 	count_a			INT NOT NULL DEFAULT 0,		-- in bulk parent: number of new entries
 												-- normal change: number of previous changes in entry at top, or -1 in those past items
 	count_b			INT							-- in bulk parent: number of changed entries
-												-- if chg=4 (status-changed): status: 0: neutral/new; 1: approved; 2: flagged
 ) ENGINE=InnoDB CHARACTER SET=utf8 COLLATE utf8_general_ci;
 CREATE INDEX idx_modifs_user_id ON modifs(user_id);
 CREATE INDEX idx_modifs_entry_id ON modifs(entry_id);
@@ -256,6 +257,11 @@ SELECT hw FROM entries WHERE id=@id;
 SELECT hw, trg, status FROM entries WHERE id=@id;
 # End
 
+# Script SelEntryStatus
+# @id INT
+SELECT status FROM entries WHERE id=@id;
+# End
+
 # Script UpdSkeletonEntry
 # @id INT
 # @hw VARCHAR
@@ -267,6 +273,31 @@ SELECT hw, trg, status FROM entries WHERE id=@id;
 UPDATE entries
 SET hw=@hw, trg=@trg, simp_hash=@simp_hash, status=@status, deleted=@deleted, bin_id=@bin_id
 WHERE id=@id;
+# End
+
+# Script SelBinByEntryId
+# @id INT
+SELECT B.data, B.id FROM binary_entries B
+JOIN entries E ON E.bin_id=B.id AND E.id=@id;
+# End
+
+# Script UpdEntryTrg
+# @id INT
+# @trg VARCHAR
+# @bin_id INT
+UPDATE entries SET trg=@trg, bin_id=@bin_id WHERE id=@id;
+# End
+
+# Script UpdEntryStatus
+# @id INT
+# @status TINYINT
+UPDATE entries SET status=@status WHERE id=@id;
+# End
+
+# Script UpdBinaryEntry
+# @id INT
+# @data BLOB
+UPDATE binary_entries SET data=@data WHERE id=@id;
 # End
 
 # Script InsBulkModif
@@ -287,15 +318,17 @@ UPDATE modifs SET count_a=@count_a, count_b=@count_b WHERE id=@id;
 
 # Script InsModif
 # @parent_id INT
+# @bulk_ref INT
 # @hw_before VARCHAR
 # @trg_before VARCHAR
+# @status_before TINYINT
 # @timestamp DATETIME
 # @user_id INT
 # @note VARCHAR
 # @chg INT
 # @entry_id INT
-INSERT INTO modifs (parent_id, hw_before, trg_before, timestamp, user_id, note, bulk_ref, chg, entry_id)
-VAlUES (@parent_id, @hw_before, @trg_before, @timestamp, @user_id, @note, -1, @chg, @entry_id);
+INSERT INTO modifs (parent_id, hw_before, trg_before, status_before, timestamp, user_id, note, bulk_ref, chg, entry_id)
+VAlUES (@parent_id, @hw_before, @trg_before, @status_before, @timestamp, @user_id, @note, @bulk_ref, @chg, @entry_id);
 # End
 
 # Script InsModifPreCounts1
@@ -319,9 +352,18 @@ SELECT COUNT(*) FROM entries WHERE hw=@hw;
 
 # Script GetPastChanges
 # @entry_id INT
-SELECT E.id, M.timestamp, E.hw, E.trg, M.note, M.chg, M.bulk_ref, U.id, U.user_name, M.count_a, M.count_b, M.hw_before, M.trg_before
+SELECT E.id, M.timestamp, E.hw, E.trg, M.note, M.chg, M.bulk_ref, U.id, U.user_name, M.count_a, M.count_b, M.hw_before, M.trg_before, M.status_before, E.status
 FROM entries E
 JOIN modifs M ON M.entry_id=E.id AND M.count_a=-1
+JOIN users U ON U.id=M.user_id
+WHERE E.id=@entry_id;
+# End
+
+# Script GetEntryChanges
+# @entry_id INT
+SELECT M.timestamp, M.note, M.chg, M.bulk_ref, U.id, U.user_name, M.count_a, M.count_b, M.hw_before, M.trg_before, M.status_before, E.status
+FROM entries E
+JOIN modifs M ON M.entry_id=E.id
 JOIN users U ON U.id=M.user_id
 WHERE E.id=@entry_id;
 # End
@@ -334,7 +376,7 @@ SELECT COUNT(*) FROM modifs WHERE parent_id=-1 AND count_a<>-1;
 # Script SelModifPage
 # @page_start INT
 # @page_len INT
-SELECT  M.id, M.timestamp, E.id, E.hw, E.trg, M.note, M.chg, M.bulk_ref, U.id, U.user_name, M.count_a, M.count_b, M.hw_before, M.trg_before
+SELECT  M.id, M.timestamp, E.id, E.hw, E.trg, M.note, M.chg, M.bulk_ref, U.id, U.user_name, M.count_a, M.count_b, M.hw_before, M.trg_before, M.status_before, E.status
 FROM	(
 		SELECT id, entry_id, user_id FROM modifs WHERE parent_id=-1 AND count_a<>-1
 		ORDER BY id DESC LIMIT @page_start, @page_len

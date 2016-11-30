@@ -45,14 +45,29 @@ namespace ZDO.CHSite.Renderers
             }
         }
 
-        public static void RenderPastChanges(StringBuilder sb, List<ChangeItem> changes, string lang)
+        public static void RenderPastChanges(StringBuilder sb, string currTrg, EntryStatus currStatus,
+            List<ChangeItem> changes, string lang)
         {
             sb.AppendLine("<div class='pastChanges'><div class='pastInner'>");
-            foreach (var ci in changes) renderPastChange(sb, ci, lang);
+            CedictParser parser = new CedictParser();
+            string trgNow = currTrg;
+            EntryStatus statusNow = currStatus;
+            foreach (var ci in changes) renderPastChange(sb, parser, ref trgNow, ref statusNow, ci, lang);
             sb.AppendLine("</div></div>"); // <div class='pastChanges'><div class='pastInner'>
         }
 
-        private static string getChangeTypeStr(ChangeType ct, int countB, string lang)
+        public static void RenderEntryChanges(StringBuilder sb, string currTrg, EntryStatus currStatus,
+            List<ChangeItem> changes, string lang)
+        {
+            sb.AppendLine("<div class='pastChanges'><div class='pastInner'>");
+            CedictParser parser = new CedictParser();
+            string trgNow = currTrg;
+            EntryStatus statusNow = currStatus;
+            foreach (var ci in changes) renderPastChange(sb, parser, ref trgNow, ref statusNow, ci, lang);
+            sb.AppendLine("</div></div>"); // <div class='pastChanges'><div class='pastInner'>
+        }
+
+        private static string getChangeTypeStr(ChangeType ct, int countB, EntryStatus entryStatus, string lang)
         {
             string changeMsg;
             if (ct == ChangeType.New) changeMsg = TextProvider.Instance.GetString(lang, "history.changeNewEntry");
@@ -61,8 +76,8 @@ namespace ZDO.CHSite.Renderers
             else if (ct == ChangeType.BulkImport) changeMsg = TextProvider.Instance.GetString(lang, "history.changeBulkImport");
             else if (ct == ChangeType.StatusChange)
             {
-                if (countB == 1) changeMsg = TextProvider.Instance.GetString(lang, "history.changeApproved");
-                else if (countB == 2) changeMsg = TextProvider.Instance.GetString(lang, "history.changeFlagged");
+                if (entryStatus == EntryStatus.Approved) changeMsg = TextProvider.Instance.GetString(lang, "history.changeApproved");
+                else if (entryStatus == EntryStatus.Flagged) changeMsg = TextProvider.Instance.GetString(lang, "history.changeFlagged");
                 else  changeMsg = TextProvider.Instance.GetString(lang, "history.changeStatusNeutral");
             }
             else changeMsg = ct.ToString();
@@ -93,13 +108,14 @@ namespace ZDO.CHSite.Renderers
             return dtFmt;
         }
 
-        private static void renderPastChange(StringBuilder sb, ChangeItem ci, string lang)
+        private static void renderPastChange(StringBuilder sb, CedictParser parser, ref string trgNow, ref EntryStatus statusNow,
+            ChangeItem ci, string lang)
         {
             sb.AppendLine("<div class='pastItem'>");
 
             sb.Append("<div class='changeSummary'>");
             sb.Append("<span class='changeType'>");
-            sb.Append(HtmlEncoder.Default.Encode(getChangeTypeStr(ci.ChangeType, ci.CountB, lang)));
+            sb.Append(HtmlEncoder.Default.Encode(getChangeTypeStr(ci.ChangeType, ci.CountB, statusNow, lang)));
             sb.Append(" &bull; </span>");
             sb.Append("<span class='changeUser'>");
             sb.Append(HtmlEncoder.Default.Encode(ci.User));
@@ -111,10 +127,30 @@ namespace ZDO.CHSite.Renderers
 
             sb.AppendLine("<div class='changeNote'>");
             sb.Append("<span class='changeNoteText'>");
+
+            if (ci.BulkRef != -1)
+            {
+                sb.Append("<span class='bulkLink'>[");
+                sb.Append("<a href='/" + lang + "/read/more/change-" + ci.BulkRef.ToString("000") + "' target='_blank'>");
+                sb.Append(TextProvider.Instance.GetString(lang, "history.bulkLink") + "</a>");
+                sb.Append("]</span> ");
+            }
+
             sb.Append(HtmlEncoder.Default.Encode(ci.Note));
             sb.Append("</span>");
-            sb.Append("</div>"); // <div class='changeNote'>
+            sb.AppendLine("</div>"); // <div class='changeNote'>
 
+            if (ci.BodyBefore != null)
+            {
+                CedictEntry entryNew = parser.ParseEntry("的 的 [de5] " + trgNow, -1, null);
+                EntryRenderer er = new EntryRenderer(entryNew, true);
+                er.RenderSenses(sb, "new");
+                CedictEntry entryOld = parser.ParseEntry("的 的 [de5] " + ci.BodyBefore, -1, null);
+                er = new EntryRenderer(entryOld, true);
+                er.RenderSenses(sb, "old");
+                trgNow = ci.BodyBefore;
+            }
+            if (ci.StatusBefore != 99) statusNow = (EntryStatus)ci.StatusBefore;
 
             sb.AppendLine("</div>"); // <div class='pastItem'>
         }
@@ -132,11 +168,17 @@ namespace ZDO.CHSite.Renderers
             else if (ci.ChangeType == ChangeType.Edit) iconClass = "fa fa-pencil-square-o ctEdit";
             else if (ci.ChangeType == ChangeType.Note) iconClass = "fa fa-commenting-o ctNote";
             else if (ci.ChangeType == ChangeType.BulkImport) iconClass = "fa fa-newspaper-o ctBulk";
+            else if (ci.ChangeType == ChangeType.StatusChange)
+            {
+                if (ci.EntryStatus == EntryStatus.Approved) iconClass = "fa fa-check-square-o ctApprove";
+                else if (ci.EntryStatus == EntryStatus.Flagged) iconClass = "fa fa-flag-o ctFlag";
+                else iconClass = "fa fa-flag-o ctUnflag";
+            }
 
             sb.Append("<i class='" + iconClass + "' />");
             sb.Append("<div class='changeSummary'>");
 
-            string changeMsg = getChangeTypeStr(ci.ChangeType, ci.CountB, lang);
+            string changeMsg = getChangeTypeStr(ci.ChangeType, ci.CountB, ci.EntryStatus, lang);
             string changeCls = "changeType";
             sb.Append("<span class='" + changeCls + "'>");
             sb.Append(HtmlEncoder.Default.Encode(changeMsg));
@@ -196,7 +238,7 @@ namespace ZDO.CHSite.Renderers
             if (ci.ChangeType != ChangeType.BulkImport)
             {
                 sb.AppendLine("<div class='histEntryOps'>");
-                sb.Append("<i class='opHistEdit fa fa-pencil-square-o' />");
+                sb.Append("<i class='opHistEdit fa fa-pencil' />");
                 sb.Append("<i class='opHistComment fa fa-commenting-o' />");
                 sb.Append("<i class='opHistFlag fa fa-flag-o' />");
                 sb.Append("</div>"); // <div class='histEntryOps'>
@@ -208,7 +250,7 @@ namespace ZDO.CHSite.Renderers
                 if (ci.BodyBefore == null)
                 {
                     CedictEntry entry = parser.ParseEntry(ci.EntryHead + " " + ci.EntryBody, 0, null);
-                    EntryRenderer er = new EntryRenderer(entry);
+                    EntryRenderer er = new EntryRenderer(entry, true);
                     er.OneLineHanziLimit = 12;
                     er.Render(sb);
                 }
@@ -217,11 +259,11 @@ namespace ZDO.CHSite.Renderers
                 {
                     sb.AppendLine("<div class='entry'>");
                     CedictEntry entry = parser.ParseEntry(ci.EntryHead + " " + ci.EntryBody, 0, null);
-                    EntryRenderer er = new EntryRenderer(entry);
+                    EntryRenderer er = new EntryRenderer(entry, true);
                     er.OneLineHanziLimit = 12;
                     er.RenderInner(sb, "new");
                     entry = parser.ParseEntry(ci.EntryHead + " " + ci.BodyBefore, 0, null);
-                    er = new EntryRenderer(entry);
+                    er = new EntryRenderer(entry, true);
                     er.RenderSenses(sb, "old");
                     sb.AppendLine("</div>");
                 }

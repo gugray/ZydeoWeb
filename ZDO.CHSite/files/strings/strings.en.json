@@ -42,19 +42,9 @@
     "changeBulkImport": "Bulk import",
     "changeApproved": "Approved",
     "changeFlagged": "Flagged",
-    "changeStatusNeutral": "Status: neutral",
+    "changeStatusNeutral": "Unflagged",
     "bulkLink": "Link",
     "bulkNewWords": "{0} new words",
     "bulkChangedWords": "{0} words changed"
-  },
-  "editEntry": {
-    "cmd-edit": "Edit",
-    "cmd-comment": "Comment",
-    "cmd-approve": "Approve",
-    "placeholder-comment": "Source, comment, reason for change...",
-    "lbl-error-nocomment": "Please enter a comment to accompany the change in the entry's history. You can reference a source or briefly explain the reason for the change.",
-    "btn-cancel": "Cancel",
-    "btn-ok": "Save",
-    "lbl-history": "Entry history"
   }
 }

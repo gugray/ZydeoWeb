@@ -45,7 +45,7 @@
     "tooltip-revealpast": "Show full entry history",
     "retrievePastFailCaption": "Unexpected error",
     "retrievePastFailMsg": "Failed to retrieve full entry history.",
-    "loginToComment": "Please log in to comment entries in the dictionary. If you don't have an account yet, you can register through the link at the bottom."
+    "loginToEdit": "Please log in to comment, edit or flag entries in the dictionary. If you don't have an account yet, you can register through the link at the bottom."
 },
   "dialog": {
     "ok": "OK",
@@ -61,7 +61,10 @@
   },
   "editExisting": {
     "cmd-flag": "Flag",
-    "cmd-unflag": "Unflag"
+    "cmd-unflag": "Unflag",
+    "loginToEdit": "Please log in to edit, comment or flag entries in the dictionary. If you don't have an account yet, you can register through the link at the bottom.",
+    "failCaption": "Unexpected error",
+    "failMessage": "Sorry; your changes have not been saved."
   },
   "login": {
     "menuLogin": "Log in",

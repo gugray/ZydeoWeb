@@ -29,6 +29,8 @@ namespace ZDO.CHSite.Logic
                         string bodyBefore = null;
                         if (!(cols[12] is DBNull)) bodyBefore = (string)cols[12];
                         if (bodyBefore == "") bodyBefore = null;
+                        sbyte statusBefore = 99;
+                        if (!(cols[13] is DBNull)) statusBefore = (sbyte)(sbyte)cols[13];
                         ChangeItem ci = new ChangeItem
                         {
                             When = new DateTime(whenTicks, DateTimeKind.Utc).ToLocalTime(),
@@ -40,8 +42,54 @@ namespace ZDO.CHSite.Logic
                             ChangeType = (ChangeType)(sbyte)cols[5],
                             BulkRef = (int)cols[6],
                             CountA = (int)cols[9],
-                            CountB = (cols[10] is DBNull) ? int.MinValue : (int)cols[9],
+                            CountB = (cols[10] is DBNull) ? int.MinValue : (int)cols[10],
                             BodyBefore = bodyBefore,
+                            StatusBefore = (byte)statusBefore,
+                            EntryStatus = (EntryStatus)(sbyte)cols[14],
+                        };
+                        res.Add(ci);
+                    }
+                }
+            }
+            res.Sort((x, y) => y.When.CompareTo(x.When));
+            return res;
+        }
+
+        /// <summary>
+        /// Returns all of an entry's changes (newest first).
+        /// </summary>
+        public static List<ChangeItem> GetEntryChanges(int entryId)
+        {
+            List<ChangeItem> res = new List<ChangeItem>();
+            using (MySqlConnection conn = DB.GetConn())
+            using (MySqlCommand cmd = DB.GetCmd(conn, "GetEntryChanges"))
+            {
+                cmd.Parameters["@entry_id"].Value = entryId;
+                using (var rdr = cmd.ExecuteReader())
+                {
+                    object[] cols = new object[16];
+                    while (rdr.Read())
+                    {
+                        rdr.GetValues(cols);
+                        long whenTicks = ((DateTime)cols[0]).Ticks;
+                        string bodyBefore = null;
+                        if (!(cols[9] is DBNull)) bodyBefore = (string)cols[9];
+                        if (bodyBefore == "") bodyBefore = null;
+                        sbyte statusBefore = 99;
+                        if (!(cols[10] is DBNull)) statusBefore = (sbyte)cols[10];
+                        ChangeItem ci = new ChangeItem
+                        {
+                            When = new DateTime(whenTicks, DateTimeKind.Utc).ToLocalTime(),
+                            User = cols[5] as string,
+                            EntryId = entryId,
+                            Note = cols[1] as string,
+                            ChangeType = (ChangeType)(sbyte)cols[2],
+                            BulkRef = (int)cols[3],
+                            CountA = (int)cols[6],
+                            CountB = (cols[7] is DBNull) ? int.MinValue : (int)cols[7],
+                            BodyBefore = bodyBefore,
+                            StatusBefore = (byte)statusBefore,
+                            EntryStatus = (EntryStatus)(sbyte)cols[11],
                         };
                         res.Add(ci);
                     }
@@ -92,6 +140,8 @@ namespace ZDO.CHSite.Logic
                         string bodyBefore = null;
                         if (!(cols[13] is DBNull)) bodyBefore = (string)cols[13];
                         if (bodyBefore == "") bodyBefore = null;
+                        sbyte statusBefore = 99;
+                        if (!(cols[14] is DBNull)) statusBefore = (sbyte)cols[14];
                         ChangeItem ci = new ChangeItem
                         {
                             When = new DateTime(whenTicks, DateTimeKind.Utc).ToLocalTime(),
@@ -105,6 +155,8 @@ namespace ZDO.CHSite.Logic
                             CountA = (int)cols[10],
                             CountB = (cols[11] is DBNull) ? int.MinValue : (int)cols[11],
                             BodyBefore = bodyBefore,
+                            StatusBefore = (byte)statusBefore,
+                            EntryStatus = (cols[15] is DBNull) ? EntryStatus.Neutral : (EntryStatus)(sbyte)cols[15],
                         };
                         res.Add(ci);
                     }

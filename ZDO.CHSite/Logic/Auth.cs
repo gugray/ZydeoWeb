@@ -259,6 +259,39 @@ namespace ZDO.CHSite.Logic
         }
 
         /// <summary>
+        /// <para>Checks if there's a live session for auth token. If yes, extends session's expiry as a side effect.</para>
+        /// <para>User ID is -1 if there's not live session.</para>
+        /// </summary>
+        public void CheckSession(IHeaderDictionary hdrReq, out int userId, out string userName)
+        {
+            userId = -1; userName = null;
+            string token = retrieveToken(hdrReq);
+            if (token == null) return;
+            lock (sessions)
+            {
+                if (!sessions.ContainsKey(token)) return;
+                SessionInfo si = sessions[token];
+                if (si.Expires < DateTime.UtcNow)
+                {
+                    sessions.Remove(token);
+                    return;
+                }
+                si.Expires = DateTime.UtcNow.AddMinutes(sessionTimeoutMinutes);
+                userId = si.UserId;
+                userName = si.UserName;
+            }
+        }
+
+        /// <summary>
+        /// Decides if a user is authorized to approve entries (regardless of existing session).
+        /// </summary>
+        public bool CanApprove(int userId)
+        {
+            // TO-DO
+            return false;
+        }
+
+        /// <summary>
         /// Ends the session identified by the auth token in HTTP headers, if found.
         /// </summary>
         public void Logout(IHeaderDictionary hdrReq)
@@ -335,30 +368,6 @@ namespace ZDO.CHSite.Logic
                 action = dbAction;
                 data = dbData;
                 userId = dbUserId;
-            }
-        }
-
-        /// <summary>
-        /// <para>Checks if there's a live session for auth token. If yes, extends session's expiry as a side effect.</para>
-        /// <para>User ID is -1 if there's not live session.</para>
-        /// </summary>
-        public void CheckSession(IHeaderDictionary hdrReq, out int userId, out string userName)
-        {
-            userId = -1; userName = null;
-            string token = retrieveToken(hdrReq);
-            if (token == null) return;
-            lock (sessions)
-            {
-                if (!sessions.ContainsKey(token)) return;
-                SessionInfo si = sessions[token];
-                if (si.Expires < DateTime.UtcNow)
-                {
-                    sessions.Remove(token);
-                    return;
-                }
-                si.Expires = DateTime.UtcNow.AddMinutes(sessionTimeoutMinutes);
-                userId = si.UserId;
-                userName = si.UserName;
             }
         }
 

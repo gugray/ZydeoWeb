@@ -162,15 +162,6 @@ namespace ZDO.CHSite.Controllers
             PageResult pr = pageProvider.GetPage(lang, "?/editexisting", false);
             StringBuilder sb = new StringBuilder(pr.Html);
             var t = TextProvider.Instance;
-            sb = sb.Replace("{{cmd-edit}}", HtmlEncoder.Default.Encode(t.GetString(lang, "editEntry.cmd-edit")));
-            sb = sb.Replace("{{cmd-comment}}", HtmlEncoder.Default.Encode(t.GetString(lang, "editEntry.cmd-comment")));
-            sb = sb.Replace("{{cmd-flag}}", HtmlEncoder.Default.Encode(t.GetString(lang, "editEntry.cmd-flag")));
-            sb = sb.Replace("{{cmd-approve}}", HtmlEncoder.Default.Encode(t.GetString(lang, "editEntry.cmd-approve")));
-            sb = sb.Replace("{{placeholder-comment}}", HtmlEncoder.Default.Encode(t.GetString(lang, "editEntry.placeholder-comment")));
-            sb = sb.Replace("{{lbl-error-nocomment}}", HtmlEncoder.Default.Encode(t.GetString(lang, "editEntry.lbl-error-nocomment")));
-            sb = sb.Replace("{{btn-cancel}}", HtmlEncoder.Default.Encode(t.GetString(lang, "editEntry.btn-cancel")));
-            sb = sb.Replace("{{btn-ok}}", HtmlEncoder.Default.Encode(t.GetString(lang, "editEntry.btn-ok")));
-            sb = sb.Replace("{{lbl-history}}", HtmlEncoder.Default.Encode(t.GetString(lang, "editEntry.lbl-history")));
             sb = sb.Replace("{{entry-id}}", HtmlEncoder.Default.Encode(entryId));
             pr.Html = sb.ToString();
             return pr;

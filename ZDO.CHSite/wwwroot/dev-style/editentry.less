@@ -4,11 +4,22 @@
   display: none; &.visible { display: block; }
   position: relative; float: left; box-sizing: border-box; height: auto; overflow: auto; font-size: 1rem; width: 100%;
   div, p { position: relative; float: left; box-sizing: border-box; height: auto; overflow: auto; width:100%; }
-  h2 { font-family: @fntSerif; font-size: 2rem; margin: 0 0 1rem 0; }
+  h2 { font-family: @fntSerif; font-size: 2rem; margin: 0 0 1rem 0; color: @clrBodyText; }
+
+  .notice {
+    position: relative; width: 100%; overflow-y: auto; height: auto; margin: 0 0 1rem 0; box-sizing: border-box;
+    padding: 0.5rem; font-size: 1rem;
+    display: none; html.resplay-hamburger & { display: block; }
+    background-color: #fae7e3; border-left: 0.4rem solid @clrStrongRed;
+    span, i { display: block; box-sizing: border-box; overflow-y: auto; height: auto; }
+    i { position: absolute; top: 0.5rem; left: 0.5rem; width: 2rem; font-size: 1.5rem; }
+    span { width: 100%; padding-left: 2rem; position: relative; }
+  }
   .senses.new { background-color: @clrLightGreen; width: 100%; }
   .commands {
     width: 100%; padding: 0.4rem 0 0.4rem 0; margin: 0 0 1rem 0;
     border-top: 1px dashed @clrBodyText; border-bottom: 1px dashed @clrBodyText;
+    html.resplay-hamburger & { display: none; }
   }
   .cmdpanel { display: none; &.visible { display: block; } }
   .command {
@@ -20,6 +31,11 @@
     &.cmdCancel { background-color: @clrLightLight; &:hover { background-color: @clrLight; } }
     &.disabled { background-color: @clrGray; color: white; }
   }
+  .actionTitle {
+    font-size: 1.1rem; font-weight: bold; font-family: @fntSansAlt; color: @clrStrong; margin-bottom: 0.2rem;
+    display: none; &.visible { display: block; }
+    span { font-weight: normal; color: @clrBodyText; }
+  }
   .pnlTasks .command {
     width: 24.0625%; margin-left: 1.25%;
     &:nth-child(1) { margin-left: 0; }
@@ -27,7 +43,7 @@
   textarea { 
     display: block; width: 100%; margin: 0 0 0.3rem 0; box-sizing: border-box; padding: 0.5rem;
     font-size: 1rem; overflow-y: scroll; font-family:@fntBase;
-    &#txtEditTrg { height: 10rem; }
+    &#txtEditTrg { height: 10rem; display: none; &.visible { display: block; } }
     &#txtEditCmt { height: 5rem; overflow-y: auto; }
   }
   .errorNote { color: @clrStrongRed; margin: -0.2rem 0 0.5rem 0; display: none; }

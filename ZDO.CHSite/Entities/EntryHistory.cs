@@ -1,5 +1,7 @@
 ﻿using System;
 
+using ZD.Common;
+
 namespace ZDO.CHSite.Entities
 {
     public enum ChangeType
@@ -47,9 +49,17 @@ namespace ZDO.CHSite.Entities
         /// </summary>
         public string EntryBody;
         /// <summary>
+        /// Current entry status.
+        /// </summary>
+        public EntryStatus EntryStatus;
+        /// <summary>
         /// Entry body before change, if target was edited in normal change. Otherwise null.
         /// </summary>
         public string BodyBefore;
+        /// <summary>
+        /// Status before change. 99 if n/a, or a value of <see cref="ZD.Common.EntryStatus"/>. 
+        /// </summary>
+        public byte StatusBefore;
         /// <summary>
         /// Bulk: new entry count. Normal: number of additional history items in entry's past.
         /// </summary>

@@ -30,6 +30,8 @@ var zdHistory = (function () {
     });
     // Event handlers for per-entry commands
     $(".opHistComment").click(onComment);
+    $(".opHistEdit").click(onEdit);
+    $(".opHistFlag").click(onFlag);
     $(".revealPast").click(onRevealPast);
     // Touch: hover simulation
     if (zdPage.isTouch()) {
@@ -69,14 +71,32 @@ var zdHistory = (function () {
     });
   }
 
-  function onComment(evt) {
+  function onEdit(evt) {
+    // Find entry ID in parent with historyItem class
+    var elm = $(this);
+    while (!elm.hasClass("historyItem")) elm = elm.parent();
+    var entryId = elm.data("entry-id");
+    // Open editor in new tab
+    window.open("/" + zdPage.getLang() + "/edit/existing/" + entryId);
+  }
+
+  function onFlag(evt) {
     // Pester to log in
     if (!zdAuth.isLoggedIn()) {
-      zdAuth.showLogin(zdPage.ui("history", "loginToComment"));
+      zdAuth.showLogin(zdPage.ui("history", "loginToEdit"));
       evt.stopPropagation();
       return;
     }
+    // TO-DO
+  }
 
+  function onComment(evt) {
+    // Pester to log in
+    if (!zdAuth.isLoggedIn()) {
+      zdAuth.showLogin(zdPage.ui("history", "loginToEdit"));
+      evt.stopPropagation();
+      return;
+    }
     // Find entry ID in parent with historyItem class
     var elm = $(this);
     while (!elm.hasClass("historyItem")) elm = elm.parent();
@@ -101,7 +121,7 @@ var zdHistory = (function () {
     if (cmt.length == 0) {
       return false;
     }
-    var req = zdAuth.ajax("/api/edit/commententry", "POST", { entryId: entryId, note: cmt });
+    var req = zdAuth.ajax("/api/edit/commententry", "POST", { entryId: entryId, note: cmt, statusChange: "none" });
     zdPage.setModalWorking("#dlgHistComment", true);
     req.done(function (data) {
       zdPage.closeModal("txtHistComment");

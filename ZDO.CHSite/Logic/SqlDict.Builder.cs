@@ -21,6 +21,17 @@ namespace ZDO.CHSite.Logic
         public class Builder : IDisposable
         {
             /// <summary>
+            /// User-initiated status transitions that show up in the history.
+            /// </summary>
+            public enum StatusChange
+            {
+                None,
+                Approve,
+                Flag,
+                Unflag,
+            }
+
+            /// <summary>
             /// Reference to the singleton's in-memory index.
             /// </summary>
             protected readonly Index index;
@@ -59,6 +70,11 @@ namespace ZDO.CHSite.Logic
             protected MySqlCommand cmdInsModif;
             protected MySqlCommand cmdInsModifPreCounts1;
             protected MySqlCommand cmdInsModifPreCounts2;
+            protected MySqlCommand cmdSelBinByEntryId;
+            protected MySqlCommand cmdUpdEntryTrg;
+            protected MySqlCommand cmdSelEntryStatus;
+            protected MySqlCommand cmdUpdEntryStatus;
+            protected MySqlCommand cmdUpdBinaryEntry;
             // Reused commands owned for the index module
             protected Index.StorageCommands indexCommands = new Index.StorageCommands();
             // ---------------
@@ -82,9 +98,14 @@ namespace ZDO.CHSite.Logic
                     cmdInsSkeletonEntry = DB.GetCmd(conn, "InsSkeletonEntry");
                     cmdSelHwByEntryId = DB.GetCmd(conn, "SelHwByEntryId");
                     cmdUpdSkeletonEntry = DB.GetCmd(conn, "UpdSkeletonEntry");
+                    cmdSelBinByEntryId = DB.GetCmd(conn, "SelBinByEntryId");
                     cmdInsModif = DB.GetCmd(conn, "InsModif"); 
                     cmdInsModifPreCounts1 = DB.GetCmd(conn, "InsModifPreCounts1");
                     cmdInsModifPreCounts2 = DB.GetCmd(conn, "InsModifPreCounts2");
+                    cmdUpdEntryTrg = DB.GetCmd(conn, "UpdEntryTrg");
+                    cmdSelEntryStatus = DB.GetCmd(conn, "SelEntryStatus");
+                    cmdUpdEntryStatus = DB.GetCmd(conn, "UpdEntryStatus");
+                    cmdUpdBinaryEntry = DB.GetCmd(conn, "UpdBinaryEntry");
                     // Commands owned for the index module
                     indexCommands.CmdDelEntryHanziInstances = DB.GetCmd(conn, "DelEntryHanziInstances");
                     indexCommands.CmdInsHanziInstance = DB.GetCmd(conn, "InsHanziInstance");
@@ -125,9 +146,14 @@ namespace ZDO.CHSite.Logic
                     if (cmdInsModif != null) cmdInsModif.Dispose();
                     if (cmdSelHwByEntryId != null) cmdSelHwByEntryId.Dispose();
                     if (cmdUpdSkeletonEntry != null) cmdUpdSkeletonEntry.Dispose();
+                    if (cmdSelBinByEntryId != null) cmdSelBinByEntryId.Dispose();
                     if (cmdInsSkeletonEntry != null) cmdInsSkeletonEntry.Dispose();
                     if (cmdInsHanziInstance != null) cmdInsHanziInstance.Dispose();
                     if (cmdInsBinaryEntry != null) cmdInsBinaryEntry.Dispose();
+                    if (cmdUpdEntryTrg != null) cmdUpdEntryTrg.Dispose();
+                    if (cmdSelEntryStatus != null) cmdSelEntryStatus.Dispose();
+                    if (cmdUpdEntryStatus != null) cmdUpdEntryStatus.Dispose();
+                    if (cmdUpdBinaryEntry != null) cmdUpdBinaryEntry.Dispose();
 
                     if (freq != null) freq.Dispose();
                     if (conn != null) conn.Dispose();
@@ -166,7 +192,7 @@ namespace ZDO.CHSite.Logic
                 return id;
             }
 
-            protected void storeEntry(string simp, string head, string trg, int binId, int id)
+            protected void storeEntry(string simp, string head, string trg, EntryStatus status, int binId, int id)
             {
                 // Use provided ID. Throw if it's not unique.
                 cmdInsSkeletonEntry.Parameters["@id"].Value = id;
@@ -179,10 +205,47 @@ namespace ZDO.CHSite.Logic
                 cmdUpdSkeletonEntry.Parameters["@hw"].Value = head;
                 cmdUpdSkeletonEntry.Parameters["@trg"].Value = trg;
                 cmdUpdSkeletonEntry.Parameters["@simp_hash"].Value = CedictEntry.Hash(simp);
-                cmdUpdSkeletonEntry.Parameters["@status"].Value = 0;
+                cmdUpdSkeletonEntry.Parameters["@status"].Value = (sbyte)status;
                 cmdUpdSkeletonEntry.Parameters["@deleted"].Value = 0;
                 cmdUpdSkeletonEntry.Parameters["@bin_id"].Value = binId;
                 cmdUpdSkeletonEntry.ExecuteNonQuery();
+            }
+
+            protected CedictEntry unindexEntry(int entryId)
+            {
+                // Get our entry from binary
+                byte[] buf = new byte[32768];
+                CedictEntry entry = null;
+                int binId = -1;
+                cmdSelBinByEntryId.Parameters["@id"].Value = entryId;
+                using (var rdr = cmdSelBinByEntryId.ExecuteReader())
+                {
+                    while (rdr.Read())
+                    {
+                        binId = (int)rdr.GetInt32(1);
+                        int len = (int)rdr.GetBytes(0, 0, buf, 0, buf.Length);
+                        using (BinReader br = new BinReader(buf, len))
+                        {
+                            entry = new CedictEntry(br);
+                        }
+                    }
+                }
+                // Get hanzi
+                HashSet<char> hAll = new HashSet<char>();
+                foreach (char c in entry.ChSimpl) hAll.Add(c);
+                foreach (char c in entry.ChTrad) hAll.Add(c);
+                // Get target tokens
+                List<Token> allToks = new List<Token>();
+                for (int i = 0; i != entry.SenseCount; ++i)
+                {
+                    CedictSense sense = entry.GetSenseAt(i);
+                    List<Token> toks = tokenizer.Tokenize(sense.Equiv);
+                    allToks.AddRange(toks);
+                }
+                // File to unindex
+                index.FileToUnindex(binId, hAll, allToks, entry.Pinyin);
+                // Return old entry we retrieved
+                return entry;
             }
 
             protected int indexEntry(CedictEntry entry)
@@ -257,16 +320,24 @@ namespace ZDO.CHSite.Logic
                 base.DoDispose();
             }
 
-            public void CommentEntry(int entryId, string note)
+            public void ChangeTarget(int userId, int entryId, string trg, string note)
             {
-                // This only involves storing a modif!
+                tr = conn.BeginTransaction();
+
+                // Retrieve current entry
+                string oldHw, oldTrg;
+                EntryStatus status;
+                GetEntryById(entryId, out oldHw, out oldTrg, out status);
+
+                // Create new modif
                 cmdInsModif.Parameters["@parent_id"].Value = -1;
-                cmdInsModif.Parameters["@hw_before"].Value = "";
-                cmdInsModif.Parameters["@trg_before"].Value = "";
+                cmdInsModif.Parameters["@bulk_ref"].Value = -1;
+                cmdInsModif.Parameters["@hw_before"].Value = DBNull.Value;
+                cmdInsModif.Parameters["@trg_before"].Value = oldTrg;
                 cmdInsModif.Parameters["@timestamp"].Value = DateTime.UtcNow;
                 cmdInsModif.Parameters["@user_id"].Value = userId;
                 cmdInsModif.Parameters["@note"].Value = note;
-                cmdInsModif.Parameters["@chg"].Value = (byte)Entities.ChangeType.Note;
+                cmdInsModif.Parameters["@chg"].Value = (byte)Entities.ChangeType.Edit;
                 cmdInsModif.Parameters["@entry_id"].Value = entryId;
                 cmdInsModif.ExecuteNonQuery();
                 // Update previous version counts
@@ -276,6 +347,115 @@ namespace ZDO.CHSite.Logic
                 cmdInsModifPreCounts2.Parameters["@top_id"].Value = cmdInsModif.LastInsertedId;
                 cmdInsModifPreCounts2.Parameters["@entry_id"].Value = entryId;
                 cmdInsModifPreCounts2.ExecuteNonQuery();
+
+                // Unindex current entry: removes binary record, returns entry deserialized from it
+                CedictEntry oldEntry = unindexEntry(entryId);
+                // Create new entry, index it
+                CedictParser parser = new CedictParser();
+                CedictEntry newEntry = parser.ParseEntry(oldHw + " " + trg, -1, null);
+                // Infuse corpus frequency: same as before; HW didn't change
+                newEntry.Freq = oldEntry.Freq;
+                // Infuse stable ID: same as before (our entry ID)
+                newEntry.StableId = oldEntry.StableId;
+                // Infuse status: same as before
+                newEntry.Status = oldEntry.Status;
+                // Index new entry
+                int newBinId = indexEntry(newEntry);
+                // Update entry target itself
+                cmdUpdEntryTrg.Parameters["@id"].Value = entryId;
+                cmdUpdEntryTrg.Parameters["@trg"].Value = trg;
+                cmdUpdEntryTrg.Parameters["@bin_id"].Value = newBinId;
+                cmdUpdEntryTrg.ExecuteNonQuery();
+                // Have index commit filed changes: unindex and index
+                index.ApplyChanges(indexCommands);
+
+                // Commit. Otherwise, dispose will roll all this back if it finds non-null transaction.
+                tr.Commit(); tr.Dispose(); tr = null;
+            }
+
+            public void CommentEntry(int entryId, string note, StatusChange change)
+            {
+                tr = conn.BeginTransaction();
+
+                // Is there a status change?
+                byte changeType = (byte)Entities.ChangeType.Note;
+                sbyte oldStatus = 99;
+                sbyte newStatus = 99;
+                if (change != StatusChange.None)
+                {
+                    // Verify that status change is legit
+                    cmdSelEntryStatus.Parameters["@id"].Value = entryId;
+                    oldStatus = (sbyte)cmdSelEntryStatus.ExecuteScalar();
+                    if (change == StatusChange.Approve)
+                    {
+                        if (oldStatus == 1) throw new Exception("Entry is already approved.");
+                        newStatus = 1;
+                    }
+                    if (change == StatusChange.Flag)
+                    {
+                        if (oldStatus == 2) throw new Exception("Entry is already flagged.");
+                        newStatus = 2;
+                    }
+                    if (change == StatusChange.Unflag)
+                    {
+                        if (oldStatus != 2) throw new Exception("Entry is not flagged.");
+                        newStatus = 0;
+                    }
+                    // Change type is now "status"
+                    changeType = (byte)Entities.ChangeType.StatusChange;
+                    // Update entry status
+                    cmdUpdEntryStatus.Parameters["@id"].Value = entryId;
+                    cmdUpdEntryStatus.Parameters["@status"].Value = newStatus;
+                    cmdUpdEntryStatus.ExecuteNonQuery();
+                    // Recreate binary entry too: contains status inside
+                    byte[] buf = new byte[32768];
+                    int binId = -1;
+                    CedictEntry entry = null;
+                    cmdSelBinByEntryId.Parameters["@id"].Value = entryId;
+                    using (var rdr = cmdSelBinByEntryId.ExecuteReader())
+                    {
+                        while (rdr.Read())
+                        {
+                            binId = (int)rdr.GetInt32(1);
+                            int len = (int)rdr.GetBytes(0, 0, buf, 0, buf.Length);
+                            using (BinReader br = new BinReader(buf, len))
+                            {
+                                entry = new CedictEntry(br);
+                            }
+                        }
+                    }
+                    entry.Status = (EntryStatus)newStatus;
+                    MemoryStream ms = new MemoryStream();
+                    BinWriter bw = new BinWriter(ms);
+                    entry.Serialize(bw);
+                    cmdUpdBinaryEntry.Parameters["@data"].Value = ms.ToArray();
+                    cmdUpdBinaryEntry.Parameters["@id"].Value = binId;
+                    cmdUpdBinaryEntry.ExecuteNonQuery();
+                }
+
+                // No index update, just a modif
+                cmdInsModif.Parameters["@parent_id"].Value = -1;
+                cmdInsModif.Parameters["@bulk_ref"].Value = -1;
+                cmdInsModif.Parameters["@hw_before"].Value = "";
+                cmdInsModif.Parameters["@trg_before"].Value = "";
+                cmdInsModif.Parameters["@timestamp"].Value = DateTime.UtcNow;
+                cmdInsModif.Parameters["@user_id"].Value = userId;
+                cmdInsModif.Parameters["@note"].Value = note;
+                cmdInsModif.Parameters["@chg"].Value = changeType;
+                cmdInsModif.Parameters["@entry_id"].Value = entryId;
+                if (change == StatusChange.None) cmdInsModif.Parameters["@status_before"].Value = 99;
+                else cmdInsModif.Parameters["@status_before"].Value = oldStatus;
+                cmdInsModif.ExecuteNonQuery();
+                // Update previous version counts
+                cmdInsModifPreCounts1.Parameters["@top_id"].Value = cmdInsModif.LastInsertedId;
+                cmdInsModifPreCounts1.Parameters["@entry_id"].Value = entryId;
+                cmdInsModifPreCounts1.ExecuteNonQuery();
+                cmdInsModifPreCounts2.Parameters["@top_id"].Value = cmdInsModif.LastInsertedId;
+                cmdInsModifPreCounts2.Parameters["@entry_id"].Value = entryId;
+                cmdInsModifPreCounts2.ExecuteNonQuery();
+
+                // Commit. Otherwise, dispose will roll all this back if it finds non-null transaction.
+                tr.Commit(); tr.Dispose(); tr = null;
             }
 
             /// <summary>
@@ -298,6 +478,8 @@ namespace ZDO.CHSite.Logic
                 int iFreq = freq.GetFreq(entry.ChSimpl);
                 ushort uFreq = iFreq > ushort.MaxValue ? ushort.MaxValue : (ushort)iFreq;
                 entry.Freq = uFreq;
+                // New entry's status is neutral aka new
+                entry.Status = EntryStatus.Neutral;
 
                 // Serialize, store in DB, index
                 entry.StableId = entryId;
@@ -306,11 +488,13 @@ namespace ZDO.CHSite.Logic
                 index.ApplyChanges(indexCommands);
 
                 // Populate entries table
-                storeEntry(entry.ChSimpl, head, trg, binId, entryId);
+                storeEntry(entry.ChSimpl, head, trg, EntryStatus.Neutral, binId, entryId);
                 // Record change
                 cmdInsModif.Parameters["@parent_id"].Value = -1;
+                cmdInsModif.Parameters["@bulk_ref"].Value = -1;
                 cmdInsModif.Parameters["@hw_before"].Value = "";
                 cmdInsModif.Parameters["@trg_before"].Value = "";
+                cmdInsModif.Parameters["@status_before"].Value = 99;
                 cmdInsModif.Parameters["@timestamp"].Value = DateTime.UtcNow;
                 cmdInsModif.Parameters["@user_id"].Value = userId;
                 cmdInsModif.Parameters["@note"].Value = note;
@@ -406,7 +590,8 @@ namespace ZDO.CHSite.Logic
                     cmdInsBulkModif.Parameters["@note"].Value = x.Value.Comment;
                     cmdInsBulkModif.Parameters["@bulk_ref"].Value = x.Key;
                     cmdInsBulkModif.ExecuteNonQuery();
-                    bulkRefToModifId[x.Key] = (int)cmdInsBulkModif.LastInsertedId;
+                    int modifId = (int)cmdInsBulkModif.LastInsertedId;
+                    bulkRefToModifId[x.Key] = modifId;
                     cmdUpdBulkModifCounts.Parameters["@id"].Value = cmdInsBulkModif.LastInsertedId;
                     cmdUpdBulkModifCounts.Parameters["@count_a"].Value = x.Value.NewEntries;
                     cmdUpdBulkModifCounts.Parameters["@count_b"].Value = x.Value.ChangedEntries;
@@ -428,6 +613,9 @@ namespace ZDO.CHSite.Logic
                 base.DoDispose();
             }
 
+            /// <summary>
+            /// Adds entry with full history (oldest first).
+            /// </summary>
             public bool AddEntry(int entryId, List<EntryVersion> vers)
             {
                 ++count;
@@ -443,6 +631,7 @@ namespace ZDO.CHSite.Logic
                 
                 // The final entry: one in the last version
                 CedictEntry entry = vers[vers.Count - 1].Entry;
+                entry.Status = vers[vers.Count - 1].Status;
                 // Infuse corpus frequency
                 int iFreq = freq.GetFreq(entry.ChSimpl);
                 ushort uFreq = iFreq > ushort.MaxValue ? ushort.MaxValue : (ushort)iFreq;
@@ -456,7 +645,7 @@ namespace ZDO.CHSite.Logic
                 entry.StableId = entryId;
                 int binId = indexEntry(entry);
                 // Populate entries table
-                storeEntry(entry.ChSimpl, hw, trg, binId, entryId);
+                storeEntry(entry.ChSimpl, hw, trg, entry.Status, binId, entryId);
                 // Working backwards, create MODIF records for each version
                 int topModifId = -1;
                 for (int i = vers.Count - 1; i >= 0; --i)
@@ -477,15 +666,20 @@ namespace ZDO.CHSite.Logic
                             if (trgLast == trg) trgLast = null;
                         }
                     }
-                    // --
+                    // Find previous status
+                    EntryStatus prevStatus = ver.Status;
+                    if (i > 0) prevStatus = vers[i - 1].Status; // Very first modif is never status change LoL
+                    // ---
                     int parentId = ver.BulkRef == -1 ? -1 : bulkRefToModifId[ver.BulkRef];
+                    int bulkRef = ver.BulkRef <= 0 ? -1 : ver.BulkRef;
                     int change;
                     if (i == 0) change = 0; // New entry
                     else if (hwLast != null || trgLast != null) change = 2; // Edit
-                    else if (ver.Status != vers[i - 1].Status) change = 4; // Status changed
+                    else if (ver.Status != prevStatus) change = 4; // Status changed
                     else change = 3; // Simply commented
                     // Store in DB
                     cmdInsModif.Parameters["@parent_id"].Value = parentId;
+                    cmdInsModif.Parameters["@bulk_ref"].Value = bulkRef;
                     if (hwLast != null) cmdInsModif.Parameters["@hw_before"].Value = hwLast;
                     else cmdInsModif.Parameters["@hw_before"].Value = "";
                     if (trgLast != null) cmdInsModif.Parameters["@trg_before"].Value = trgLast;
@@ -495,6 +689,8 @@ namespace ZDO.CHSite.Logic
                     cmdInsModif.Parameters["@note"].Value = ver.Comment;
                     cmdInsModif.Parameters["@chg"].Value = change;
                     cmdInsModif.Parameters["@entry_id"].Value = entryId;
+                    if (change == 4) cmdInsModif.Parameters["@status_before"].Value = prevStatus;
+                    else cmdInsModif.Parameters["@status_before"].Value = 99;
                     cmdInsModif.ExecuteNonQuery();
                     // Remember ID of top (latest) modif
                     if (i == vers.Count - 1) topModifId = (int)cmdInsModif.LastInsertedId;

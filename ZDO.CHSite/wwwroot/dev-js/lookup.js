@@ -93,6 +93,13 @@ var zdLookup = (function () {
     $("#soaClose").click(hideStrokeAnim);
     $("#soaBox").click(function (e) { e.stopPropagation(); });
     $('.txtSearch.active').val(data.data);
+    // Touch: hover simulation
+    if (zdPage.isTouch()) {
+      $(".entry").bind("touchstart", function (e) {
+        $(".entry").removeClass("tapOver");
+        $(this).addClass("tapOver");
+      });
+    }
     // Hack [?] - but either something steals focus on load, or input field is not yet shown to accept focus.
     setTimeout(function () {
       if (!zdPage.isMobile()) $('.txtSearch.active').focus();

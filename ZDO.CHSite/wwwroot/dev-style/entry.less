@@ -3,11 +3,17 @@
 .entry {
   position: relative; padding-top: 0; padding-bottom: 1em; display: block; float: left;
   width: 100%; clear: right; border-top: 0; font-size: 80%;
-  .entryAction {
+  .entryAction, .entryStatus {
     display: none; position: absolute; right: 0; font-size: 160%; color: @clrMediumAccent;
     cursor: default;
   }
-  &:hover { .entryAction { display: block; &:hover { color: @clrStrongAccent; } } }
+  .entryStatus { top: 1.5em; }
+  .entryStatus.flagged { color: @clrStrongRed; font-size: 140%; }
+  .entryStatus.approved { color: @clrStrongGreen; }
+  &:hover, &.tapOver { 
+    .entryAction { display: block; &:hover { color: @clrStrongAccent; } }
+    .entryStatus { display: block; }
+  }
 }
 
 

@@ -378,7 +378,7 @@ var zdAuth = (function () {
       loginChangedCallback = callback;
       var hiddenFormHtml =
         '<div id="hiddenLoginForm">' +
-        '<form class="login" method="post" action="#" autocomplete="on" target="hiddenLoginFrame">' +
+        '<form class="login" method="post" action="/dummy.html" autocomplete="on" target="hiddenLoginFrame">' +
         '<input type="text" name="username" class="hiddenUserName">' +
         '<input type="password" name="password" class="hiddenPassword">' +
         '<button type="submit">login</button>' +
