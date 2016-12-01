@@ -90,7 +90,7 @@ namespace ZDO.CHSite.Renderers
             else renderAnnotation(sb);
         }
 
-        public void RenderInner(StringBuilder sb, string lang, string extraSensesClass)
+        public void RenderInner(StringBuilder sb, string extraSensesClass, string lang)
         {
             renderResult(sb, lang, false, extraSensesClass);
         }
