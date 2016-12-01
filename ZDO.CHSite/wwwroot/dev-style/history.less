@@ -69,9 +69,9 @@ a.pageLink:hover, a.pageLink.selected { background-color: @clrLight; }
 }
 
 .changeNote {
-  position: relative; float: left; clear: both; width: 100%; box-sizing: border-box; padding: 0 2rem 0 3rem;
+  position: relative; float: left; clear: both; width: 100%; box-sizing: border-box; padding: 0 2rem 0.5rem 3rem;
   .pastChanges & { padding-left: 0; }
-  .changeNoteText { /*font-style: italic;*/ color: @clrStrongRed; }
+  .changeNoteText { color: @clrStrongRed; white-space: pre-wrap; }
   a { text-decoration: none; color: @clrStrongAccent; }
   a:hover { color: @clrStrongRed; }
 }

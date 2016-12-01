@@ -29,7 +29,7 @@ namespace ZDO.CHSite.Renderers
                 EntryRenderer er = new EntryRenderer(lr.Results[i], uiScript, uiTones, entryIdStr);
                 // TO-DO: double-check, also for mobile
                 er.OneLineHanziLimit = 9;
-                er.Render(sb);
+                er.Render(sb, uiLang);
                 if (i != lr.Results.Count - 1) sb.AppendLine("<div class='resultSep'></div>");
             }
             if (lr.Annotations.Count != 0)
@@ -41,7 +41,7 @@ namespace ZDO.CHSite.Renderers
                 for (int i = 0; i != lr.Annotations.Count; ++i)
                 {
                     EntryRenderer er = new EntryRenderer(lr.Query, lr.Annotations[i], uiTones);
-                    er.Render(sb);
+                    er.Render(sb, uiLang);
                     if (i != lr.Annotations.Count - 1) sb.AppendLine("<div class='resultSep'></div>");
                 }
             }

@@ -361,15 +361,6 @@ UPDATE modifs SET count_a=-1 WHERE id<>@top_id AND entry_id=@entry_id;
 SELECT COUNT(*) FROM entries WHERE hw=@hw;
 # End
 
-# Script GetPastChanges
-# @entry_id INT
-SELECT E.id, M.timestamp, E.hw, E.trg, M.note, M.chg, M.bulk_ref, U.id, U.user_name, M.count_a, M.count_b, M.hw_before, M.trg_before, M.status_before, E.status
-FROM entries E
-JOIN modifs M ON M.entry_id=E.id AND M.count_a=-1
-JOIN users U ON U.id=M.user_id
-WHERE E.id=@entry_id;
-# End
-
 # Script GetEntryChanges
 # @entry_id INT
 SELECT M.timestamp, M.note, M.chg, M.bulk_ref, U.id, U.user_name, M.count_a, M.count_b, M.hw_before, M.trg_before, M.status_before, E.status

@@ -150,6 +150,11 @@ namespace ZD.LangUtils
                 msg = string.Format(msg, lineNum, strBody);
                 if (logStream != null) logStream.WriteLine(msg);
             }
+            // In each sense, replace \ with /
+            for (int i = 0; i != senses.Length; ++i)
+            {
+                if (senses[i].Contains('\\')) senses[i] = senses[i].Replace('\\', '/');
+            }
             // Separate domain, equiv and note in each sense
             List<CedictSense> cedictSenses = new List<CedictSense>();
             for (int i = 0; i != senses.Length; ++i)

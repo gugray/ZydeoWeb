@@ -34,7 +34,7 @@ var zdHistory = (function () {
     });
     // Event handlers for per-entry commands
     $(".opHistComment").click(onComment);
-    $(".opHistEdit").click(onEdit);
+    //$(".opHistEdit").click(onEdit);
     $(".opHistFlag").click(onFlag);
     $(".revealPast").click(onRevealPast);
     // Touch: hover simulation
@@ -75,15 +75,15 @@ var zdHistory = (function () {
     });
   }
 
-  function onEdit(evt) {
-    // Find entry ID in parent with historyItem class
-    var elm = $(this);
-    while (!elm.hasClass("historyItem")) elm = elm.parent();
-    var entryId = elm.data("entry-id");
-    // Open editor
-    zdPage.navigate("edit/existing/" + entryId);
-    //window.open("/" + zdPage.getLang() + "/edit/existing/" + entryId);
-  }
+  //function onEdit(evt) {
+  //  // Find entry ID in parent with historyItem class
+  //  var elm = $(this);
+  //  while (!elm.hasClass("historyItem")) elm = elm.parent();
+  //  var entryId = elm.data("entry-id");
+  //  // Open editor
+  //  zdPage.navigate("edit/existing/" + entryId);
+  //  //window.open("/" + zdPage.getLang() + "/edit/existing/" + entryId);
+  //}
 
   function onFlag(evt) {
     // Pester to log in
@@ -246,7 +246,7 @@ var zdHistory = (function () {
         });
         // Event handlers for per-entry commands
         $(".flashdown .opHistComment").click(onComment);
-        $(".flashdown .opHistEdit").click(onEdit);
+        //$(".flashdown .opHistEdit").click(onEdit);
         $(".flashdown .opHistFlag").click(onFlag);
         $(".flashdown .revealPast").click(onRevealPast);
         // Touch: hover simulation

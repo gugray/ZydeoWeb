@@ -25,7 +25,9 @@ namespace ZD.LangUtils
             sb.Append("] /");
             for (int i = 0; i != entry.SenseCount; ++i)
             {
-                sb.Append(entry.GetSenseAt(i).GetPlainText());
+                string sense = entry.GetSenseAt(i).GetPlainText();
+                if (sense.Contains('/')) sense = sense.Replace('/', '\\');
+                sb.Append(sense);
                 sb.Append('/');
             }
             return sb.ToString();

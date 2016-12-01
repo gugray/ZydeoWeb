@@ -40,7 +40,7 @@ namespace ZDO.CHSite.Controllers
             if (userId < 0) return StatusCode(401, "Request must contain authentication token.");
 
             int idVal = EntryId.StringToId(entryId);
-            trg = trg.Replace('\\', '/');
+            trg = trg.Replace('/', '\\');
             trg = trg.Replace('\n', '/');
             trg = "/" + trg + "/";
             using (SqlDict.SimpleBuilder builder = dict.GetSimpleBuilder(userId))
@@ -70,7 +70,7 @@ namespace ZDO.CHSite.Controllers
                 EntryRenderer er = new EntryRenderer(entry, true);
                 er.OneLineHanziLimit = 12;
                 StringBuilder sb = new StringBuilder();
-                er.Render(sb);
+                er.Render(sb, null);
                 return new ObjectResult(sb.ToString());
             }
             catch
@@ -100,8 +100,7 @@ namespace ZDO.CHSite.Controllers
             SqlDict.GetEntryById(idVal, out hw, out trg, out status);
             res.Status = status.ToString().ToLowerInvariant();
             res.HeadTxt = hw;
-            res.TrgTxt = trg.Trim('/').Replace("/", "\n");
-            res.TrgTxt = res.TrgTxt.Replace('\\', '/');
+            res.TrgTxt = trg.Trim('/').Replace('/', '\n').Replace('\\', '/');
 
             // Entry HTML
             CedictParser parser = new CedictParser();
@@ -110,7 +109,7 @@ namespace ZDO.CHSite.Controllers
             EntryRenderer er = new EntryRenderer(entry, true);
             er.OneLineHanziLimit = 12;
             StringBuilder sb = new StringBuilder();
-            er.Render(sb);
+            er.Render(sb, null);
             res.EntryHtml = sb.ToString();
 
             // Entry history
@@ -147,7 +146,12 @@ namespace ZDO.CHSite.Controllers
             string hw, trg;
             EntryStatus status;
             SqlDict.GetEntryById(idVal, out hw, out trg, out status);
-            var changes = SqlDict.GetPastChanges(idVal);
+            var changes = SqlDict.GetEntryChanges(idVal);
+            // Remove first item (most recent change). But first, backprop potential trg and status change
+            // Later: HW
+            if (changes[0].BodyBefore != null) trg = changes[0].BodyBefore;
+            if (changes[0].StatusBefore != 99) status = (EntryStatus)changes[0].StatusBefore;
+            changes.RemoveAt(0);
             StringBuilder sb = new StringBuilder();
             HistoryRenderer.RenderPastChanges(sb, entryId, trg, status, changes, lang);
             return new ObjectResult(sb.ToString());

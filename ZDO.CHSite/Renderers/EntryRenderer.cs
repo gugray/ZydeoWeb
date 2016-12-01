@@ -84,15 +84,15 @@ namespace ZDO.CHSite.Renderers
             this.hanim = true;
         }
 
-        public void Render(StringBuilder sb)
+        public void Render(StringBuilder sb, string lang)
         {
-            if (res != null || entryToRender != null) renderResult(sb, true);
+            if (res != null || entryToRender != null) renderResult(sb, lang, true);
             else renderAnnotation(sb);
         }
 
-        public void RenderInner(StringBuilder sb, string extraSensesClass)
+        public void RenderInner(StringBuilder sb, string lang, string extraSensesClass)
         {
-            renderResult(sb, false, extraSensesClass);
+            renderResult(sb, lang, false, extraSensesClass);
         }
 
         public void RenderSenses(StringBuilder sb, string extraSensesClass)
@@ -179,7 +179,7 @@ namespace ZDO.CHSite.Renderers
 
 
 
-        private void renderResult(StringBuilder sb, bool renderEntryDiv, string extraSensesClass = "")
+        private void renderResult(StringBuilder sb, string lang, bool renderEntryDiv, string extraSensesClass = "")
         {
             CedictEntry entry = entryToRender;
             if (entry == null) entry = res.Entry;
@@ -194,11 +194,13 @@ namespace ZDO.CHSite.Renderers
             else if (tones == UiTones.Dummitt) entryClass += " toneColorsDummitt";
             if (renderEntryDiv) sb.Append("<div class='" + entryClass + "'>"); // <div class="entry">
 
-            if (entryId != null)
+            if (entryId != null && lang != null)
             {
-                sb.Append("<i class='fa fa-pencil entryAction edit' data-entry-id='");
-                sb.Append(entryId);
-                sb.Append("'></i>");
+                sb.Append("<a class='ajax' href='/" + lang + "/edit/existing/" + entryId + "'>");
+                sb.Append("<i class='fa fa-pencil entryAction edit'></i></a>");
+                //sb.Append("<i class='fa fa-pencil entryAction edit' data-entry-id='");
+                //sb.Append(entryId);
+                //sb.Append("'></i>");
             }
 
             if (entry.Status != EntryStatus.Neutral)

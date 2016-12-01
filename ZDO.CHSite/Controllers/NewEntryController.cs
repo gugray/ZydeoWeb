@@ -248,14 +248,14 @@ namespace ZDO.CHSite.Controllers
             foreach (CedictEntry entry in ced)
             {
                 EntryRenderer er = new EntryRenderer(entry, trad, pyList);
-                er.Render(sb);
+                er.Render(sb, null);
             }
             sb.Append("</div>");
             sb.Append("<div id='newEntryRefHDD'>");
             foreach (CedictEntry entry in hdd)
             {
                 EntryRenderer er = new EntryRenderer(entry, trad, pyList);
-                er.Render(sb);
+                er.Render(sb, null);
             }
             sb.Append("</div>");
             res.RefEntries = sb.ToString();
@@ -282,7 +282,7 @@ namespace ZDO.CHSite.Controllers
             CedictEntry entry = Utils.BuildEntry(simp, trad, pinyin, trg);
             StringBuilder sb = new StringBuilder();
             EntryRenderer er = new EntryRenderer(entry, null, null);
-            er.Render(sb);
+            er.Render(sb, null);
             res.Preview = sb.ToString();
 
             // Tell our caller

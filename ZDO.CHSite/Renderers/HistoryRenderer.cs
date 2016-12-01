@@ -149,7 +149,9 @@ namespace ZDO.CHSite.Renderers
                 sb.Append("]</span> ");
             }
 
-            sb.Append(HtmlEncoder.Default.Encode(ci.Note));
+            string note = HtmlEncoder.Default.Encode(ci.Note);
+            note = note.Replace("&#xA;", "<br/>");
+            sb.Append(note);
             sb.Append("</span>");
             sb.AppendLine("</div>"); // <div class='changeNote'>
 
@@ -246,7 +248,9 @@ namespace ZDO.CHSite.Renderers
                 sb.Append("]</span> ");
             }
             sb.Append("<span class='changeNoteText'>");
-            sb.Append(HtmlEncoder.Default.Encode(ci.Note));
+            string note = HtmlEncoder.Default.Encode(ci.Note);
+            note = note.Replace("&#xA;", "<br/>");
+            sb.Append(note);
             sb.Append("</span>");
             sb.Append("</div>");
 
@@ -256,7 +260,9 @@ namespace ZDO.CHSite.Renderers
             if (ci.ChangeType != ChangeType.BulkImport)
             {
                 sb.AppendLine("<div class='histEntryOps'>");
-                sb.Append("<i class='opHistEdit fa fa-pencil' />");
+                sb.Append("<a class='ajax' href='/" + lang + "/edit/existing/" + EntryId.IdToString(ci.EntryId) + "'>");
+                sb.Append("<i class='opHistEdit fa fa-pencil'></i></a>");
+                //sb.Append("<i class='opHistEdit fa fa-pencil' />");
                 sb.Append("<i class='opHistComment fa fa-commenting-o' />");
                 sb.Append("<i class='opHistFlag fa fa-flag-o' />");
                 sb.Append("</div>"); // <div class='histEntryOps'>
@@ -271,7 +277,7 @@ namespace ZDO.CHSite.Renderers
                     entry.Status = ci.EntryStatus;
                     EntryRenderer er = new EntryRenderer(entry, true);
                     er.OneLineHanziLimit = 12;
-                    er.Render(sb);
+                    er.Render(sb, null);
                 }
                 // Entry edited: show "diff"
                 else
@@ -281,7 +287,7 @@ namespace ZDO.CHSite.Renderers
                     entry.Status = ci.EntryStatus;
                     EntryRenderer er = new EntryRenderer(entry, true);
                     er.OneLineHanziLimit = 12;
-                    er.RenderInner(sb, "new");
+                    er.RenderInner(sb, "new", null);
                     entry = parser.ParseEntry(ci.EntryHead + " " + ci.BodyBefore, 0, null);
                     er = new EntryRenderer(entry, true);
                     er.RenderSenses(sb, "old");
