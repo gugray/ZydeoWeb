@@ -9,6 +9,12 @@ namespace ZDO.CHSite.Logic
 {
     public class Utils
     {
+        public static string ChinesDateStr(DateTime dtUtc)
+        {
+            DateTime dt = dtUtc.ToLocalTime();
+            return dt.Year + "年" + dt.Month + "月" + dt.Day + "日";
+        }
+
         public static bool IsHanzi(char c)
         {
             return (c >= 0x4E00 && c <= 0x9FFF) || (c >= 0x3400 && c <= 0x4DFF) ||

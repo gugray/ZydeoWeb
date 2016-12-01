@@ -165,8 +165,9 @@ DELETE FROM conf_tokens WHERE expiry<@expiry_before;
 # Script InsImplicitUser
 # @user_name VARCHAR
 # @registered DATETIME
-INSERT INTO users (user_name, status, registered)
-VALUES (@user_name, 3, @registered);
+# @about VARCHAR
+INSERT INTO users (user_name, status, registered, about)
+VALUES (@user_name, 3, @registered, @about);
 # End
 
 # Script InsNewUser
@@ -177,6 +178,12 @@ VALUES (@user_name, 3, @registered);
 # @registered DATETIME
 INSERT INTO users (user_name, email, pass_hash, pass_salt, status, registered)
 VALUES (@user_name, @email, @pass_hash, @pass_salt, 1, @registered);
+# End
+
+# Script AddContribScore
+# @id INT
+# @val INT
+UPDATE users SET contrib_score=contrib_score+@val WHERE id=@id;
 # End
 
 # Script SelUserByName
@@ -192,6 +199,10 @@ SELECT * FROM users WHERE email=@email;
 # Script SelUserById
 # @id INT
 SELECT * FROM users WHERE id=@id;
+# End
+
+# Script SelAllUsers
+SELECT * FROM users;
 # End
 
 # Script UpdUserStatus

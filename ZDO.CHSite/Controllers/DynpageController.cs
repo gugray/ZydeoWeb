@@ -79,6 +79,7 @@ namespace ZDO.CHSite.Controllers
                     else if (rel.StartsWith("edit/new")) return doNewEntry(rel, lang);
                     else if (rel.StartsWith("edit/existing")) return doEditExisting(rel, lang);
                     else if (rel.StartsWith("user/confirm/")) return doUserConfirm(rel, lang);
+                    else if (rel.StartsWith("user/users")) return doUserList(rel, lang, isMobile);
                     else if (rel.StartsWith("user/profile")) return doUserProfile(rel, lang);
                 }
                 else
@@ -101,8 +102,7 @@ namespace ZDO.CHSite.Controllers
             if (userId < 0) return pageProvider.GetPage(lang, "?/privatepage", false);
 
             Auth.UserInfo ui = auth.GetUserInfo(userId);
-            DateTime dt = ui.Registered.ToLocalTime();
-            string registered = dt.Year + "年" + dt.Month + "月" + dt.Day + "日";
+            string registered = Utils.ChinesDateStr(ui.Registered);
             PageResult res = pageProvider.GetPage(lang, "?/profile", false);
             res.Html = string.Format(res.Html,
                 HtmlEncoder.Default.Encode(userName),
@@ -112,6 +112,28 @@ namespace ZDO.CHSite.Controllers
                 HtmlEncoder.Default.Encode(ui.Location),
                 HtmlEncoder.Default.Encode(ui.About)
                 );
+            return res;
+        }
+
+        private static int cmpUser(Auth.UserInfo x, Auth.UserInfo y)
+        {
+            // Larger contribs first
+            int cmpContrib = y.ContribScore.CompareTo(x.ContribScore);
+            if (cmpContrib != 0) return cmpContrib;
+            // Later registered first
+            return y.Registered.CompareTo(y.Registered);
+        }
+
+        private PageResult doUserList(string rel, string lang, bool isMobile)
+        {
+            //PageResult res = pageProvider.GetPage(lang, "?/userlist-doodle", false);
+            //return res;
+            List<Auth.UserInfo> users = auth.GetAllUsers();
+            users.Sort(cmpUser);
+            StringBuilder sb = new StringBuilder();
+            UserListRenderer.Render(sb, lang, users, isMobile);
+            PageResult res = pageProvider.GetPage(lang, "?/userlist", false);
+            res.Html = sb.ToString();
             return res;
         }
 

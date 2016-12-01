@@ -75,6 +75,7 @@ namespace ZDO.CHSite.Logic
             protected MySqlCommand cmdSelEntryStatus;
             protected MySqlCommand cmdUpdEntryStatus;
             protected MySqlCommand cmdUpdBinaryEntry;
+            protected MySqlCommand cmdAddContribScore;
             // Reused commands owned for the index module
             protected Index.StorageCommands indexCommands = new Index.StorageCommands();
             // ---------------
@@ -106,6 +107,7 @@ namespace ZDO.CHSite.Logic
                     cmdSelEntryStatus = DB.GetCmd(conn, "SelEntryStatus");
                     cmdUpdEntryStatus = DB.GetCmd(conn, "UpdEntryStatus");
                     cmdUpdBinaryEntry = DB.GetCmd(conn, "UpdBinaryEntry");
+                    cmdAddContribScore = DB.GetCmd(conn, "AddContribScore");
                     // Commands owned for the index module
                     indexCommands.CmdDelEntryHanziInstances = DB.GetCmd(conn, "DelEntryHanziInstances");
                     indexCommands.CmdInsHanziInstance = DB.GetCmd(conn, "InsHanziInstance");
@@ -154,6 +156,7 @@ namespace ZDO.CHSite.Logic
                     if (cmdSelEntryStatus != null) cmdSelEntryStatus.Dispose();
                     if (cmdUpdEntryStatus != null) cmdUpdEntryStatus.Dispose();
                     if (cmdUpdBinaryEntry != null) cmdUpdBinaryEntry.Dispose();
+                    if (cmdAddContribScore != null) cmdAddContribScore.Dispose();
 
                     if (freq != null) freq.Dispose();
                     if (conn != null) conn.Dispose();
@@ -295,6 +298,16 @@ namespace ZDO.CHSite.Logic
                 // File to index
                 index.FileToIndex(entryId, simpSet, tradSet, cmnSet);
             }
+
+            /// <summary>
+            /// Gets score of contribution (as per modifs.chg value).
+            /// </summary>
+            protected int getContribScore(byte chg)
+            {
+                if (chg == 0) return SqlDict.ScoreNew;
+                else if (chg == 2) return SqlDict.ScoreEdit;
+                else return SqlDict.ScoreOther;
+            }
         }
 
         #endregion
@@ -334,12 +347,17 @@ namespace ZDO.CHSite.Logic
                 cmdInsModif.Parameters["@bulk_ref"].Value = -1;
                 cmdInsModif.Parameters["@hw_before"].Value = "";
                 cmdInsModif.Parameters["@trg_before"].Value = oldTrg;
+                cmdInsModif.Parameters["@status_before"].Value = 99;
                 cmdInsModif.Parameters["@timestamp"].Value = DateTime.UtcNow;
                 cmdInsModif.Parameters["@user_id"].Value = userId;
                 cmdInsModif.Parameters["@note"].Value = note;
                 cmdInsModif.Parameters["@chg"].Value = (byte)Entities.ChangeType.Edit;
                 cmdInsModif.Parameters["@entry_id"].Value = entryId;
                 cmdInsModif.ExecuteNonQuery();
+                // Count contrib score
+                cmdAddContribScore.Parameters["@id"].Value = userId;
+                cmdAddContribScore.Parameters["@val"].Value = getContribScore((byte)Entities.ChangeType.Edit);
+                cmdAddContribScore.ExecuteNonQuery();
                 // Update previous version counts
                 cmdInsModifPreCounts1.Parameters["@top_id"].Value = cmdInsModif.LastInsertedId;
                 cmdInsModifPreCounts1.Parameters["@entry_id"].Value = entryId;
@@ -446,6 +464,10 @@ namespace ZDO.CHSite.Logic
                 if (change == StatusChange.None) cmdInsModif.Parameters["@status_before"].Value = 99;
                 else cmdInsModif.Parameters["@status_before"].Value = oldStatus;
                 cmdInsModif.ExecuteNonQuery();
+                // Count contrib score
+                cmdAddContribScore.Parameters["@id"].Value = userId;
+                cmdAddContribScore.Parameters["@val"].Value = getContribScore(changeType);
+                cmdAddContribScore.ExecuteNonQuery();
                 // Update previous version counts
                 cmdInsModifPreCounts1.Parameters["@top_id"].Value = cmdInsModif.LastInsertedId;
                 cmdInsModifPreCounts1.Parameters["@entry_id"].Value = entryId;
@@ -501,6 +523,10 @@ namespace ZDO.CHSite.Logic
                 cmdInsModif.Parameters["@chg"].Value = (byte)Entities.ChangeType.New;
                 cmdInsModif.Parameters["@entry_id"].Value = entryId;
                 cmdInsModif.ExecuteNonQuery();
+                // Count contrib score
+                cmdAddContribScore.Parameters["@id"].Value = userId;
+                cmdAddContribScore.Parameters["@val"].Value = getContribScore((byte)Entities.ChangeType.New);
+                cmdAddContribScore.ExecuteNonQuery();
                 // Update previous version counts
                 cmdInsModifPreCounts1.Parameters["@top_id"].Value = cmdInsModif.LastInsertedId;
                 cmdInsModifPreCounts1.Parameters["@entry_id"].Value = entryId;
@@ -552,6 +578,11 @@ namespace ZDO.CHSite.Logic
             private readonly Dictionary<int, int> bulkRefToModifId = new Dictionary<int, int>();
 
             /// <summary>
+            /// Maps user IDs to the contribution score accumulated during the import.
+            /// </summary>
+            private readonly Dictionary<int, int> userIdToScore = new Dictionary<int, int>();
+
+            /// <summary>
             /// Ctor: initialize bulk builder resources.
             /// </summary>
             public ImportBuilder(Index index, string workingFolder, HashSet<string> users, Dictionary<int, BulkChangeInfo> bulks)
@@ -567,20 +598,25 @@ namespace ZDO.CHSite.Logic
                 // Insert missing users as implicit users
                 foreach (var x in users)
                 {
+                    string[] userParts = x.Split('\t');
+                    string userName = userParts[0];
+                    string userAbout = userParts[1];
                     int userId = -1;
-                    cmdSelUserByName.Parameters["@user_name"].Value = x;
+                    cmdSelUserByName.Parameters["@user_name"].Value = userName;
                     using (var rdr = cmdSelUserByName.ExecuteReader())
                     {
                         while (rdr.Read()) userId = rdr.GetInt32("id");
                     }
                     if (userId == -1)
                     {
-                        cmdInsImplicitUser.Parameters["@user_name"].Value = x;
+                        cmdInsImplicitUser.Parameters["@user_name"].Value = userName;
                         cmdInsImplicitUser.Parameters["@registered"].Value = DateTime.UtcNow;
+                        cmdInsImplicitUser.Parameters["@about"].Value = userAbout;
                         cmdInsImplicitUser.ExecuteNonQuery();
                         userId = (int)cmdInsImplicitUser.LastInsertedId;
                     }
-                    userToId[x] = userId;
+                    userToId[userName] = userId;
+                    userIdToScore[userId] = 0;
                 }
                 // Insert modif records for every bulk change
                 foreach (var x in bulks)
@@ -672,7 +708,7 @@ namespace ZDO.CHSite.Logic
                     // ---
                     int parentId = ver.BulkRef == -1 ? -1 : bulkRefToModifId[ver.BulkRef];
                     int bulkRef = ver.BulkRef <= 0 ? -1 : ver.BulkRef;
-                    int change;
+                    byte change;
                     if (i == 0) change = 0; // New entry
                     else if (hwLast != null || trgLast != null) change = 2; // Edit
                     else if (ver.Status != prevStatus) change = 4; // Status changed
@@ -694,6 +730,8 @@ namespace ZDO.CHSite.Logic
                     cmdInsModif.ExecuteNonQuery();
                     // Remember ID of top (latest) modif
                     if (i == vers.Count - 1) topModifId = (int)cmdInsModif.LastInsertedId;
+                    // Count contrib score
+                    userIdToScore[userToId[ver.User]] += getContribScore(change);
                 }
                 // Update previous version counts
                 cmdInsModifPreCounts1.Parameters["@top_id"].Value = cmdInsModif.LastInsertedId;
@@ -712,6 +750,14 @@ namespace ZDO.CHSite.Logic
             {
                 // Make index apply changes
                 index.ApplyChanges(indexCommands);
+                // Apply contrib scores -- only now, once, at the very end.
+                foreach (var x in userIdToScore)
+                {
+                    cmdAddContribScore.Parameters["@id"].Value = x.Key;
+                    cmdAddContribScore.Parameters["@val"].Value = x.Value;
+                    cmdAddContribScore.ExecuteNonQuery();
+                }
+
                 // Finish transaction
                 tr.Commit(); tr.Dispose(); tr = null;
             }

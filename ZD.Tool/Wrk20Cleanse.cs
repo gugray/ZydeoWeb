@@ -39,7 +39,7 @@ namespace ZD.Tool
                     else
                     {
                         sw.WriteLine("# " + re.LnVer1);
-                        sw.WriteLine("# Ver-2 2016-10-23T15:32:07Z gabor " + (isVerified ? "Stat-Verif" : "Stat-New") + " 002>Datenreinigung");
+                        sw.WriteLine("# Ver 2016-10-23T15:32:07Z zydeo-robot " + (isVerified ? "Stat-Verif" : "Stat-New") + " 002>Datenreinigung");
                         sw.WriteLine(cleansed);
                     }
                     // Empty line
@@ -110,7 +110,7 @@ namespace ZD.Tool
                     res = new RawEntry { LnId = line };
                     continue;
                 }
-                if (line.StartsWith("# Ver-"))
+                if (line.StartsWith("# Ver"))
                 {
                     res.LnMetaVer1 = line;
                     continue;

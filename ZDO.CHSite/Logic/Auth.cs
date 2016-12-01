@@ -69,8 +69,13 @@ namespace ZDO.CHSite.Logic
             public string UserName;
             public string Email;
             public DateTime Registered;
+            public int ContribScore;
+            public bool IsPlaceholder;
+            public bool IsDeleted;
             public string About;
             public string Location;
+            public int Perms;
+            public bool IsLoggedIn;
         }
 
         /// <summary>
@@ -304,14 +309,57 @@ namespace ZDO.CHSite.Logic
         }
 
         /// <summary>
+        /// Retrieves all existing users (including deleted ones).
+        /// </summary>
+        public List<UserInfo> GetAllUsers()
+        {
+            HashSet<int> loggedIn = new HashSet<int>();
+            foreach (var x in sessions)
+            {
+                if (x.Value.Expires < DateTime.UtcNow) continue;
+                loggedIn.Add(x.Value.UserId);
+            }
+            List<UserInfo> res = new List<UserInfo>();
+            using (MySqlConnection conn = DB.GetConn())
+            using (MySqlCommand sel = DB.GetCmd(conn, "SelAllUsers"))
+            {
+                using (var rdr = sel.ExecuteReader())
+                {
+                    while (rdr.Read())
+                    {
+                        object[] vals = new object[16];
+                        rdr.GetValues(vals);
+                        byte status = rdr.GetByte("status");
+                        var usr = new UserInfo
+                        {
+                            UserId = rdr.GetInt32("id"),
+                            UserName = rdr.GetString("user_name"),
+                            Email = vals[2] is DBNull ? "" : rdr.GetString(2),
+                            Registered = new DateTime(rdr.GetDateTime("registered").Ticks, DateTimeKind.Utc),
+                            About = vals[7] is DBNull ? "" : rdr.GetString(7),
+                            Location = vals[8] is DBNull ? "" : rdr.GetString(8),
+                            IsDeleted = status == 2,
+                            IsPlaceholder = status == 3,
+                            ContribScore = rdr.GetInt32("contrib_score"),
+                            Perms = rdr.GetInt32("perms"),
+                        };
+                        if (loggedIn.Contains(usr.UserId)) usr.IsLoggedIn = true;
+                        res.Add(usr);
+                    }
+                }
+            }
+            return res;
+        }
+
+        /// <summary>
         /// Retrieves passive information about a user account.
         /// </summary>
         public UserInfo GetUserInfo(int userId)
         {
+            UserInfo res = null;
             using (MySqlConnection conn = DB.GetConn())
             using (MySqlCommand sel = DB.GetCmd(conn, "SelUserById"))
             {
-                UserInfo res = null;
                 sel.Parameters["@id"].Value = userId;
                 using (var rdr = sel.ExecuteReader())
                 {
@@ -319,6 +367,7 @@ namespace ZDO.CHSite.Logic
                     {
                         object[] vals = new object[16];
                         rdr.GetValues(vals);
+                        byte status = rdr.GetByte("status");
                         res = new UserInfo
                         {
                             UserId = userId,
@@ -327,11 +376,22 @@ namespace ZDO.CHSite.Logic
                             Registered = new DateTime(rdr.GetDateTime("registered").Ticks, DateTimeKind.Utc),
                             About = vals[7] is DBNull ? "" : rdr.GetString(7),
                             Location = vals[8] is DBNull ? "" : rdr.GetString(8),
+                            IsDeleted = status == 2,
+                            IsPlaceholder = status == 3,
+                            ContribScore = rdr.GetInt32("contrib_score"),
+                            Perms = rdr.GetInt32("perms"),
                         };
                     }
                 }
-                return res;
             }
+            foreach (var x in sessions)
+            {
+                if (x.Value.UserId != userId) continue;
+                if (x.Value.Expires < DateTime.UtcNow) continue;
+                res.IsLoggedIn = true;
+                break;
+            }
+            return res;
         }
 
         /// <summary>

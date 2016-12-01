@@ -28,6 +28,10 @@ namespace ZDO.CHSite.Logic
         /// </summary>
         private readonly Index index;
 
+        private static readonly int ScoreNew = 4;
+        private static readonly int ScoreEdit = 2;
+        private static readonly int ScoreOther = 1;
+
         /// <summary>
         /// Ctor: init app-wide singleton.
         /// </summary>

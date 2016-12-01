@@ -41,3 +41,16 @@
     &:hover { background-color: @clrMediumAccent; }
   }
 }
+
+.userlist {
+  .user { 
+    width: 50%; float: left; box-sizing: border-box; font-size: 0.9rem; 
+    html.resplay-hamburger & { width: 100%; }
+  }
+  .user.left { padding-right: 1rem; }
+  .user.right { padding-left: 1rem; }
+  .userName { font-weight: bold; color: @clrStrong; &.online { color: @clrStrongGreen; } }
+  .userInfo { font-style: italic; color: lighten(@clrBodyText, 20%); }
+  i.fa { color: lighten(@clrBodyText, 20%); }
+  .itemSep { width: 100%; clear: both; margin-bottom: 1.5rem; }
+}

@@ -417,6 +417,12 @@ var zdPage = (function () {
       dynNavigate();
     },
 
+    // Navigates to provided relative URL (excluding language, not leading slash)
+    navigate: function (newRel) {
+      history.pushState(null, null, "/" + lang + "/" + newRel);
+      dynNavigate();
+    },
+
     applyFailHtml: function () { doApplyFailHtml(); },
 
     submitSearch: function(query) {

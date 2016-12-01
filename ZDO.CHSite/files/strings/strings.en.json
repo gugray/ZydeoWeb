@@ -46,5 +46,10 @@
     "bulkLink": "Link",
     "bulkNewWords": "{0} new words",
     "bulkChangedWords": "{0} words changed"
+  },
+  "userList": {
+    "registered": "Registered:",
+    "location": "Location:",
+    "about": "About:"
   }
 }

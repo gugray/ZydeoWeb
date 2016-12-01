@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.ObjectModel;
+using System.Text;
 using System.Collections.Generic;
 using System.IO;
 
@@ -10,16 +10,23 @@ namespace ZD.Tool
 {
     public class Wrk10Prepare : IWorker
     {
+        private class ResItem
+        {
+            public int ID;
+            public string Lines;
+        }
+
+        private List<ResItem> items = new List<ResItem>();
+
         public void Work()
         {
             Random rnd = new Random(0);
             CedictParser parser = new CedictParser();
             HashSet<int> idSet = new HashSet<int>();
+            StringBuilder sb = new StringBuilder();
 
             using (FileStream fsIn = new FileStream("handedict.u8", FileMode.Open, FileAccess.Read))
             using (StreamReader sr = new StreamReader(fsIn))
-            using (FileStream fsOut = new FileStream("x-10-handedict.txt", FileMode.Create, FileAccess.ReadWrite))
-            using (StreamWriter sw = new StreamWriter(fsOut))
             {
                 string line;
                 while ((line = sr.ReadLine()) != null)
@@ -27,20 +34,24 @@ namespace ZD.Tool
                     if (line.StartsWith("#")) continue;
                     CedictEntry entry = parser.ParseEntry(line, 0, null);
                     if (entry == null) continue;
+                    if (entry.ChSimpl.Length > 16) continue;
+
                     int id = rnd.Next();
                     while (idSet.Contains(id)) id = rnd.Next();
                     idSet.Add(id);
                     string strId = EntryId.IdToString(id);
                     bool isVerif = isVerified(entry);
+
+                    sb.Clear();
                     // Line with ID
-                    sw.WriteLine("# ID-" + strId);
+                    sb.AppendLine("# ID-" + strId);
                     // First version metainfo
                     string statStr = isVerif ? "Stat-Verif" : "Stat-New";
-                    sw.WriteLine("# Ver-1 2011-05-28T01:27:49Z HanDeDict " + statStr + " 001>Originalversion HanDeDict-Datei");
+                    sb.AppendLine("# Ver 2011-05-28T01:27:49Z HanDeDict " + statStr + " 001>Originalversion HanDeDict-Datei");
                     // The entry itself
-                    sw.WriteLine(CedictWriter.Write(entry));
-                    // Empty line between entries
-                    sw.WriteLine();
+                    sb.AppendLine(CedictWriter.Write(entry));
+
+                    items.Add(new ResItem { ID = id, Lines = sb.ToString() });
                 }
             }
         }
@@ -65,6 +76,17 @@ namespace ZD.Tool
         { }
 
         public void Finish()
-        { }
+        {
+            items.Sort((x, y) => x.ID.CompareTo(y.ID));
+            using (FileStream fsOut = new FileStream("x-10-handedict.txt", FileMode.Create, FileAccess.ReadWrite))
+            using (StreamWriter sw = new StreamWriter(fsOut))
+            {
+                foreach (var x in items)
+                {
+                    sw.Write(x.Lines);
+                    sw.WriteLine();
+                }
+            }
+        }
     }
 }

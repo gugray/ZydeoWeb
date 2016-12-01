@@ -449,7 +449,8 @@ var zdLookup = (function () {
   // An action icon (e.g., "edit") is clicked next to entry
   function onEntryAction(evt) {
     if ($(this).hasClass("edit")) {
-      window.open("/" + zdPage.getLang() + "/edit/existing/" + $(this).data("entry-id"));
+      zdPage.navigate("edit/existing/" + $(this).data("entry-id"));
+      //window.open("/" + zdPage.getLang() + "/edit/existing/" + $(this).data("entry-id"));
     }
   }
 

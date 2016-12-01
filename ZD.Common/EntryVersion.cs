@@ -8,11 +8,6 @@ namespace ZD.Common
     public class EntryVersion
     {
         /// <summary>
-        /// Entry's version number. Oldest is 1.
-        /// </summary>
-        public int Ver;
-        
-        /// <summary>
         /// Timestamp of this change.
         /// </summary>
         public DateTime Timestamp;

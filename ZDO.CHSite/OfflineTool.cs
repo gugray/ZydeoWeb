@@ -116,9 +116,17 @@ namespace ZDO.CHSite
                         }
                     }
                 }
+                // Enrich known built-in user names with "about"
+                HashSet<string> richUsers = new HashSet<string>();
+                foreach (string x in users)
+                {
+                    if (x == "HanDeDict") richUsers.Add(x + "\t" + "Platzhalter für das ursprüngliche HanDeDict-Team");
+                    if (x == "zydeo-robot") richUsers.Add(x + "\t" + "Platzhalter für automatische Datenverarbeitung");
+                    else richUsers.Add(x + "\t");
+                }
                 // Second pass. Actual import.
                 fs.Position = 0;
-                using (SqlDict.ImportBuilder builder = dict.GetBulkBuilder(workingFolder, users, bulks))
+                using (SqlDict.ImportBuilder builder = dict.GetBulkBuilder(workingFolder, richUsers, bulks))
                 {
                     while (true)
                     {

@@ -76,8 +76,9 @@ var zdHistory = (function () {
     var elm = $(this);
     while (!elm.hasClass("historyItem")) elm = elm.parent();
     var entryId = elm.data("entry-id");
-    // Open editor in new tab
-    window.open("/" + zdPage.getLang() + "/edit/existing/" + entryId);
+    // Open editor
+    zdPage.navigate("edit/existing/" + entryId);
+    //window.open("/" + zdPage.getLang() + "/edit/existing/" + entryId);
   }
 
   function onFlag(evt) {

@@ -76,6 +76,7 @@ var zdEditEntry = (function () {
       $("#txtEditTrg").removeClass("visible");
       // Edit entry
       if ($(this).hasClass("cmdEdit")) {
+        $(".actionTitle.edit").addClass("visible");
         $("#txtEditTrg").addClass("visible");
         $("#txtEditTrg").focus();
       }
@@ -136,7 +137,7 @@ var zdEditEntry = (function () {
       }
       else $(".errNoComment").removeClass("visible");
       // OK, got comment: submit request, depending on which mode we're in
-      if ($("#txtEditTrg").hasClass("visible")) onSubmitEdit();
+      if ($(".actionTitle.edit").hasClass("visible")) onSubmitEdit();
       else onSubmitComment();
     });
   }

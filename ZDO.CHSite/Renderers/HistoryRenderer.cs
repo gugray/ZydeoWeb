@@ -6,6 +6,7 @@ using System.Text.Encodings.Web;
 using ZD.Common;
 using ZD.LangUtils;
 using ZDO.CHSite.Entities;
+using ZDO.CHSite.Logic;
 
 namespace ZDO.CHSite.Renderers
 {
@@ -88,24 +89,28 @@ namespace ZDO.CHSite.Renderers
         private static readonly string dtFmtDe = "{2:00}.{1:00}.{0} {3:00}:{4:00}";
         private static readonly string dtFmtEn = "{1:00}/{2:00}/{0} {3:00}:{4:00}";
 
-        private static string getTimeStr(DateTime dt, string lang)
+        private static string getTimeStr(DateTime dtUtc, string lang)
         {
-            // TO-DO: language-specific format
-            string dtFmt = dtFmtEn;
-            if (lang == "hu") dtFmt = dtFmtHu;
-            else if (lang == "de") dtFmt = dtFmtDe;
-            // US time gets special treatment (12-hour, AM/PM)
-            if (lang != "en")
-                dtFmt = string.Format(dtFmt, dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute);
-            else
-            {
-                string ampm = " AM";
-                int hour = dt.Hour;
-                if (hour > 12) { hour -= 12; ampm = " PM"; }
-                if (hour == 12) ampm = " PM";
-                dtFmt = string.Format(dtFmt, dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute) + ampm;
-            }
-            return dtFmt;
+            string dateStr = Utils.ChinesDateStr(dtUtc);
+            DateTime dt = dtUtc.ToLocalTime();
+            string dateTimeStr = string.Format("{0} {1}时{2}分", dateStr, dt.Hour, dt.Minute);
+            return dateTimeStr;
+
+            //string dtFmt = dtFmtEn;
+            //if (lang == "hu") dtFmt = dtFmtHu;
+            //else if (lang == "de") dtFmt = dtFmtDe;
+            //// US time gets special treatment (12-hour, AM/PM)
+            //if (lang != "en")
+            //    dtFmt = string.Format(dtFmt, dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute);
+            //else
+            //{
+            //    string ampm = " AM";
+            //    int hour = dt.Hour;
+            //    if (hour > 12) { hour -= 12; ampm = " PM"; }
+            //    if (hour == 12) ampm = " PM";
+            //    dtFmt = string.Format(dtFmt, dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute) + ampm;
+            //}
+            //return dtFmt;
         }
 
         private static void renderPastChange(StringBuilder sb, CedictParser parser, ref string trgNow, ref EntryStatus statusNow,
@@ -121,7 +126,7 @@ namespace ZDO.CHSite.Renderers
             sb.Append(HtmlEncoder.Default.Encode(ci.User));
             sb.Append("</span>");
             sb.Append("<span class='changeTime'>");
-            sb.Append(HtmlEncoder.Default.Encode(getTimeStr(ci.When.ToLocalTime(), lang)));
+            sb.Append(HtmlEncoder.Default.Encode(getTimeStr(ci.When, lang)));
             sb.Append("</span>");
             sb.AppendLine("</div>"); // <div class='changeSummary'>
 
@@ -189,7 +194,7 @@ namespace ZDO.CHSite.Renderers
             sb.Append("</span>");
 
             sb.Append("<span class='changeTime'>");
-            sb.Append(HtmlEncoder.Default.Encode(getTimeStr(ci.When.ToLocalTime(), lang)));
+            sb.Append(HtmlEncoder.Default.Encode(getTimeStr(ci.When, lang)));
             sb.Append("</span>");
 
             if (ci.ChangeType != ChangeType.BulkImport && ci.CountA > 0)

@@ -49,7 +49,7 @@ namespace ZD.LangUtils
                     }
                     // Commented lines are either version declarations, or past forms of entries following a version declaration
                     // Entries are omitted if they didn't change from previous version
-                    if (line.StartsWith("# Ver-"))
+                    if (line.StartsWith("# Ver"))
                     {
                         if (currVersion != null) vers.Add(currVersion);
                         currVersion = parseVersion(line);
@@ -66,7 +66,7 @@ namespace ZD.LangUtils
             return id;
         }
 
-        private Regex reVer = new Regex(@"^# Ver\-(\d+) ([^ ]+) ([^ ]+) Stat\-([^ ]+) (\d*>)(.+)$");
+        private Regex reVer = new Regex(@"^# Ver ([^ ]+) ([^ ]+) Stat\-([^ ]+) (\d*>)(.+)$");
         private Regex reDate = new Regex(@"^([\d]{4})\-([\d]{2})\-([\d]{2})T([\d]{2}):([\d]{2}):([\d]{2})Z$");
 
         // Parses a version declaration from line within block.
@@ -75,12 +75,11 @@ namespace ZD.LangUtils
             // Resolve declaration overall
             Match m = reVer.Match(line);
             if (!m.Success) throw new Exception("Invalid version declaration in block.");
-            int ver = int.Parse(m.Groups[1].Value);
-            string dateStr = m.Groups[2].Value;
-            string user = m.Groups[3].Value;
-            string statStr = m.Groups[4].Value;
-            string cmtIntro = m.Groups[5].Value;
-            string cmt = m.Groups[6].Value;
+            string dateStr = m.Groups[1].Value;
+            string user = m.Groups[2].Value;
+            string statStr = m.Groups[3].Value;
+            string cmtIntro = m.Groups[4].Value;
+            string cmt = m.Groups[5].Value;
             // Resolve UTC timestamp
             m = reDate.Match(dateStr);
             if (!m.Success) throw new Exception("Invalid date format: " + dateStr);
@@ -100,7 +99,6 @@ namespace ZD.LangUtils
             // Put it all together
             return new EntryVersion
             {
-                Ver = ver,
                 Timestamp = date,
                 User = user,
                 Status = status,
