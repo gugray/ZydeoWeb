@@ -11,6 +11,9 @@ var zdAuth = (function () {
   var hiddenPass;
 
   function showLogin(message, callback) {
+    // Quit right here in hamburger mode
+    if (zdPage.isMobile()) return;
+
     // Dummies so we don't keep checking later on
     if (!message) message = "";
     if (!callback) callback = function () { };
