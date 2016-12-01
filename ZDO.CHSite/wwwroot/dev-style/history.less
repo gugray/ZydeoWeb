@@ -29,7 +29,10 @@ a.pageLink:hover, a.pageLink.selected { background-color: @clrLight; }
 
 .historyItem {
   position: relative; float: left; width: 100%; box-sizing: border-box; padding: 0.9rem 0 0.9rem 0;
+  transition: background-color none;
   &:hover, &.tapOver { background-color: @clrLightLight; }
+  &.reloaded { background-color: @clrLightAccent; transition: background-color 3s ease; }
+  &.flashdown { background-color: @clrDefBg; &:hover { background-color: @clrDefBg } }
   .senses.old { background-color: @clrLightRed; width: 100%; }
   .senses.new { background-color: @clrLightGreen; width: 100%; }
 }
@@ -47,6 +50,7 @@ a.pageLink:hover, a.pageLink.selected { background-color: @clrLight; }
   i.ctFlag, i.ctUnflag { font-size: 1.8rem; padding-left: 0.3rem; }
   i.ctFlag { color: @clrStrongRed; }
   i.ctUnflag { color: @clrStrongGreen; }
+  i.ctApprove { color: @clrStrongGreen; font-size: 2.1rem; padding-left: 0.3rem; }
 }
 
 .changeSummary {
@@ -75,7 +79,7 @@ a.pageLink:hover, a.pageLink.selected { background-color: @clrLight; }
 .changeEntry {
   position: relative; clear: both; width: 100%; box-sizing: border-box; height: auto;
   .entry {
-    position: relative; float: left; box-sizing: border-box; padding: 0 0 0 3rem;
+    position: relative; float: left; box-sizing: border-box; padding: 0 0.4rem 0 3rem;
     font-size: 0.7rem; color: #606060;
   }
 }
@@ -88,10 +92,11 @@ a.pageLink:hover, a.pageLink.selected { background-color: @clrLight; }
     border-left: 0.3rem dotted @clrLight; padding-left: 1rem;
   }
   .pastItem {
-    position: relative; float: left; width: 100%; box-sizing: border-box; margin-bottom: 1.2rem;
+    position: relative; float: left; width: 100%; box-sizing: border-box; margin-bottom: 1.2rem; padding-right: 0.4rem;
     .senses { font-size: 0.9rem; color: #606060; width: 100%; }
     .senses.old { background-color: @clrLightRed; }
     .senses.new { background-color: @clrLightGreen; }
+    .changeTime { right:  0; }
   }
 }
 
@@ -107,30 +112,26 @@ a.pageLink:hover, a.pageLink.selected { background-color: @clrLight; }
     &.opHistEdit { left: 0.5rem; top: 1.5rem; }
     &.opHistFlag { left: 0.5rem; top: 3.1rem; }
   }
+  html.resplay-hamburger & i {
+     &.opHistComment { display: none; }
+     &.opHistFlag { display: none; }
+     &.opHistEdit { top: -0.1rem; }
+  }
 }
 
 
 /* ===================== ADD COMMENT POPUP BODY =========================== */
+/* ===================== FLAG/UNFLAG POPUP BODY =========================== */
 
-#dlgHistComment i.fa {
-  display: block;
-  position: relative;
-  float: left;
-  font-size: 350%;
-  margin-left: 0.2em;
-  color: @clrMedium;
-  cursor: default;
-}
-
-#dlgHistComment textarea {
-  width: 30em;
-  height: 5em;
-  margin-left: 1.5em;
-  border: none;
-  outline: none;
-  color: @clrBodyText;
-  background-color: @clrLightLight;
-  font-family: @fntBase;
-  font-size: 100%;
-  padding: 0.2em 0.4em 0.2em 0.4em;
+#dlgHistComment, #dlgHistFlag {
+  i.fa {
+    display: block; position: relative; float: left; margin-left: 0.2em;
+    font-size: 350%; color: @clrMedium; cursor: default;
+    &.unflag { color: @clrStrongGreen; }
+    &.flag { color: @clrStrongRed; }
+  }
+  textarea {
+    width: 30em; height: 5em; margin-left: 1.5em; border: none; outline: none; padding: 0.2em 0.4em 0.2em 0.4em;
+    background-color: @clrLightLight; color: @clrBodyText; font-family: @fntBase; font-size: 100%;
+  }
 }

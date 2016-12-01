@@ -4,6 +4,7 @@
 //= oops : oops.html
 //= modalPopup : modalPopup.html
 //= history.addComment : history.addComment.html
+//= history.flagEntry : history.flagEntry.html
 //= lookup.options : lookup.options.html
 //= lookup.handwriting : lookup.handwriting.html
 //= lookup.soa : lookup.soa.html

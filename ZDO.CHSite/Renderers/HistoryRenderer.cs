@@ -42,14 +42,22 @@ namespace ZDO.CHSite.Renderers
             for (int i = 0; i != histChanges.Count; ++i)
             {
                 ChangeItem ci = histChanges[i];
-                histRenderChange(sb, ci, i != histChanges.Count - 1);
+                histRenderChange(sb, ci, i != histChanges.Count - 1, lang, parser);
             }
         }
 
-        public static void RenderPastChanges(StringBuilder sb, string currTrg, EntryStatus currStatus,
+        public static void RenderItem(StringBuilder sb, string currTrg, EntryStatus currStatus,
+            ChangeItem change, string lang)
+        {
+            CedictParser parser = new CedictParser();
+            histRenderChange(sb, change, false, lang, parser, "reloaded");
+        }
+
+        public static void RenderPastChanges(StringBuilder sb, string entryId, string currTrg, EntryStatus currStatus,
             List<ChangeItem> changes, string lang)
         {
-            sb.AppendLine("<div class='pastChanges'><div class='pastInner'>");
+            sb.Append("<div class='pastChanges' data-entry-id='" + entryId + "'>");
+            sb.AppendLine("<div class='pastInner'>");
             CedictParser parser = new CedictParser();
             string trgNow = currTrg;
             EntryStatus statusNow = currStatus;
@@ -93,7 +101,7 @@ namespace ZDO.CHSite.Renderers
         {
             string dateStr = Utils.ChinesDateStr(dtUtc);
             DateTime dt = dtUtc.ToLocalTime();
-            string dateTimeStr = string.Format("{0} {1}时{2}分", dateStr, dt.Hour, dt.Minute);
+            string dateTimeStr = string.Format("{0} {1}:{2}", dateStr, dt.Hour.ToString("00"), dt.Minute.ToString("00"));
             return dateTimeStr;
 
             //string dtFmt = dtFmtEn;
@@ -160,12 +168,17 @@ namespace ZDO.CHSite.Renderers
             sb.AppendLine("</div>"); // <div class='pastItem'>
         }
 
-        private void histRenderChange(StringBuilder sb, ChangeItem ci, bool trailingSeparator)
+        private static void histRenderChange(StringBuilder sb, ChangeItem ci, bool trailingSeparator, string lang,
+            CedictParser parser, string extraItemClass = "")
         {
+            var tprov = TextProvider.Instance;
+
             sb.AppendLine();
+            string itemClass = "historyItem";
+            if (!string.IsNullOrEmpty(extraItemClass)) itemClass += " " + extraItemClass;
             if (ci.EntryId >= 0)
-                sb.AppendLine("<div class='historyItem' data-entry-id='" + EntryId.IdToString(ci.EntryId) + "'>");
-            else sb.AppendLine("<div class='historyItem'>");
+                sb.AppendLine("<div class='" + itemClass + "' data-entry-id='" + EntryId.IdToString(ci.EntryId) + "'>");
+            else sb.AppendLine("<div class='" + itemClass + "'>");
             sb.AppendLine("<div class='changeHead'>");
 
             string iconClass = "";
@@ -255,6 +268,7 @@ namespace ZDO.CHSite.Renderers
                 if (ci.BodyBefore == null)
                 {
                     CedictEntry entry = parser.ParseEntry(ci.EntryHead + " " + ci.EntryBody, 0, null);
+                    entry.Status = ci.EntryStatus;
                     EntryRenderer er = new EntryRenderer(entry, true);
                     er.OneLineHanziLimit = 12;
                     er.Render(sb);
@@ -264,6 +278,7 @@ namespace ZDO.CHSite.Renderers
                 {
                     sb.AppendLine("<div class='entry'>");
                     CedictEntry entry = parser.ParseEntry(ci.EntryHead + " " + ci.EntryBody, 0, null);
+                    entry.Status = ci.EntryStatus;
                     EntryRenderer er = new EntryRenderer(entry, true);
                     er.OneLineHanziLimit = 12;
                     er.RenderInner(sb, "new");

@@ -12,6 +12,7 @@ var zdEditEntry = (function () {
 
   var origEntryHtml;
   var headTxt;
+  var canApprove;
   var trgOrig;
   var trgCurrVal = "";
 
@@ -37,14 +38,19 @@ var zdEditEntry = (function () {
 
   function onGotData(data, eventWireup) {
     origEntryHtml = data.entryHtml;
+    canApprove = data.canApprove;
     $(".entry").replaceWith(origEntryHtml);
+    $(".entry").addClass("editentry");
     $(".pastChanges").replaceWith(data.historyHtml);
     headTxt = data.headTxt;
     trgOrig = data.trgTxt;
     $("#txtEditTrg").val(trgOrig);
     trgCurrVal = $("#txtEditTrg").val();
-    if (!data.canApprove) $(".cmdApprove").addClass("disabled");
-    if (data.status == 2) {
+    // Approve disabled if entry is already approved
+    if (data.status == "approved") $(".cmdApprove").addClass("disabled");
+    else $(".cmdApprove").removeClass("disabled");
+    // Flagged: text and meaning of Flag button
+    if (data.status == "flagged") {
       $(".cmdFlag").text(zdPage.ui("editExisting", "cmd-unflag"));
       $(".cmdFlag").removeClass("flag");
       $(".cmdFlag").addClass("unflag");
@@ -54,6 +60,7 @@ var zdEditEntry = (function () {
       $(".cmdFlag").removeClass("unflag");
       $(".cmdFlag").addClass("flag");
     }
+    // Now reveal page
     $(".editexisting").addClass("visible");
 
     // Need to wire up events too? First time only.
@@ -68,6 +75,23 @@ var zdEditEntry = (function () {
         evt.stopPropagation();
         return;
       }
+
+      // Approve entry: check if user is authorized
+      if ($(this).hasClass("cmdApprove") && !canApprove) {
+        var params = {
+          id: "dlgCannotApprove",
+          confirmed: function () { return true; },
+          title: zdPage.ui("editExisting", "cannotApproveTitle"),
+          body: escapeHTML(zdPage.ui("editExisting", "cannotApproveMsg"))
+        };
+        // Show
+        zdPage.showModal(params);
+        $("#dlgCannotApprove .modalPopupButtonCancel").addClass("hidden");
+        evt.stopPropagation();
+
+        return;
+      }
+
       // Show action panel
       $(".pnlTasks").removeClass("visible");
       $(".pnlAction").addClass("visible");
@@ -149,6 +173,7 @@ var zdEditEntry = (function () {
     if ($(".actionTitle.flag").hasClass("visible")) statusChange = "flag";
     if ($(".actionTitle.unflag").hasClass("visible")) statusChange = "unflag";
     if ($(".actionTitle.approve").hasClass("visible")) statusChange = "approve";
+    // Prepare request
     var data = {
       entryId: $(".editexisting").data("entry-id"),
       note: $("#txtEditCmt").val(),

@@ -209,7 +209,7 @@ namespace ZDO.CHSite.Renderers
 
             if (script != UiScript.Trad)
             {
-                sb.Append("<span class='hw-simp'>"); // <span class="hw-simp">
+                sb.Append("<span class='hw-simp' lang='zh-CN'>"); // <span class="hw-simp">
                 renderHanzi(entry, true, false, sb);
                 sb.Append("</span>"); // <span class="hw-simp">
             }
@@ -233,7 +233,7 @@ namespace ZDO.CHSite.Renderers
                 // Need special class so traditional floats left after line break
                 if (script == UiScript.Both && entry.ChSimpl.Length > OneLineHanziLimit)
                     clsTrad = "hw-trad break";
-                sb.Append("<span class='" + clsTrad + "'>"); // <span class="hw-trad">
+                sb.Append("<span class='" + clsTrad + "' lang='zh-TW'>"); // <span class="hw-trad">
                 renderHanzi(entry, false, dimIdenticalTrad && script == UiScript.Both, sb);
                 sb.Append("</span>"); // <span class="hw-trad">
             }

@@ -14,6 +14,6 @@ namespace ZDO.CHSite.Entities
         public string TrgTxt;
         public bool CanApprove;
         public string HistoryHtml;
-        public EntryStatus Status;
+        public string Status;
     }
 }

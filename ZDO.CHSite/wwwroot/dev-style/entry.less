@@ -1,7 +1,7 @@
 @import "defines.less";
 
 .entry {
-  position: relative; padding-top: 0; padding-bottom: 1em; display: block; float: left;
+  position: relative; padding-top: 0; padding-bottom: 1em; display: block; float: left; box-sizing: border-box;
   width: 100%; clear: right; border-top: 0; font-size: 80%;
   .entryAction, .entryStatus {
     display: none; position: absolute; right: 0; font-size: 160%; color: @clrMediumAccent;
@@ -14,12 +14,17 @@
     .entryAction { display: block; &:hover { color: @clrStrongAccent; } }
     .entryStatus { display: block; }
   }
+  // In the "edit entry" and "history" contexts: always show status
+  &.editentry, &.history {
+    .entryStatus { top: 0; display: block; }
+    .entryAction { display: none; }
+  }
+  &.history { .entryStatus { right: 0.4rem; } }
 }
 
 
-.hw-simp, .hw-trad {
-  font-family: @fntZho;
-}
+.hw-simp { font-family: @fntZho; }
+.hw-trad { font-family: @fntZho; }
 
 .hw-ann,
 .hw-simp,

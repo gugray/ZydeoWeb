@@ -99,6 +99,8 @@ namespace ZDO.CHSite.Logic
             public readonly int UserId;
             public readonly string UserName;
             public DateTime Expires;
+            public int ContribScore;
+            public int Perms;
             public SessionInfo(int userId, string userName)
             {
                 UserId = userId;
@@ -113,6 +115,7 @@ namespace ZDO.CHSite.Logic
         private readonly string sessionFileName;
         private readonly string baseUrl;
         private readonly int sessionTimeoutMinutes;
+        private readonly int minApproveScore;
         private readonly ManualResetEvent quitBusywork;
         private readonly Thread busyThread;
         private readonly Dictionary<string, SessionInfo> sessions = new Dictionary<string, SessionInfo>();
@@ -124,6 +127,7 @@ namespace ZDO.CHSite.Logic
             this.emailer = emailer;
             this.pageProvider = pageProvider;
             sessionTimeoutMinutes = int.Parse(config["sessionTimeoutMinutes"]);
+            minApproveScore = int.Parse(config["minApproveScore"]);
             baseUrl = config["baseUrl"];
             sessionFileName = config["sessionFileName"];
             loadPersistedSessions();
@@ -148,9 +152,11 @@ namespace ZDO.CHSite.Logic
                     while ((line = sr.ReadLine()) != null)
                     {
                         string[] parts = line.Split('\t');
-                        if (parts.Length != 4) continue;
+                        if (parts.Length != 6) continue;
                         SessionInfo si = new SessionInfo(int.Parse(parts[1]), parts[3]);
                         si.Expires = new DateTime(long.Parse(parts[2]), DateTimeKind.Utc);
+                        si.ContribScore = int.Parse(parts[4]);
+                        si.Perms = int.Parse(parts[5]);
                         sessions[parts[0]] = si;
                     }
                 }
@@ -178,6 +184,7 @@ namespace ZDO.CHSite.Logic
                     foreach (var x in sessions)
                     {
                         string line = x.Key + "\t" + x.Value.UserId + "\t" + x.Value.Expires.Ticks + "\t" + x.Value.UserName;
+                        line += "\t" + x.Value.ContribScore + "\t" + x.Value.Perms;
                         lines.Add(line);
                     }
                 }
@@ -292,8 +299,20 @@ namespace ZDO.CHSite.Logic
         /// </summary>
         public bool CanApprove(int userId)
         {
-            // TO-DO
-            return false;
+            int contribScore = -1;
+            // First try from sessions. It'll most likely be there.
+            lock (sessions)
+            {
+                foreach (var x in sessions) if (x.Value.UserId == userId) { contribScore = x.Value.ContribScore; break; }
+            }
+            // If not there, get from DB
+            if (contribScore == -1)
+            {
+                UserInfo ui = GetUserInfo(userId);
+                contribScore = ui.ContribScore;
+            }
+            // Can approve or not?
+            return contribScore >= minApproveScore;
         }
 
         /// <summary>
@@ -305,6 +324,25 @@ namespace ZDO.CHSite.Logic
             lock (sessions)
             {
                 if (sessions.ContainsKey(token)) sessions.Remove(token);
+            }
+        }
+
+        /// <summary>
+        /// Refreshes a user's cached information in all her sessions.
+        /// </summary>
+        public void RefreshUserInfo(int userId)
+        {
+            UserInfo ui = GetUserInfo(userId);
+            lock (sessions)
+            {
+                foreach (var x in sessions)
+                {
+                    if (x.Value.UserId == userId)
+                    {
+                        x.Value.ContribScore = ui.ContribScore;
+                        x.Value.Perms = ui.Perms;
+                    }
+                }
             }
         }
 
@@ -548,6 +586,8 @@ namespace ZDO.CHSite.Logic
             string dbSalt = null;
             string userName = null;
             int userId = -1;
+            int contribScore = 0;
+            int perms = 0;
             using (MySqlConnection conn = DB.GetConn())
             using (MySqlCommand cmd = DB.GetCmd(conn, "SelUserByEmail"))
             {
@@ -561,6 +601,8 @@ namespace ZDO.CHSite.Logic
                         dbSalt = rdr.GetString("pass_salt");
                         userName = rdr.GetString("user_name");
                         userId = rdr.GetInt32("id");
+                        contribScore = rdr.GetInt32("contrib_score");
+                        perms = rdr.GetInt32("perms");
                     }
                 }
             }
@@ -578,6 +620,8 @@ namespace ZDO.CHSite.Logic
                 while (sessions.ContainsKey(token)) token = getRandomString();
                 SessionInfo si = new SessionInfo(userId, userName);
                 si.Expires = DateTime.UtcNow.AddMinutes(sessionTimeoutMinutes);
+                si.ContribScore = contribScore;
+                si.Perms = perms;
                 sessions[token] = si;
             }
             return token;

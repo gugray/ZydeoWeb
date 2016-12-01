@@ -47,6 +47,8 @@ namespace ZDO.CHSite.Controllers
             {
                 builder.ChangeTarget(userId, idVal, trg, note);
             }
+            // Refresh cached contrib score
+            auth.RefreshUserInfo(userId);
             // Tell our caller we dun it
             return new ObjectResult(true);
         }
@@ -80,32 +82,62 @@ namespace ZDO.CHSite.Controllers
         public IActionResult GetEditEntryData([FromQuery] string entryId, [FromQuery] string lang)
         {
             if (entryId == null || lang == null) return StatusCode(400, "Missing parameter(s).");
+
+            // The data we'll return.
             EditEntryData res = new EditEntryData();
 
-            int idVal = EntryId.StringToId(entryId);
+            // Is this an authenticated user?
+            int userId;
+            string userName;
+            auth.CheckSession(HttpContext.Request.Headers, out userId, out userName);
+            // Can she approve entries?
+            if (userId != -1) res.CanApprove = auth.CanApprove(userId);
 
+            // Retrieve entry
+            int idVal = EntryId.StringToId(entryId);
             string hw, trg;
             EntryStatus status;
             SqlDict.GetEntryById(idVal, out hw, out trg, out status);
-            res.Status = status;
+            res.Status = status.ToString().ToLowerInvariant();
             res.HeadTxt = hw;
             res.TrgTxt = trg.Trim('/').Replace("/", "\n");
             res.TrgTxt = res.TrgTxt.Replace('\\', '/');
 
+            // Entry HTML
             CedictParser parser = new CedictParser();
             CedictEntry entry = parser.ParseEntry(hw + " " + trg, 0, null);
+            entry.Status = status;
             EntryRenderer er = new EntryRenderer(entry, true);
             er.OneLineHanziLimit = 12;
             StringBuilder sb = new StringBuilder();
             er.Render(sb);
             res.EntryHtml = sb.ToString();
 
+            // Entry history
             List<ChangeItem> changes = SqlDict.GetEntryChanges(idVal);
             sb.Clear();
             HistoryRenderer.RenderEntryChanges(sb, trg, status, changes, lang);
             res.HistoryHtml = sb.ToString();
 
             return new ObjectResult(res);
+        }
+
+        public IActionResult GetHistoryItem([FromQuery] string entryId, [FromQuery] string lang)
+        {
+            if (entryId == null || lang == null) return StatusCode(400, "Missing parameter(s).");
+            int idVal = EntryId.StringToId(entryId);
+
+            string hw, trg;
+            EntryStatus status;
+            SqlDict.GetEntryById(idVal, out hw, out trg, out status);
+            StringBuilder sb = new StringBuilder();
+            List<ChangeItem> changes = SqlDict.GetEntryChanges(idVal);
+            ChangeItem ci = changes[0];
+            ci.EntryBody = trg;
+            ci.EntryHead = hw;
+            ci.EntryStatus = status;
+            HistoryRenderer.RenderItem(sb, trg, status, changes[0], lang);
+            return new ObjectResult(sb.ToString());
         }
 
         public IActionResult GetPastChanges([FromQuery] string entryId, [FromQuery] string lang)
@@ -117,7 +149,7 @@ namespace ZDO.CHSite.Controllers
             SqlDict.GetEntryById(idVal, out hw, out trg, out status);
             var changes = SqlDict.GetPastChanges(idVal);
             StringBuilder sb = new StringBuilder();
-            HistoryRenderer.RenderPastChanges(sb, trg, status, changes, lang);
+            HistoryRenderer.RenderPastChanges(sb, entryId, trg, status, changes, lang);
             return new ObjectResult(sb.ToString());
         }
 
@@ -143,7 +175,7 @@ namespace ZDO.CHSite.Controllers
             if (change == SqlDict.Builder.StatusChange.Approve)
             {
                 canApprove = auth.CanApprove(userId);
-                if (!canApprove) StatusCode(401, "User is not authorized to approve entries.");
+                if (!canApprove) return StatusCode(401, "User is not authorized to approve entries.");
             }
 
             bool success = false;
@@ -153,6 +185,8 @@ namespace ZDO.CHSite.Controllers
                 int idVal = EntryId.StringToId(entryId);
                 builder = dict.GetSimpleBuilder(userId);
                 builder.CommentEntry(idVal, note, change);
+                // Refresh cached contrib score
+                auth.RefreshUserInfo(userId);
                 success = true;
             }
             catch (Exception ex)
@@ -188,6 +222,8 @@ namespace ZDO.CHSite.Controllers
                 builder = dict.GetSimpleBuilder(userId);
                 CedictEntry entry = Utils.BuildEntry(simp, trad, pinyin, trg);
                 builder.NewEntry(entry, note);
+                // Refresh cached contrib score
+                auth.RefreshUserInfo(userId);
             }
             catch (Exception ex)
             {
