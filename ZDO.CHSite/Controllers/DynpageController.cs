@@ -181,7 +181,7 @@ namespace ZDO.CHSite.Controllers
             string entryId = rel.Replace("edit/existing/", "");
             entryId = WebUtility.UrlDecode(entryId);
             int idVal = -1;
-            try { EntryId.StringToId(entryId); }
+            try { idVal = EntryId.StringToId(entryId); }
             catch { }
             if (idVal == -1)
             {
