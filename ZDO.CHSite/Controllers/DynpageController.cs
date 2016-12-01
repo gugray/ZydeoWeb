@@ -180,6 +180,13 @@ namespace ZDO.CHSite.Controllers
         {
             string entryId = rel.Replace("edit/existing/", "");
             entryId = WebUtility.UrlDecode(entryId);
+            int idVal = -1;
+            try { EntryId.StringToId(entryId); }
+            catch { }
+            if (idVal == -1)
+            {
+                return pageProvider.GetPage(lang, "?/editnothing", false);
+            }
 
             PageResult pr = pageProvider.GetPage(lang, "?/editexisting", false);
             StringBuilder sb = new StringBuilder(pr.Html);

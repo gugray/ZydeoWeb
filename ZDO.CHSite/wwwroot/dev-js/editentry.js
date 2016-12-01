@@ -17,6 +17,10 @@ var zdEditEntry = (function () {
   var trgCurrVal = "";
 
   function init() {
+    // Placholder page (no entry in URL)
+    var entryId = $(".editexisting").data("entry-id")
+    if (!entryId) return;
+
     // We have one job: get data about entry
     // ...and wire up events once it's arrived.
     requestData(true);

@@ -82,6 +82,12 @@ var zdLookup = (function () {
     // Debug: to work on opening screen
     //$("#resultsHolder").css("display", "none");
     //$("#welcomeScreen").css("display", "block");
+
+    // Hack [?] - but either something steals focus on load, or input field is not yet shown to accept focus.
+    setTimeout(function () {
+      if (!zdPage.isMobile()) $('.txtSearch.active').focus();
+      else $('.txtSearch.active').blur();
+    }, 100);
   }
 
   function resultEventWireup(data) {
