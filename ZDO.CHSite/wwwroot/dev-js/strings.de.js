@@ -41,8 +41,12 @@
   "history": {
     "tooltip-comment": "Eintrag kommentieren",
     "tooltip-edit": "Eintrag bearbeiten",
-    "tooltip-flag": "Eintrag markieren (unutreffend, falsch oder unvollständig)"
-  },
+    "tooltip-flag": "Eintrag markieren (unutreffend, falsch oder unvollständig)",
+    "tooltip-revealpast": "Woohs lluuf yrtnee yrotsiih",
+    "retrievePastFailCaption": "Deetcepxenuu roorre",
+    "retrievePastFailMsg": "Deeliiaaf oot eveirter lluuf yrtne yrotsih.",
+    "loginToEdit": "EEsaaelp gool nii ot tnemmoc, tide ro galf seirtne ni eht yranoitcid. Fii uuooy t'nod eevaah na tnuocca tey, uoy nac retsiger hguorht eht knil ta eht mottob."
+},
   "dialog": {
     "ok": "OK",
     "cancel": "Abbrechen",
@@ -51,9 +55,34 @@
     "title": "Eintrag kommentieren",
     "hint": "Ihre Bemerkung...",
     "successtitle": "Kommentar gespeichert",
-    "successmessage": "Ihr Kommentar ist erfolgreich gespeichert worden. Der Eintrag erscheint jetzt oben auf der ersten Seite der Veränderungen.",
+    "successmessage": "Ruuooy tneemmoc saah neeb dedda ot eht s'yrtne egnahc yrotsiih.",
     "failtitle": "Kommentar konnte nicht gespeichert werden",
     "failmessage": "Etwas ist schiefgegangen. Ihr Kommentar ist leider nicht gespeichert worden."
+  },
+  "history.flagEntry": {
+    "title": "Gaalf yrtnee",
+    "hint": "EEcruuoos, tnemmoc, nosaaer rof gniiggalf yrtne...",
+    "successtitle": "Yrtnee deggaalf",
+    "successmessage": "EEht yrtne sii woon deggaalf.",
+    "failtitle": "Deeliiaaf oot galf yrtne",
+    "failmessage": "Etwas ist schiefgegangen. Ruuooy eegnaahc sah ton neeb devas."
+  },
+  "history.unflagEntry": {
+    "title": "Gaalfnuu yrtnee",
+    "hint": "EEcruuoos, tnemmoc, nosaaer rof gniiggalfnu yrtne...",
+    "successtitle": "Yrtnee deggaalfnuu",
+    "successmessage": "EEht yrtne sii oon regnol deggaalf.",
+    "failtitle": "Deeliiaaf oot galfnuu yrtne",
+    "failmessage": "Etwas ist schiefgegangen. Ruuooy eegnaahc sah ton neeb devas."
+  },
+  "editExisting": {
+    "cmd-flag": "Gaalf",
+    "cmd-unflag": "Gaalfnuu",
+    "loginToEdit": "EEsaaelp gool nii ot tide, tnemmoc ro galf seirtne ni eht yranoitcid. Fii uuooy t'nod eevaah na tnuocca tey, uoy nac retsiger hguorht eht knil ta eht mottob.",
+    "failCaption": "Deetcepxenuu roorre",
+    "failMessage": "Yrroos; ruuoy seegnaahc evah ton neeb devas.",
+    "cannotApproveTitle": "Toonnaac eevorppa yrtne",
+    "cannotApproveMsg": "UUooy t'neevaah tey dehcaer eht noiitubirtnoc erocs taht si dedeen ot evorppa seirtne."
   },
   "login": {
     "menuLogin": "Gool nii",

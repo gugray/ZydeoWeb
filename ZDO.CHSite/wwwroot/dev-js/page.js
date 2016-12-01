@@ -299,7 +299,7 @@ var zdPage = (function () {
     });
     // Link to imprint
     $("#imprint").click(function () {
-      window.open("/" + zdPage.getLang() + "/read/imprint");
+      window.open("/" + zdPage.getLang() + "/read/details/imprint");
     });
     // Login/logout
     $("#smUserLogInOut").click(function (evt) {
@@ -366,11 +366,12 @@ var zdPage = (function () {
     if (startsWith(rel, "edit/new")) $("#smEditNew").addClass("on");
     else if (startsWith(rel, "edit/history")) $("#smEditHistory").addClass("on");
     else if (startsWith(rel, "edit/existing")) $("#smEditExisting").addClass("on");
-    else if (startsWith(rel, "read/about")) $("#smReadAbout").addClass("on");
     else if (startsWith(rel, "read/search-tips")) $("#smReadSearchTips").addClass("on");
-    else if (startsWith(rel, "read/version-history")) $("#smReadVersionHistory").addClass("on");
-    else if (startsWith(rel, "read/articles")) $("#smReadArticles").addClass("on");
-    else if (startsWith(rel, "read/etc")) $("#smReadEtc").addClass("on");
+    else if (startsWith(rel, "read/faq")) $("#smReadFAQ").addClass("on");
+    else if (startsWith(rel, "read/details")) $("#smReadDetails").addClass("on");
+    else if (startsWith(rel, "download/dictionary")) $("#smDownloadDict").addClass("on");
+    else if (startsWith(rel, "download/software")) $("#smDownloadSoft").addClass("on");
+    else if (startsWith(rel, "download/license")) $("#smDownloadLic").addClass("on");
     else if (startsWith(rel, "user/users")) $("#smUserUsers").addClass("on");
     else if (startsWith(rel, "user/profile")) $("#smUserProfile").addClass("on");
     // In hamburger mode, steal title from selected submenu; or page's ".page-title" element

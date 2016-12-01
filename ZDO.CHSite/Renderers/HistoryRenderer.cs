@@ -144,7 +144,7 @@ namespace ZDO.CHSite.Renderers
             if (ci.BulkRef != -1)
             {
                 sb.Append("<span class='bulkLink'>[");
-                sb.Append("<a href='/" + lang + "/read/more/change-" + ci.BulkRef.ToString("000") + "' target='_blank'>");
+                sb.Append("<a href='/" + lang + "/read/details/change-" + ci.BulkRef.ToString("000") + "' target='_blank'>");
                 sb.Append(TextProvider.Instance.GetString(lang, "history.bulkLink") + "</a>");
                 sb.Append("]</span> ");
             }
@@ -243,7 +243,7 @@ namespace ZDO.CHSite.Renderers
                     sb.Append("</p>");
                 }
                 sb.Append("<span class='bulkLink'>[");
-                sb.Append("<a href='/" + lang + "/read/more/change-" + ci.BulkRef.ToString("000") + "' target='_blank'>");
+                sb.Append("<a href='/" + lang + "/read/details/change-" + ci.BulkRef.ToString("000") + "' target='_blank'>");
                 sb.Append(tprov.GetString(lang, "history.bulkLink") + "</a>");
                 sb.Append("]</span> ");
             }

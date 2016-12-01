@@ -41,8 +41,12 @@
   "history": {
     "tooltip-comment": "Comment entry",
     "tooltip-edit": "Edit entry",
-    "tooltip-flag": "Flag entry (inaccurate, false or incomplete)"
-  },
+    "tooltip-flag": "Flag entry (inaccurate, false or incomplete)",
+    "tooltip-revealpast": "Show full entry history",
+    "retrievePastFailCaption": "Unexpected error",
+    "retrievePastFailMsg": "Failed to retrieve full entry history.",
+    "loginToEdit": "Please log in to comment, edit or flag entries in the dictionary. If you don't have an account yet, you can register through the link at the bottom."
+},
   "dialog": {
     "ok": "OK",
     "cancel": "Cancel",
@@ -51,9 +55,34 @@
     "title": "Comment entry",
     "hint": "Your comment here...",
     "successtitle": "Comment saved",
-    "successmessage": "You comment has been saved successfully. You will now find the entry at the top of the first page in the change history.",
+    "successmessage": "Your comment has been added to the entry's change history.",
     "failtitle": "Failed to save comment",
     "failmessage": "Something went wrong. Your comment has not been saved."
+  },
+  "history.flagEntry": {
+    "title": "Flag entry",
+    "hint": "Source, comment, reason for flagging entry...",
+    "successtitle": "Entry flagged",
+    "successmessage": "The entry is now flagged.",
+    "failtitle": "Failed to flag entry",
+    "failmessage": "Something went wrong. Your change has not been saved."
+  },
+  "history.unflagEntry": {
+    "title": "Unflag entry",
+    "hint": "Source, comment, reason for unflagging entry...",
+    "successtitle": "Entry unflagged",
+    "successmessage": "The entry is no longer flagged.",
+    "failtitle": "Failed to unflag entry",
+    "failmessage": "Something went wrong. Your change has not been saved."
+  },
+  "editExisting": {
+    "cmd-flag": "Flag",
+    "cmd-unflag": "Unflag",
+    "loginToEdit": "Please log in to edit, comment or flag entries in the dictionary. If you don't have an account yet, you can register through the link at the bottom.",
+    "failCaption": "Unexpected error",
+    "failMessage": "Sorry; your changes have not been saved.",
+    "cannotApproveTitle": "Cannot approve entry",
+    "cannotApproveMsg": "You haven't yet reached the contribution score that is needed to approve entries."
   },
   "login": {
     "menuLogin": "Log in",

@@ -2,18 +2,23 @@
   "header": {
     "topSearch": "Search",
     "topEdit": "Edit",
-    "topRead": "About",
+    "topRead": "Explore",
     "topDownload": "Download",
     "subEditNew": "New entry",
     "subEditHistory": "History",
     "subEditExisting": "Edit entry",
     "subReadAbout": "About",
-    "subReadAboutHDD": "HanDeDict @ Zydeo",
+    "subReadFAQ": "FAQ",
+    "subReadDetails": "Dig deeper",
     "subReadSearchTipsHDD": "Search tips",
     "subReadVersionHistory": "Version history",
     "subReadArticles": "Articles",
     "subReadEtc": "Small print",
-    "subDownload": "Download the dictionary"
+    "subDownloadDict": "Dictionary",
+    "subDownloadSoft": "Software",
+    "subDownloadLic": "License",
+    "subUserList": "Users",
+    "subMyProfile": "My profile"
   },
   "misc": {
     "searchResultTitleHDD": "{0} - German translation - HanDeDict @ Zydeo Chinese-German Dictionary",
