@@ -1,6 +1,81 @@
 @import "defines.less";
 
-#newEntry { position: relative; width: 100%; clear: both; }
+#newEntry {
+  position: relative; float: left; width: 100%; clear: both; box-sizing: border-box;
+  div, p { position: relative; float: left; width: 100%; box-sizing: border-box; }
+  .formBlock { margin-bottom: 1.2rem; &.hidden { display: none; } }
+  .formBlockLabel { 
+    font-family: @fntSansAlt; font-size: 1.2rem; font-weight: bold; color: lighten(@clrBodyText, 15%); 
+    margin-bottom: 0.3rem;
+  }
+  .inputPadder { padding-right: 2.2rem; }
+  input, textarea { 
+    display: block; width: 100%; margin-bottom: 0.3rem; box-sizing: border-box; padding: 0.2rem;
+    font-size: 1rem; position: relative; float: left;
+    &.zho { font-size: 2rem; font-family: @fntZho; }
+  }
+  .inputCtrl { padding: 0.2rem; margin-bottom: 0.3rem; font-size: 2rem; &.zho { font-family: @fntZho; } }
+  .formButtonRight {
+    position: absolute; right: 0; top: -0.5rem; display: none; width: 1.5rem;
+    font-size: 2rem; cursor: default;
+    transition: background-color 0.5s ease;
+    &.accept { color: @clrMediumGreen; &:hover { color: @clrStrongGreen; } }
+    &.edit { color: @clrMediumAccent; font-size: 1.8rem; right: -0.2rem; top: -0.25rem; &:hover { color: @clrStrongAccent; } }
+    &.edit.disabled, &.accept.disabled { color: @clrGray; }
+  }
+  .formNote, .formErrors { padding-right: 2.2rem; font-size: 0.9rem; }
+  .formNote.hidden { display: none; }
+  .formErrors { 
+    display: none; &.visible { display: block; } color: @clrStrongRed; 
+    li { margin: 0; }
+  }
+  .formBlock.active {
+    .formButtonRight.accept { display: block; }
+    input, .inputCtrl, textarea { background-color: @clrLightLight; }
+    .newEntryTradPos, .newEntryPinyinPos {
+      span:hover { background-color: #a8c8e5; }
+      span:first-child:hover { background-color: inherit; }
+    }
+  }
+  .formBlock.future { 
+    .formButtonRight { display: none; }
+    input, .inputCtrl, textarea { background-color: @clrLightGray; }
+  }
+  .formBlock.future, .formBlock.ready {
+    .formNote { display: none; }
+  }
+  .formBlock.ready {
+    .formButtonRight.edit { display: block; }
+    input, .inputCtrl, textarea { background-color: @clrLightGreen; }
+    .tradAlt, .pyAlt { display: none; }
+  }
+
+  .newEntryTradPos, .newEntryPinyinPos {
+    display: block; position: relative; float: left; width: auto;
+    span {
+      display: inline-block; position: relative; float: left; clear: both;
+      cursor: default; border-radius: 0.1em; color: #808080;
+      &:first-child { color: @clrBodyText; }
+    }
+  }
+  #newEntryPinyinCtrl { font-size: 1.2rem; font-family: @fntBase; padding: 0.4rem 0 0.4rem 0.2rem; }
+  .newEntryPinyinPos { text-align: center; }
+  .newEntryPinyinPos span {
+    box-sizing: border-box; padding: 0 0.2rem 0 0.2rem;
+    margin: 0 0.1rem 0.1rem 0.1rem; width: 100%;
+  }
+  #newEntryTrg { height: 10rem; overflow-y: scroll; font-family:@fntBase; }
+  #newEntryNote { height: 5rem; overflow-y: auto; font-family:@fntBase; }
+  .formSubmit { 
+    width: auto; float: right; padding: 0.2rem 2rem 0.2rem 2rem; background-color: @clrLightAccent; cursor: default;
+    transition: background-color 0.5s ease;
+    &:hover { background-color: @clrMediumAccent; }
+  }
+  #newEntryRender { font-size: 1rem; }
+}
+
+
+/*
 
 #newEntrySimp {
   display: block; position: relative; float: left; box-sizing: border-box; width: calc(100% - 10rem);
@@ -129,3 +204,6 @@
 .newEntryKnown.visible {
   display: block;
 }
+
+
+*/

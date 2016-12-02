@@ -1,0 +1,98 @@
+﻿<div id="x-lang">en</div>
+<div id="x-rel">?/newentry</div>
+<div id="x-nositemap"></div>
+<div id="x-title-hdd">New entry - HanDeDict @ Zydeo Chinese-German dictionary</div>
+<div id="x-title-chd">New entry - CHDICT Chinese-Hungarian Dictionary</div>
+
+<div class="content" id="newEntry">
+  <div class="formBlock active" id="blockSimp">
+    <div class="formBlockLabel">Simplified</div>
+    <div class="formBlockFrame">
+      <div class="inputPadder">
+        <input id="newEntrySimp" class="zho" maxlength="16" readonly />
+        <div class="formButtonRight accept" id="acceptSimp"><i class="fa fa-check"></i></div>
+        <div class="formButtonRight edit" id="editSimp"><i class="fa fa-pencil"></i></div>
+      </div>
+    </div>
+    <div class="formNote" id="noteSimp">
+      To continue, click the green <i>Confirm</i> icon, or press Enter.
+    </div>
+    <div class="formErrors" id="errorsSimp">
+      There are a few problems with your input. Please correct these, then click the green <i>Confirm</i> icon again to proceed.
+      <ul id="errorListSimp"></ul>
+    </div>
+  </div>
+  <div class="formBlock future" id="blockTrad">
+    <div class="formBlockLabel">Traditional</div>
+    <div class="formBlockFrame">
+      <div class="inputPadder">
+        <div id="newEntryTradCtrl" class="inputCtrl zho">&nbsp;</div>
+        <div class="formButtonRight accept" id="acceptTrad"><i class="fa fa-check"></i></div>
+        <div class="formButtonRight edit" id="editTrad"><i class="fa fa-pencil"></i></div>
+      </div>
+      <div class="formNote">
+        If the traditional character you need is not at the top, you can fix it by
+        clicking the correct item below it. When you're done, click the green
+        <i>Confirm</i> icon to continue.
+      </div>
+    </div>
+  </div>
+  <div class="formBlock future" id="blockPinyin">
+    <div class="formBlockLabel">Pinyin</div>
+    <div class="formBlockFrame">
+      <div class="inputPadder">
+        <div id="newEntryPinyinCtrl" class="inputCtrl">&nbsp;</div>
+        <div class="formButtonRight accept" id="acceptPinyin"><i class="fa fa-check"></i></div>
+        <div class="formButtonRight edit" id="editPinyin"><i class="fa fa-pencil"></i></div>
+      </div>
+      <div class="formNote" id="notePinyin">
+        Verify the Pinyin transcription of each syllable. When done, click the green
+        <i>Confirm</i> icon to continue.
+      </div>
+      <div class="formErrors" id="errorsPinyin">
+        Duplicate: this headword already exists in the dictionary (same simplified and traditional
+        characters, with the same pronunciation).
+      </div>
+    </div>
+  </div>
+  <div class="formBlock future" id="blockTrg">
+    <div class="formBlockLabel" id="lblTargetBlock">Target</div>
+    <div class="formBlockFrame">
+      <div class="inputPadder">
+        <textarea id="newEntryTrg" maxlength="1024" readonly></textarea>
+        <div class="formButtonRight accept" id="acceptTrg"><i class="fa fa-check"></i></div>
+        <div class="formButtonRight edit" id="editTrg"><i class="fa fa-pencil"></i></div>
+      </div>
+      <div class="formNote" id="noteTrg">
+        Enter the headword's meanings, separated by newlines. When done, click the green <i>Confirm</i> icon.
+      </div>
+      <div class="formErrors" id="errorsTrg">
+        There are a few problems with your input. Please correct these, then click the green <i>Confirm</i> icon again to proceed.
+        <ul id="errorListTrg"></ul>
+      </div>
+    </div>
+  </div>
+  <div class="formBlock future hidden" id="blockReview">
+    <div class="formBlockLabel">Preview</div>
+    <div class="formBlockFrame">
+      <div class="inputPadder">
+        <div id="newEntryRender"></div>
+        <textarea id="newEntryNote" maxlength="1024" placeholder="Source, comment, reference..." readonly />
+        <div class="formErrors" id="errorsReview">
+          Please enter a comment to accompany the new entry. You can reference an online or offline source,
+          describe where you attested the word etc.
+        </div>
+        <div class="formSubmit" id="newEntrySubmit">Save</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--
+<div class="formBlock future hidden" id="blockRefs">
+  <div class="formBlockLabel">Sources</div>
+  <div class="formBlockFrame">
+    <div id="newEntryRefEntries"></div>
+  </div>
+</div>
+-->

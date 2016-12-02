@@ -13,13 +13,6 @@ namespace ZDO.CHSite.Controllers
 {
     public class NewEntryController : Controller
     {
-        // TO-DO: text provider. For that, we need to have session and know language.
-        private static readonly string errSpacePunct = "A címszó nem tartalmazhat szóközöket vagy központozást";
-        private static readonly string errNotHanzi = "Nem írásjegy, nagybetű vagy számjegy:";
-        private static readonly string errUnsupported = "Nem támogatott írásjegy:";
-        private static readonly string errNotSimp = "Nem egyszerűsített írásjegy:";
-
-
         private readonly LangRepo langRepo;
         private readonly SqlDict dict;
 
@@ -158,9 +151,10 @@ namespace ZDO.CHSite.Controllers
         /// <summary>
         /// Verifies if string can serve as a simplified headword.
         /// </summary>
-        public IActionResult VerifySimp([FromQuery] string simp)
+        public IActionResult VerifySimp([FromQuery] string simp, [FromQuery] string lang)
         {
             if (simp == null) return StatusCode(400, "Missing 'simp' parameter.");
+            if (lang == null) return StatusCode(400, "Missing 'lang' parameter.");
             NewEntryVerifySimpResult res = new NewEntryVerifySimpResult();
             UniHanziInfo[] uhis = langRepo.GetUnihanInfo(simp);
 
@@ -196,24 +190,25 @@ namespace ZDO.CHSite.Controllers
             else
             {
                 // Compile our errors
+                var tprov = TextProvider.Instance;
                 res.Passed = false;
                 res.Errors = new List<string>();
-                if (hasSpaceOrPunct) res.Errors.Add(errSpacePunct);
+                if (hasSpaceOrPunct) res.Errors.Add(tprov.GetString(lang, "newEntry.errSpacePunct"));
                 if (notHanziOrLD.Count != 0)
                 {
-                    string err = errNotHanzi;
+                    string err = tprov.GetString(lang, "newEntry.errNotHanzi");
                     foreach (char c in notHanziOrLD) { err += ' '; err += c; }
                     res.Errors.Add(err);
                 }
                 if (unsupportedHanzi.Count != 0)
                 {
-                    string err = errUnsupported;
+                    string err = tprov.GetString(lang, "newEntry.errUnsupported");
                     foreach (char c in unsupportedHanzi) { err += ' '; err += c; }
                     res.Errors.Add(err);
                 }
                 if (notSimp.Count != 0)
                 {
-                    string err = errNotSimp;
+                    string err = tprov.GetString(lang, "newEntry.errNotSimp");
                     foreach (char c in notSimp) { err += ' '; err += c; }
                     res.Errors.Add(err);
                 }
@@ -230,15 +225,34 @@ namespace ZDO.CHSite.Controllers
             if (pinyin == null) return StatusCode(400, "Missing 'pinyin' parameter.");
 
             NewEntryVerifyHeadResult res = new NewEntryVerifyHeadResult();
-            res.Passed = true;
-
-            // DBG
-            if (simp == "大家" || simp == "污染") res.Passed = false;
 
             // Prepare pinyin as list of proper syllables
             List<PinyinSyllable> pyList = new List<PinyinSyllable>();
             string[] pyRawArr = pinyin.Split(' ');
-            foreach (string pyRaw in pyRawArr) pyList.Add(PinyinSyllable.FromDisplayString(pyRaw));
+            foreach (string pyRaw in pyRawArr)
+            {
+                PinyinSyllable syll = PinyinSyllable.FromDisplayString(pyRaw);
+                if (syll == null) syll = new PinyinSyllable(pyRaw, -1);
+                pyList.Add(syll);
+            }
+            string pyInOne = "";
+            foreach (var syll in pyList)
+            {
+                if (pyInOne != "") pyInOne += " ";
+
+                pyInOne += syll.GetDisplayString(false);
+            }
+
+            // Is this a dupe?
+            string head = trad + " " + simp + " [" + pyInOne + "]";
+            if (SqlDict.DoesHeadExist(head))
+            {
+                res.Duplicate = true;
+                return new ObjectResult(res);
+            }
+
+            // OK, we're good.
+            res.Duplicate = false;
 
             // Return all entries, CEDICT and HanDeDict, rendered as HTML
             CedictEntry[] ced, hdd;
@@ -281,7 +295,7 @@ namespace ZDO.CHSite.Controllers
 
             CedictEntry entry = Utils.BuildEntry(simp, trad, pinyin, trg);
             StringBuilder sb = new StringBuilder();
-            EntryRenderer er = new EntryRenderer(entry, null, null);
+            EntryRenderer er = new EntryRenderer(entry, true);
             er.Render(sb, null);
             res.Preview = sb.ToString();
 

@@ -50,7 +50,7 @@ namespace ZDO.CHSite.Logic
                 can += pyList[i].GetDisplayString(false);
             }
             can += "] /";
-            foreach (string str in senses) can += str + "/";
+            foreach (string str in senses) can += str.Replace('/', '\\') + "/";
             CedictParser parser = new CedictParser();
             return parser.ParseEntry(can, 0, null);
         }

@@ -56,5 +56,11 @@
     "registered": "Registered:",
     "location": "Location:",
     "about": "About:"
+  },
+  "newEntry": {
+    "errSpacePunct": "The headword must not contain spaces or punctuation",
+    "errNotHanzi": "Not a Hanzi, capital letter or digit:",
+    "errUnsupported": "Unsupported character:",
+    "errNotSimp": "Not simplified Hanzi:"
   }
 }

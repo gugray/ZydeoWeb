@@ -132,7 +132,7 @@ namespace ZDO.CHSite.Controllers
             users.Sort(cmpUser);
             StringBuilder sb = new StringBuilder();
             UserListRenderer.Render(sb, lang, users, isMobile);
-            PageResult res = pageProvider.GetPage(lang, "?/userlist", false);
+            PageResult res = pageProvider.GetPage(lang, "user/users", false);
             res.Html = sb.ToString();
             return res;
         }
@@ -185,7 +185,7 @@ namespace ZDO.CHSite.Controllers
             catch { }
             if (idVal == -1)
             {
-                return pageProvider.GetPage(lang, "?/editnothing", false);
+                return pageProvider.GetPage(lang, "edit/existing", false);
             }
 
             PageResult pr = pageProvider.GetPage(lang, "?/editexisting", false);
@@ -201,7 +201,7 @@ namespace ZDO.CHSite.Controllers
             int userId;
             string userName;
             auth.CheckSession(HttpContext.Request.Headers, out userId, out userName);
-            if (userId < 0) return pageProvider.GetPage(lang, "?/privatepage", false);
+            if (userId < 0) return pageProvider.GetPage(lang, "edit/new", false);
             else return pageProvider.GetPage(lang, "?/newentry", false);
         }
 
@@ -232,7 +232,7 @@ namespace ZDO.CHSite.Controllers
             HistoryRenderer hr = new HistoryRenderer(lang, histPageSize, histPageIX, histPageCount, histChanges);
             hr.Render(sb);
             // Wrap up
-            PageResult pr = pageProvider.GetPage(lang, "?/history", false);
+            PageResult pr = pageProvider.GetPage(lang, "edit/history", false);
             pr.Html = sb.ToString();
             return pr;
         }

@@ -268,6 +268,12 @@ namespace ZD.LangUtils
             List<PinyinSyllable> sylls = new List<PinyinSyllable>();
             foreach (string ps in parts)
             {
+                // Single character that's a digit: take it as a weird syllable
+                if (ps.Length == 1 && ps[0] >= '0' && ps[0] <= '9')
+                {
+                    sylls.Add(new PinyinSyllable(ps, -1));
+                    continue;
+                }
                 // Does not end with a tone mark (1 thru 5): weird
                 char chrLast = ps[ps.Length - 1];
                 if (chrLast < '1' || chrLast > '5')

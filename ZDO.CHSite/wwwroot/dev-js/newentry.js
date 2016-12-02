@@ -14,6 +14,10 @@ var zdNewEntry = (function () {
   function init() {
     server = zdNewEntryServer;
 
+    // Label for target input field depends on mutation
+    if ($("body").hasClass("hdd")) $("#lblTargetBlock").text(zdPage.ui("newEntry", "target-hdd"));
+    else $("#lblTargetBlock").text(zdPage.ui("newEntry", "target-chd"));
+
     $("#newEntrySimp").bind("compositionstart", onSimpCompStart);
     $("#newEntrySimp").bind("compositionend", onSimpCompEnd);
     $("#newEntrySimp").bind("input", onSimpChanged);
@@ -115,10 +119,12 @@ var zdNewEntry = (function () {
   // API callback: submit returned, with either success or failure.
   function onSubmitReady(success) {
     $("#newEntrySubmit").removeClass("disabled");
-    if (success)
-      zdPage.showAlert("A szócikket sikeresen eltároltuk.", null, false);
+    if (success) {
+      zdPage.showAlert(zdPage.ui("newEntry", "successCaption"), zdPage.ui("newEntry", "successMsg"), false);
+      zdPage.reload();
+    }
     else
-      zdPage.showAlert("A szócikket nem sikerült eltárolni :(", null, true);
+      zdPage.showAlert(zdPage.ui("newEntry", "failCaption"), zdPage.ui("newEntry", "failMsg"), true);
   }
 
   // Event handler: user clicked pencil to continue editing target
@@ -167,7 +173,7 @@ var zdNewEntry = (function () {
   // API callback: entire headword has been verified (is it a duplicate?).
   function onHeadVerified(res) {
     $("#acceptPinyin").removeClass("disabled");
-    if (!res.passed) {
+    if (res.duplicate) {
       $(".formErrors").removeClass("visible");
       $("#errorsPinyin").addClass("visible");
       $("#notePinyin").addClass("hidden");
@@ -261,7 +267,7 @@ var zdNewEntry = (function () {
   // Handles simplified's "accept" event. Invokes server to check input.
   function onSimpAccept(evt) {
     if ($("#acceptSimp").hasClass("disabled")) return;
-    server.verifySimp($("#newEntrySimp").val(), onSimpVerified);
+    server.verifySimp($("#newEntrySimp").val(), zdPage.getLang(), onSimpVerified);
     $("#acceptSimp").addClass("disabled");
   }
 
@@ -443,8 +449,8 @@ var zdNewEntryServer = (function() {
       });
     },
 
-    verifySimp: function (simp, ready) {
-      var req = zdAuth.ajax("/api/newentry/verifysimp", "GET", { simp: simp });
+    verifySimp: function (simp, lang, ready) {
+      var req = zdAuth.ajax("/api/newentry/verifysimp", "GET", { simp: simp, lang: lang });
       req.done(function (data) {
         var res = {
           passed: data.passed,
@@ -464,7 +470,7 @@ var zdNewEntryServer = (function() {
       var req = zdAuth.ajax("/api/newentry/verifyhead", "GET", { simp: simp, trad: trad, pinyin: pinyin });
       req.done(function (data) {
         var res = {
-          passed: data.passed,
+          duplicate: data.duplicate,
           ref_entries_html: data.refEntries,
         };
         ready(res);

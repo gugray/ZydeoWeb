@@ -84,6 +84,14 @@
     "cannotApproveTitle": "Cannot approve entry",
     "cannotApproveMsg": "You haven't yet reached the contribution score that is needed to approve entries."
   },
+  "newEntry": {
+    "target-hdd": "Senses in German",
+    "target-chd": "Senses in Hungarian",
+    "successCaption": "Thank you!",
+    "successMsg": "Your entry is now in the dictionary.",
+    "failCaption": "Something went wrong",
+    "failMsg": "Your entry has not been saved."
+},
   "login": {
     "menuLogin": "Log in",
     "menuLogout": "Log out",

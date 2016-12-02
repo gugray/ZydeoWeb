@@ -40,6 +40,7 @@ namespace ZDO.CHSite.Controllers
             if (userId < 0) return StatusCode(401, "Request must contain authentication token.");
 
             int idVal = EntryId.StringToId(entryId);
+            trg = trg.Replace("\r\n", "\n");
             trg = trg.Replace('/', '\\');
             trg = trg.Replace('\n', '/');
             trg = "/" + trg + "/";
@@ -62,6 +63,7 @@ namespace ZDO.CHSite.Controllers
                 // DBG
                 if (trgTxt.Contains("micu-barf")) throw new Exception("barf");
 
+                trgTxt = trgTxt.Replace("\r\n", "\n");
                 trgTxt = trgTxt.Replace('/', '\\');
                 trgTxt = trgTxt.Replace('\n', '/');
                 trgTxt = "/" + trgTxt + "/";
