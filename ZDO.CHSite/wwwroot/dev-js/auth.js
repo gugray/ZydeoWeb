@@ -10,6 +10,30 @@ var zdAuth = (function () {
   var hiddenUser;
   var hiddenPass;
 
+  function removeHiddenFrame() {
+    $("#hiddenLoginForm").remove();
+    $("#hiddenLoginFrame").remove();
+  }
+
+  function injectHiddenFrame() {
+    removeHiddenFrame();
+    var hiddenFormHtml =
+      '<div id="hiddenLoginForm">' +
+      '<form class="login" method="post" action="/dummy.html" autocomplete="on" target="hiddenLoginFrame">' +
+      '<input type="text" name="username" class="hiddenUserName">' +
+      '<input type="password" name="password" class="hiddenPassword">' +
+      '<button type="submit">login</button>' +
+      '</form>' +
+      '</div>';
+    $("body").append(hiddenFormHtml);
+    var hiddenLoginFrame = '<iframe id="hiddenLoginFrame" name="hiddenLoginFrame" src="/dummy.html"></iframe>';
+    $("body").append(hiddenLoginFrame);
+    $("#hiddenLoginForm input").on("input", function () {
+      hiddenPass = $(".hiddenPassword").val();
+      hiddenUser = $(".hiddenUserName").val();
+    });
+  }
+
   function showLogin(message, callback) {
     // Quit right here in hamburger mode
     if (zdPage.isMobile()) return;
@@ -17,6 +41,9 @@ var zdAuth = (function () {
     // Dummies so we don't keep checking later on
     if (!message) message = "";
     if (!callback) callback = function () { };
+
+    // Inject hidden frame - triggers browser's password manager
+    injectHiddenFrame();
     
     var bodyHtml = zdSnippets["login"];
     var loginTerms = zdPage.ui("login", "terms-raw");
@@ -34,7 +61,8 @@ var zdAuth = (function () {
         else if ($(".forgotPassView").hasClass("visible")) return submitForgotPass();
         else return true;
       },
-      onClosed: function() {
+      onClosed: function () {
+        removeHiddenFrame();
         if (callback && zdAuth.isLoggedIn()) callback(true);
       },
       toFocus: "#loginEmail"
@@ -379,21 +407,6 @@ var zdAuth = (function () {
     // Sets "login status changed" callback, so main page can update menu state; adds hidden form for user/pass autocomplete
     initOnLoad: function (callback) {
       loginChangedCallback = callback;
-      var hiddenFormHtml =
-        '<div id="hiddenLoginForm">' +
-        '<form class="login" method="post" action="/dummy.html" autocomplete="on" target="hiddenLoginFrame">' +
-        '<input type="text" name="username" class="hiddenUserName">' +
-        '<input type="password" name="password" class="hiddenPassword">' +
-        '<button type="submit">login</button>' +
-        '</form>' +
-        '</div>';
-      $("body").append(hiddenFormHtml);
-      var hiddenLoginFrame = '<iframe id="hiddenLoginFrame" name="hiddenLoginFrame" src="/dummy.html"></iframe>';
-      $("body").append(hiddenLoginFrame);
-      $("#hiddenLoginForm input").on("input", function () {
-        hiddenPass = $(".hiddenPassword").val();
-        hiddenUser = $(".hiddenUserName").val();
-      });
     },
 
     // Returns auto-completed email address from hidden login form
