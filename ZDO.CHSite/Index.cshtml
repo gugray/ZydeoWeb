@@ -38,11 +38,11 @@
     <div id="headerFull">
       @if (Model.Mut == ZDO.CHSite.Mutation.CHD)
       {
-          <div id="headerHome"><span id="hdrHomeLatin">CHDICT</span><span id="hdrHomeZho">汉匈词典</span></div>
+          <a id="headerHome" href="/@Model.Lang"><span id="hdrHomeLatin">CHDICT</span><span id="hdrHomeZho">汉匈词典</span></a>
       }
       else
       {
-          <div id="headerHome"><span id="hdrHomeLatin">HANDEDICT</span><span id="hdrHomeZho">汉德词典</span></div>
+          <a id="headerHome" href="/@Model.Lang"><span id="hdrHomeLatin">HANDEDICT</span><span id="hdrHomeZho">汉德词典</span></a>
       }
       <div class="hdrSearch hdrAlt on">
         <div class="searchBox">
