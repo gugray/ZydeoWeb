@@ -75,7 +75,7 @@ namespace ZDO.CHSite.Logic
             public string About;
             public string Location;
             public int Perms;
-            public bool IsLoggedIn;
+            public bool IsAround;
         }
 
         /// <summary>
@@ -351,11 +351,13 @@ namespace ZDO.CHSite.Logic
         /// </summary>
         public List<UserInfo> GetAllUsers()
         {
-            HashSet<int> loggedIn = new HashSet<int>();
+            HashSet<int> around = new HashSet<int>();
             foreach (var x in sessions)
             {
-                if (x.Value.Expires < DateTime.UtcNow) continue;
-                loggedIn.Add(x.Value.UserId);
+                // Session expires no less than 50 minutes from now
+                // I.e., session was last touched not more than 10 minutes ago
+                if (x.Value.Expires < DateTime.UtcNow.AddMinutes(50)) continue;
+                around.Add(x.Value.UserId);
             }
             List<UserInfo> res = new List<UserInfo>();
             using (MySqlConnection conn = DB.GetConn())
@@ -381,7 +383,7 @@ namespace ZDO.CHSite.Logic
                             ContribScore = rdr.GetInt32("contrib_score"),
                             Perms = rdr.GetInt32("perms"),
                         };
-                        if (loggedIn.Contains(usr.UserId)) usr.IsLoggedIn = true;
+                        if (around.Contains(usr.UserId)) usr.IsAround = true;
                         res.Add(usr);
                     }
                 }
@@ -422,12 +424,17 @@ namespace ZDO.CHSite.Logic
                     }
                 }
             }
-            foreach (var x in sessions)
+            if (res != null)
             {
-                if (x.Value.UserId != userId) continue;
-                if (x.Value.Expires < DateTime.UtcNow) continue;
-                res.IsLoggedIn = true;
-                break;
+                foreach (var x in sessions)
+                {
+                    if (x.Value.UserId != userId) continue;
+                    // Session expires no less than 50 minutes from now
+                    // I.e., session was last touched not more than 10 minutes ago
+                    if (x.Value.Expires < DateTime.UtcNow.AddMinutes(50)) continue;
+                    res.IsAround = true;
+                    break;
+                }
             }
             return res;
         }

@@ -46,7 +46,7 @@ namespace ZDO.CHSite.Renderers
 
             sb.Append("<div class='line1'>");
             sb.Append("<span class='userName");
-            if (user.IsLoggedIn) sb.Append(" online");
+            if (user.IsAround) sb.Append(" online");
             sb.Append("'>");
             sb.Append(HtmlEncoder.Default.Encode(user.UserName));
             sb.Append("</span>");
