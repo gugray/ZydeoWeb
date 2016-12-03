@@ -90,7 +90,9 @@
     "successCaption": "Thank you!",
     "successMsg": "Your entry is now in the dictionary.",
     "failCaption": "Something went wrong",
-    "failMsg": "Your entry has not been saved."
+    "failMsg": "Your entry has not been saved.",
+    "verifyFailCaption": "Unexpected error",
+    "verifyFailMsg": "Your input could not be verified. Please try again in a few seconds."
 },
   "login": {
     "menuLogin": "Log in",

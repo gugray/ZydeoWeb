@@ -5,14 +5,23 @@
 var zdNewEntry = (function () {
   "use strict";
 
-  var server;
+  var reqId = 0;
 
   $(document).ready(function () {
     zdPage.registerInitScript("edit/new", init);
   });
 
   function init() {
-    server = zdNewEntryServer;
+    // Not logged in: only login "link" logic to set up.
+    if ($("#newEntry").length == 0) {
+      $("#loginLink").click(function (evt) {
+        zdAuth.showLogin(null, function () {
+          zdPage.reload();
+        });
+        evt.stopPropagation();
+      });
+      return;
+    }
 
     // Label for target input field depends on mutation
     if ($("body").hasClass("hdd")) $("#lblTargetBlock").text(zdPage.ui("newEntry", "target-hdd"));
@@ -54,6 +63,8 @@ var zdNewEntry = (function () {
       $("#blockSimp").addClass("active");
       $("#blockTrad").addClass("future");
       $("#blockPinyin").addClass("future");
+      $("#blockTrg").removeClass("hidden");
+      $("#blockExisting").addClass("hidden");
       $("#blockTrg").addClass("future");
       $("#blockRefs").addClass("future");
       $("#blockReview").addClass("future");
@@ -64,6 +75,8 @@ var zdNewEntry = (function () {
       $("#blockSimp").addClass("ready");
       $("#blockTrad").addClass("active");
       $("#blockPinyin").addClass("future");
+      $("#blockTrg").removeClass("hidden");
+      $("#blockExisting").addClass("hidden");
       $("#blockTrg").addClass("future");
       $("#blockRefs").addClass("future");
       $("#blockReview").addClass("future");
@@ -73,6 +86,8 @@ var zdNewEntry = (function () {
       $("#blockSimp").addClass("ready");
       $("#blockTrad").addClass("ready");
       $("#blockPinyin").addClass("active");
+      $("#blockTrg").removeClass("hidden");
+      $("#blockExisting").addClass("hidden");
       $("#blockTrg").addClass("future");
       $("#blockRefs").addClass("future");
       $("#blockReview").addClass("future");
@@ -103,28 +118,39 @@ var zdNewEntry = (function () {
   function onSubmit(evt) {
     if ($("#newEntrySubmit").hasClass("disabled")) return;
     // Check if user has entered a substantial note
-    if ($("#newEntryNote").val().length < 6) {
+    if ($("#newEntryNote").val().length == 0) {
       $(".formErrors").removeClass("visible");
       $("#errorsReview").addClass("visible");
       $("#newEntryNote").focus();
+      return;
     }
-    else {
-      $("#errorsReview").removeClass("visible");
-      $("#newEntrySubmit").addClass("disabled");
-      server.submit($("#newEntrySimp").val(), getTrad(), getPinyin(),
-        $("#newEntryTrg").val(), $("#newEntryNote").val(), onSubmitReady);
-    }
+    $("#errorsReview").removeClass("visible");
+    $("#newEntrySubmit").addClass("disabled");
+    var req = zdAuth.ajax("/api/edit/createentry", "POST", {
+      simp: $("#newEntrySimp").val(),
+      trad: getTrad(),
+      pinyin: getPinyin(),
+      trg: $("#newEntryTrg").val(),
+      note: $("#newEntryNote").val()
+    });
+    req.done(function (data) {
+      $("#newEntrySubmit").removeClass("disabled");
+      onSubmitReady(data.success);
+    });
+    req.fail(function (jqXHR, textStatus, error) {
+      $("#newEntrySubmit").removeClass("disabled");
+      onSubmitReady(false);
+    });
+    $("#newEntrySubmit").addClass("disabled");
   }
 
   // API callback: submit returned, with either success or failure.
   function onSubmitReady(success) {
-    $("#newEntrySubmit").removeClass("disabled");
-    if (success) {
+    if (success && success == true) {
       zdPage.showAlert(zdPage.ui("newEntry", "successCaption"), zdPage.ui("newEntry", "successMsg"), false);
       zdPage.reload();
     }
-    else
-      zdPage.showAlert(zdPage.ui("newEntry", "failCaption"), zdPage.ui("newEntry", "failMsg"), true);
+    else zdPage.showAlert(zdPage.ui("newEntry", "failCaption"), zdPage.ui("newEntry", "failMsg"), true);
   }
 
   // Event handler: user clicked pencil to continue editing target
@@ -136,13 +162,25 @@ var zdNewEntry = (function () {
   // Event handler: user clicked green button to accept translation
   function onTrgAccept(evt) {
     if ($("#acceptTrg").hasClass("disabled")) return;
-    server.verifyTrg($("#newEntrySimp").val(), getTrad(), getPinyin(), $("#newEntryTrg").val(), onTrgVerified);
+    var req = zdAuth.ajax("/api/newentry/verifyfull", "GET", {
+      simp: $("#newEntrySimp").val(),
+      trad: getTrad(),
+      pinyin: getPinyin(),
+      trg: $("#newEntryTrg").val()
+    });
+    req.done(function (data) {
+      $("#acceptTrg").removeClass("disabled");
+      onTrgVerified(data);
+    });
+    req.fail(function (jqXHR, textStatus, error) {
+      $("#acceptTrg").removeClass("disabled");
+      zdPage.showAlert(zdPage.ui("newEntry", "verifyFailCaption"), zdPage.ui("newEntry", "verifyFailMsg"), true);
+    });
     $("#acceptTrg").addClass("disabled");
   }
 
   // API callback: translation verified; we might have a preview
   function onTrgVerified(res) {
-    $("#acceptTrg").removeClass("disabled");
     if (!res.passed) {
       $(".formErrors").removeClass("visible");
       $("#errorsTrg").addClass("visible");
@@ -166,27 +204,45 @@ var zdNewEntry = (function () {
   // Even handler: user accepts content of pinyin field
   function onPinyinAccept(evt) {
     if ($("#acceptPinyin").hasClass("disabled")) return;
-    server.verifyHead($("#newEntrySimp").val(), getTrad(), getPinyin(), onHeadVerified);
+    var req = zdAuth.ajax("/api/newentry/verifyhead", "GET", {
+      simp: $("#newEntrySimp").val(),
+      trad: getTrad(),
+      pinyin: getPinyin()
+    });
+    req.done(function (data) {
+      $("#acceptPinyin").removeClass("disabled");
+      onHeadVerified(data);
+    });
+    req.fail(function (jqXHR, textStatus, error) {
+      $("#acceptPinyin").removeClass("disabled");
+      zdPage.showAlert(zdPage.ui("newEntry", "verifyFailCaption"), zdPage.ui("newEntry", "verifyFailMsg"), true);
+    });
     $("#acceptPinyin").addClass("disabled");
   }
 
   // API callback: entire headword has been verified (is it a duplicate?).
   function onHeadVerified(res) {
-    $("#acceptPinyin").removeClass("disabled");
     if (res.duplicate) {
       $(".formErrors").removeClass("visible");
       $("#errorsPinyin").addClass("visible");
       $("#notePinyin").addClass("hidden");
       $("#blockRefs").addClass("hidden");
+      $("#blockTrg").addClass("hidden");
+      $("#blockExisting").removeClass("hidden");
+      $("#existingEntryRender").html(res.existingEntry);
+      var hrefEdit = "/" + zdPage.getLang() + "/edit/existing/" + res.existingEntryId;
+      $("#lnkEditExisting").attr("href", hrefEdit);
     }
     else {
       $("#errorsPinyin").removeClass("visible");
       $("#notePinyin").removeClass("hidden");
+      $("#blockTrg").removeClass("hidden");
+      $("#blockExisting").addClass("hidden");
       setActive("trg");
       // References only shown in CHDICT
       if ($("body").hasClass("chd")) {
         $("#blockRefs").removeClass("hidden");
-        $("#newEntryRefEntries").html(res.ref_entries_html);
+        $("#newEntryRefEntries").html(res.refEntries);
       }
     }
   }
@@ -239,7 +295,16 @@ var zdNewEntry = (function () {
   // Handles change of simplified field. Invokes server to retrieve data for subsequent HW fields.
   function onSimpChanged(evt) {
     if (simpComposing) return;
-    server.processSimp($("#newEntrySimp").val(), onSimpProcessed);
+    var simp = $("#newEntrySimp").val();
+    if (simp.length == 0) return;
+    ++reqId;
+    var id = reqId;
+    var req = zdAuth.ajax("/api/newentry/processsimp", "GET", { simp: simp });
+    req.done(function (data) {
+      if (id != reqId) return;
+      onSimpProcessed(data.trad, data.pinyin, data.is_known_headword);
+    });
+    // Here: we silently swallow "fail"
   }
 
   // Callback when API finished processing current content of simplified field.
@@ -267,14 +332,21 @@ var zdNewEntry = (function () {
   // Handles simplified's "accept" event. Invokes server to check input.
   function onSimpAccept(evt) {
     if ($("#acceptSimp").hasClass("disabled")) return;
-    server.verifySimp($("#newEntrySimp").val(), zdPage.getLang(), onSimpVerified);
+    var req = zdAuth.ajax("/api/newentry/verifysimp", "GET", { simp: $("#newEntrySimp").val(), lang: zdPage.getLang() });
+    req.done(function (data) {
+      $("#acceptSimp").removeClass("disabled");
+      onSimpVerified(data);
+    });
+    req.fail(function (jqXHR, textStatus, error) {
+      $("#acceptSimp").removeClass("disabled");
+      zdPage.showAlert(zdPage.ui("newEntry", "verifyFailCaption"), zdPage.ui("newEntry", "verifyFailMsg"), true);
+    });
     $("#acceptSimp").addClass("disabled");
   }
 
   // Callback when API finished checking simplified.
   // We show error notice, or move on to next field.
   function onSimpVerified(res) {
-    $("#acceptSimp").removeClass("disabled");
     // Simplified is not OK - show error
     if (!res.passed) {
       $(".formErrors").removeClass("visible");
@@ -383,7 +455,14 @@ var zdNewEntry = (function () {
     $(".tradAlt").unbind("click", onTradAltClicked);
     $(".tradAlt").click(onTradAltClicked);
 
-    server.processSimpTrad($("#newEntrySimp").val(), getTrad(), onSimpTradProcessed);
+    ++reqId;
+    var id = reqId;
+    var req = zdAuth.ajax("/api/newentry/processsimptrad", "GET", { simp: $("#newEntrySimp").val(), trad: getTrad() });
+    req.done(function (data) {
+      if (id != reqId) return;
+      onSimpTradProcessed(data.pinyin, data.isKnownHeadword);
+    });
+    // Here we simply swallow failure
   }
 
   // Update data shown in pinyin field.
@@ -431,97 +510,5 @@ var zdNewEntry = (function () {
     updatePinyin(pinyin);
     if (known_hw) $(".newEntryKnown").addClass("visible");
     else $(".newEntryKnown").removeClass("visible");
-  }
-})();
-
-var zdNewEntryServer = (function() {
-  return {
-    processSimp: function (simp, ready) {
-      var req = zdAuth.ajax("/api/newentry/processsimp", "GET", { simp: simp });
-      req.done(function(data) {
-        ready(data.trad, data.pinyin, data.is_known_headword);
-      });
-      req.fail(function (jqXHR, textStatus, error) {
-        var msg = jqXHR.status + ": ";
-        if (jqXHR.responseText != "") msg += jqXHR.responseText;
-        else msg += jqXHR.statusText;
-        zdPage.showAlert("Váratlan hiba", msg, true);
-      });
-    },
-
-    verifySimp: function (simp, lang, ready) {
-      var req = zdAuth.ajax("/api/newentry/verifysimp", "GET", { simp: simp, lang: lang });
-      req.done(function (data) {
-        var res = {
-          passed: data.passed,
-          errors: data.errors
-        };
-        ready(res);
-      });
-      req.fail(function (jqXHR, textStatus, error) {
-        var msg = jqXHR.status + ": ";
-        if (jqXHR.responseText != "") msg += jqXHR.responseText;
-        else msg += jqXHR.statusText;
-        zdPage.showAlert("Váratlan hiba", msg, true);
-      });
-    },
-
-    verifyHead: function (simp, trad, pinyin, ready) {
-      var req = zdAuth.ajax("/api/newentry/verifyhead", "GET", { simp: simp, trad: trad, pinyin: pinyin });
-      req.done(function (data) {
-        var res = {
-          duplicate: data.duplicate,
-          ref_entries_html: data.refEntries,
-        };
-        ready(res);
-      });
-      req.fail(function (jqXHR, textStatus, error) {
-        var msg = jqXHR.status + ": ";
-        if (jqXHR.responseText != "") msg += jqXHR.responseText;
-        else msg += jqXHR.statusText;
-        zdPage.showAlert("Váratlan hiba", msg, true);
-      });
-    },
-
-    verifyTrg: function (simp, trad, pinyin, trg, ready) {
-      var req = zdAuth.ajax("/api/newentry/verifyfull", "GET", { simp: simp, trad: trad, pinyin: pinyin, trg: trg });
-      req.done(function (data) {
-        var res = {
-          passed: data.passed,
-          errors: data.errors,
-          preview: data.preview
-        };
-        ready(res);
-      });
-      req.fail(function (jqXHR, textStatus, error) {
-        var msg = jqXHR.status + ": ";
-        if (jqXHR.responseText != "") msg += jqXHR.responseText;
-        else msg += jqXHR.statusText;
-        zdPage.showAlert("Váratlan hiba", msg, true);
-      });
-    },
-
-    processSimpTrad: function (simp, trad, ready) {
-      var req = zdAuth.ajax("/api/newentry/processsimptrad", "GET", { simp: simp, trad: trad });
-      req.done(function (data) {
-        ready(data.pinyin, data.isKnownHeadword);
-      });
-      req.fail(function (jqXHR, textStatus, error) {
-        var msg = jqXHR.status + ": ";
-        if (jqXHR.responseText != "") msg += jqXHR.responseText;
-        else msg += jqXHR.statusText;
-        zdPage.showAlert("Váratlan hiba", msg, true);
-      });
-    },
-
-    submit: function (simp, trad, pinyin, trg, note, ready) {
-      var req = zdAuth.ajax("/api/edit/createentry", "POST", { simp: simp, trad: trad, pinyin: pinyin, trg: trg, note: note });
-      req.done(function (data) {
-        ready(data.success);
-      });
-      req.fail(function (jqXHR, textStatus, error) {
-        ready(false);
-      });
-    }
   }
 })();

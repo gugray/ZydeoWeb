@@ -9,5 +9,7 @@ namespace ZDO.CHSite.Entities
     {
         public bool Duplicate;
         public string RefEntries = null;
+        public string ExistingEntry = null;
+        public string ExistingEntryId = null;
     }
 }

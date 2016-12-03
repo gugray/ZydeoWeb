@@ -25,7 +25,7 @@ namespace ZDO.CHSite.Logic
         {
             Regex re = new Regex(@"([^ ]+) ([^ ]+) \[([^\]]+)\]");
             var m = re.Match(headword);
-            return BuildEntry(m.Groups[2].Value, m.Groups[1].Value, m.Groups[3].Value, trg);
+            return BuildEntry(m.Groups[2].Value, m.Groups[1].Value, m.Groups[3].Value, trg.Trim('/'));
         }
 
         public static CedictEntry BuildEntry(string simp, string trad, string pinyin, string trg)

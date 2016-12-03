@@ -14,8 +14,8 @@
     .entryAction { display: block; &:hover { color: @clrStrongAccent; } }
     .entryStatus { display: block; }
   }
-  // In the "edit entry" and "history" contexts: always show status
-  &.editentry, &.history {
+  // In the "edit entry", "history" and "new entry" contexts: always show status
+  &.editentry, &.history, #newEntry & {
     .entryStatus { top: 0; display: block; }
     .entryAction { display: none; }
   }

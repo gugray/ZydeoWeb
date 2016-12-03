@@ -6,6 +6,7 @@
 var zdAuth = (function () {
   "use strict";
 
+  var loginPopupClosedCallback;
   var loginChangedCallback;
   var hiddenUser;
   var hiddenPass;
@@ -41,6 +42,7 @@ var zdAuth = (function () {
     // Dummies so we don't keep checking later on
     if (!message) message = "";
     if (!callback) callback = function () { };
+    loginPopupClosedCallback = callback;
 
     // Inject hidden frame - triggers browser's password manager
     injectHiddenFrame();
@@ -63,7 +65,10 @@ var zdAuth = (function () {
       },
       onClosed: function () {
         removeHiddenFrame();
-        if (callback && zdAuth.isLoggedIn()) callback(true);
+        if (loginPopupClosedCallback && zdAuth.isLoggedIn()) {
+          loginPopupClosedCallback(true);
+          loginPopupClosedCallback = null;
+        }
       },
       toFocus: "#loginEmail"
     };
@@ -305,6 +310,11 @@ var zdAuth = (function () {
           loginChangedCallback();
         }
         zdPage.closeModal("dlgLogin");
+        removeHiddenFrame();
+        if (loginPopupClosedCallback && zdAuth.isLoggedIn()) {
+          loginPopupClosedCallback(true);
+          loginPopupClosedCallback = null;
+        }
       }
       else {
         $(".loginFailed").addClass("visible");

@@ -225,6 +225,7 @@ namespace ZDO.CHSite.Controllers
             if (pinyin == null) return StatusCode(400, "Missing 'pinyin' parameter.");
 
             NewEntryVerifyHeadResult res = new NewEntryVerifyHeadResult();
+            StringBuilder sb = new StringBuilder();
 
             // Prepare pinyin as list of proper syllables
             List<PinyinSyllable> pyList = new List<PinyinSyllable>();
@@ -239,15 +240,19 @@ namespace ZDO.CHSite.Controllers
             foreach (var syll in pyList)
             {
                 if (pyInOne != "") pyInOne += " ";
-
                 pyInOne += syll.GetDisplayString(false);
             }
 
             // Is this a dupe?
             string head = trad + " " + simp + " [" + pyInOne + "]";
-            if (SqlDict.DoesHeadExist(head))
+            CedictEntry existingEntry = SqlDict.GetEntryByHead(head);
+            if (existingEntry != null)
             {
                 res.Duplicate = true;
+                res.ExistingEntryId = EntryId.IdToString(existingEntry.StableId);
+                EntryRenderer er = new EntryRenderer(existingEntry, true);
+                er.Render(sb, null);
+                res.ExistingEntry = sb.ToString();
                 return new ObjectResult(res);
             }
 
@@ -257,7 +262,6 @@ namespace ZDO.CHSite.Controllers
             // Return all entries, CEDICT and HanDeDict, rendered as HTML
             CedictEntry[] ced, hdd;
             langRepo.GetEntries(simp, out ced, out hdd);
-            StringBuilder sb = new StringBuilder();
             sb.Append("<div id='newEntryRefCED'>");
             foreach (CedictEntry entry in ced)
             {

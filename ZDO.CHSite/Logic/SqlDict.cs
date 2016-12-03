@@ -77,15 +77,45 @@ namespace ZDO.CHSite.Logic
             }
         }
 
-        public static bool DoesHeadExist(string head)
+        public static bool DoesHeadExist(string hw)
         {
             using (MySqlConnection conn = DB.GetConn())
             using (MySqlCommand cmd = DB.GetCmd(conn, "SelCountHead"))
             {
-                cmd.Parameters["@hw"].Value = head;
+                cmd.Parameters["@hw"].Value = hw;
                 Int64 count = (Int64)cmd.ExecuteScalar();
                 return count > 0;
             }
+        }
+
+        public static CedictEntry GetEntryByHead(string hw)
+        {
+            int entryId = -1;
+            string trg = null;
+            EntryStatus status = EntryStatus.Neutral;
+            using (MySqlConnection conn = DB.GetConn())
+            using (MySqlCommand cmd = DB.GetCmd(conn, "SelEntryByHead"))
+            {
+                cmd.Parameters["@hw"].Value = hw;
+                using (var rdr = cmd.ExecuteReader())
+                {
+                    while (rdr.Read())
+                    {
+                        entryId = rdr.GetInt32("id");
+                        trg = rdr.GetString("trg");
+                        sbyte sx = rdr.GetSByte("status");
+                        if (sx == 0) status = EntryStatus.Neutral;
+                        else if (sx == 2) status = EntryStatus.Flagged;
+                        else if (sx == 1) status = EntryStatus.Approved;
+                        else throw new Exception("Invalid status in DB: " + sx);
+                    }
+                }
+            }
+            if (entryId == -1) return null;
+            CedictEntry entry = Utils.BuildEntry(hw, trg);
+            entry.Status = status;
+            entry.StableId = entryId;
+            return entry;
         }
 
         public static void GetEntryById(int id, out string hw, out string trg, out EntryStatus status)
