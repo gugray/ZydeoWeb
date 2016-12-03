@@ -51,7 +51,9 @@ namespace ZD.LangUtils
             sbTrg.Append('/');
             for (int i = 0; i != entry.SenseCount; ++i)
             {
-                sbTrg.Append(entry.GetSenseAt(i).GetPlainText());
+                string sense = entry.GetSenseAt(i).GetPlainText();
+                if (sense.Contains('/')) sense = sense.Replace('/', '\\');
+                sbTrg.Append(sense);
                 sbTrg.Append('/');
             }
             trg = sbTrg.ToString();
