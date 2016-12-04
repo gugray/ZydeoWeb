@@ -198,9 +198,6 @@ namespace ZDO.CHSite.Renderers
             {
                 sb.Append("<a class='ajax' href='/" + lang + "/edit/existing/" + entryId + "'>");
                 sb.Append("<i class='fa fa-pencil entryAction edit'></i></a>");
-                //sb.Append("<i class='fa fa-pencil entryAction edit' data-entry-id='");
-                //sb.Append(entryId);
-                //sb.Append("'></i>");
             }
 
             if (entry.Status != EntryStatus.Neutral)
@@ -243,7 +240,8 @@ namespace ZDO.CHSite.Renderers
             bool firstSyll = true;
             foreach (var pinyin in entry.Pinyin)
             {
-                if (!firstSyll) sb.Append(" ");
+                bool isErhua = pinyin.Text == "r" && pinyin.Tone == 0;
+                if (!firstSyll && !isErhua) sb.Append(" ");
                 firstSyll = false;
                 sb.Append(HtmlEncoder.Default.Encode(pinyin.GetDisplayString(true)));
             }
@@ -353,13 +351,15 @@ namespace ZDO.CHSite.Renderers
             }
             if (equiv != string.Empty)
             {
-                if (domain != string.Empty) sb.Append(" ");
+                // Not since we have pre-wrap, and character-precise content in entry
+                //if (domain != string.Empty) sb.Append(" ");
                 renderEquiv(sb, sense.Equiv, hl, needToSplit);
                 needToSplit = false;
             }
             if (note != string.Empty)
             {
-                if (domain != string.Empty || equiv != string.Empty) sb.Append(" ");
+                // Not since we have pre-wrap, and character-precise content in entry
+                //if (domain != string.Empty || equiv != string.Empty) sb.Append(" ");
                 sb.Append("<span class='sense-meta'>");
                 if (needToSplit)
                 {

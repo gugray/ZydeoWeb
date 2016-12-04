@@ -32,6 +32,13 @@ var zdHistory = (function () {
       content: $("<span>" + zdPage.ui("history", "tooltip-revealpast") + "</span>"),
       position: 'top'
     });
+    // In mobile, disable those tooltips
+    if (zdPage.isMobile()) {
+      $(".opHistComment").tooltipster("disable");
+      $(".opHistEdit").tooltipster("disable");
+      $(".opHistFlag").tooltipster("disable");
+      $(".revealPast").tooltipster("disable");
+    }
     // Event handlers for per-entry commands
     $(".opHistComment").click(onComment);
     //$(".opHistEdit").click(onEdit);
@@ -244,6 +251,13 @@ var zdHistory = (function () {
           content: $("<span>" + zdPage.ui("history", "tooltip-revealpast") + "</span>"),
           position: 'top'
         });
+        // In mobile, disable those tooltips
+        if (zdPage.isMobile()) {
+          $(".flashdown .opHistComment").tooltipster("disable");
+          $(".flashdown .opHistEdit").tooltipster("disable");
+          $(".flashdown .opHistFlag").tooltipster("disable");
+          $(".flashdown .revealPast").tooltipster("disable");
+        }
         // Event handlers for per-entry commands
         $(".flashdown .opHistComment").click(onComment);
         //$(".flashdown .opHistEdit").click(onEdit);
