@@ -1,0 +1,38 @@
+﻿<div id="x-lang">de</div>
+<div id="x-rel">?/editexisting</div>
+<div id="x-nositemap"></div>
+<div id="x-title-hdd">Eintrag bearbeiten - HanDeDict @ Zydeo chinesisch-deutsches Wörterbuch</div>
+<div id="x-title-chd">Eintrag bearbeiten - CHDICT chinesisch-ungarisches Wörterbuch</div>
+
+<div class="editexisting" data-entry-id="{{entry-id}}">
+  <div class="notice">
+    <i class="fa fa-umbrella"></i> <span>Diese Seite zeigt die Veränderungsgeschichte des Eintrags an. Um Einträge zu bearbeiten, kommentieren oder markieren, rufen Sie bitte die Seite in einem Desktop-Browser auf.</span>
+  </div>
+  <div class="entry" />
+  <div class="commands">
+    <div class="cmdpanel pnlTasks visible">
+      <span class="command cmdEdit">Bearbeiten</span>
+      <span class="command cmdComment">Kommentieren</span>
+      <span class="command cmdFlag"></span>
+      <span class="command cmdApprove">Verifizieren</span>
+    </div>
+    <div class="cmdpanel pnlAction">
+      <div class="actionTitle edit">Eintrag bearbeiten</div>
+      <div class="actionTitle comment">Eintrag kommentieren</div>
+      <div class="actionTitle flag">Eintrag markieren<span> &bull; Bitte Kommentar eingeben</span></div>
+      <div class="actionTitle unflag">Eintrag unmarkieren<span> &bull; Bitte Kommentar eingeben</span></div>
+      <div class="actionTitle approve">Eintrag verifizieren<span> &bull; Bitte Kommentar eingeben</span></div>
+      <textarea id="txtEditTrg" maxlength="1024"></textarea>
+      <div class="errorNote errBadTrg" />
+      <textarea id="txtEditCmt" class="txtEditCmt" maxlength="1024" placeholder="Source, comment, reason for change..."></textarea>
+      <div class="errorNote errNoComment">
+        Geben Sie bitte ein Kommentar mit Details zur Veränderung ein. Sie können auf eine Quelle hinweisen, oder den Grund für die Veränderung kurz erklären.
+      </div>
+      <span class="previewUpdateFail">Vorschau nicht aktualisiert</span>
+      <span class="command cmdCancel">Abbrechen</span>
+      <span class="command cmdOK">Speichern</span>
+    </div>
+  </div>
+  <h2>Versionsgeschichte</h2>
+  <div class='pastChanges' />
+</div> 

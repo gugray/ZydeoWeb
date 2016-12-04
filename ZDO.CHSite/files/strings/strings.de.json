@@ -3,7 +3,7 @@
     "topSearch": "Suche",
     "topEdit": "Bearbeiten",
     "topRead": "Infos",
-    "topDownload": "Herunterladen",
+    "topDownload": "Download",
     "subEditNew": "Neuer Eintrag",
     "subEditHistory": "Veränderungen",
     "subEditExisting": "Eintrag bearbeiten",
@@ -21,10 +21,10 @@
     "subMyProfile": "Mein profil"
   },
   "misc": {
-    "searchResultTitleHDD": "{0} - deutsche Übersetzung - HanDeDict @ Zydeo Chinesisch-Deutsches Wörterbuch",
-    "searchResultTitleTrgHDD": "{0} - chinesische Übersetzung - HanDeDict @ Zydeo Chinesisch-Deutsches Wörterbuch",
-    "searchResultTitleCHD": "{0} - Naaiiragnuuh nooitalsnart - TCIDHC NairagnuH-eesenihc Yranoitcid",
-    "searchResultTitleTrgCHD": "{0} - EEseniihc nooitaalsnart - TCIDHC NairagnuuH-esenihc Yranoitcid",
+    "searchResultTitleHDD": "{0} - deutsche Übersetzung - HanDeDict @ Zydeo chinesisch-Deutsches Wörterbuch",
+    "searchResultTitleTrgHDD": "{0} - chinesische Übersetzung - HanDeDict @ Zydeo chinesisch-Deutsches Wörterbuch",
+    "searchResultTitleCHD": "{0} - ungarische Übersetzung - CHDICT chinesisch-Ungarisches Wörterbuch",
+    "searchResultTitleTrgCHD": "{0} - chinesische Übersetzung - CHDICT chinesisch-Ungarisches Wörterbuch",
     "cookieNotice": "Diese Webseite verwendet Cookies für einige Funktionen. Indem Sie die Webseite benutzen, stimmen Sie der Nutzung von Cookies zu.",
     "cookieOK": "OK",
     "cookieLearnMore": "Mehr erfahren",
@@ -42,7 +42,7 @@
   "history": {
     "lblPage": "Seite",
     "changeNewEntry": "Neuer Eintrag",
-    "changeEdited": "Beareitet",
+    "changeEdited": "Bearbeitet",
     "changeCommented": "Kommentiert",
     "changeBulkImport": "Datenimport",
     "changeApproved": "Verifiziert",
@@ -50,11 +50,17 @@
     "changeStatusNeutral": "Unmarkiert",
     "bulkLink": "Link",
     "bulkNewWords": "{0} neue Wörter",
-    "bulkChangedWords": "{0} Wörter geändert"
+    "bulkChangedWords": "{0} Wörter verändert"
   },
   "userList": {
     "registered": "Registriert:",
     "location": "Ort:",
     "about": "Über:"
+  },
+  "newEntry": {
+    "errSpacePunct": "Das Stichwort darf keine Leer- oder Satzzeichen enthalten",
+    "errNotHanzi": "Kein Hanzi, Großbuchstabe oder Ziffer:",
+    "errUnsupported": "Schriftzeichen nicht unterstützt:",
+    "errNotSimp": "Kein vereinfachtes Schriftzeichen:"
   }
 }
