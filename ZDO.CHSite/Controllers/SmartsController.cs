@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System.Net;
 
 using Countries;
@@ -20,17 +21,19 @@ namespace ZDO.CHSite.Controllers
         private readonly SqlDict dict;
         private readonly LangRepo langRepo;
         private readonly QueryLogger qlog;
+        private readonly ILogger logger;
 
         /// <summary>
         /// Ctor: init controller within app environment.
         /// </summary>
         public SmartsController(CountryResolver cres, LangRepo langRepo, SqlDict dict,
-            QueryLogger qlog, IConfiguration config)
+            QueryLogger qlog, IConfiguration config, ILoggerFactory loggerFactory)
         {
             this.cres = cres;
             this.langRepo = langRepo;
             this.dict = dict;
             this.qlog = qlog;
+            logger = loggerFactory.CreateLogger("SmartsController");
         }
 
         /// <summary>
@@ -45,10 +48,7 @@ namespace ZDO.CHSite.Controllers
             return new ObjectResult(res);
         }
 
-        /// <summary>
-        /// Returns stroke order animation, it it exists for requested character.
-        /// </summary>
-        public IActionResult CharStrokes([FromQuery] string hanzi)
+        private IActionResult doCharStrokes(string hanzi)
         {
             IActionResult res;
 
@@ -87,6 +87,22 @@ namespace ZDO.CHSite.Controllers
             qlog.LogHanzi(country, hanzi[0], strokes != null);
             // Return result
             return res;
+        }
+
+        /// <summary>
+        /// Returns stroke order animation, it it exists for requested character.
+        /// </summary>
+        public IActionResult CharStrokes([FromQuery] string hanzi)
+        {
+            try { return doCharStrokes(hanzi); }
+            catch (Exception ex)
+            {
+                string hanziStr = hanzi == null ? "null" : hanzi;
+                string hanziHex = "n/a";
+                if (hanziStr.Length == 1) hanziHex = ((int)hanziStr[0]).ToString("X4");
+                logger.LogError(new EventId(), ex, "Failed to retrieve stroke animation; Hanzi: " + hanziHex + " \"" + hanziStr + "\"");
+                throw;
+            }
         }
 
     }
