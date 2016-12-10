@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using System.IO;
 using System.Reflection;
 using System.Runtime.Loader;
@@ -107,7 +108,55 @@ namespace ZDO.Console.Logic
             //catch (Exception ex) { return ex.ToString(); }
         }
 
+        public static string GetSizeString(int sz)
+        {
+            int order = 0;
+            if (sz >= 1000000) order = 1000000;
+            else if (sz >= 1000) order = 1000;
+            if (order == 0)
+            {
+                return sz + " byte";
+            }
+            int meg = sz / order;
+            int rem = sz - meg * order;
+            int frac = rem / (order / 10);
+            string res = meg + "." + frac;
+            if (order == 1000) return res + "KB";
+            else return res + "MB";
 
+        }
+
+        public static string GetDTString(DateTime dt)
+        {
+            string res = dt.Year + "-" + dt.Month.ToString("00") + "-" + dt.Day.ToString("00") + "!";
+            res += dt.Hour.ToString("00") + ":" + dt.Minute.ToString("00") + "." + dt.Second.ToString("00");
+            return res;
+        }
+
+        public static readonly string BupRegex = @"db\-dump\-(\d+)\-(\d+)\-(\d+)T(\d+)\-(\d+)\-(\d+)Z\.sql\.gz";
+
+        public static void FindLatestBackup(string folder, out string latestFullName, out DateTime latestDT, out int latestSize)
+        {
+            // Enumerate files in instance's exports folder
+            Regex reDump = new Regex(BupRegex);
+            DirectoryInfo di = new DirectoryInfo(folder);
+            var fis = di.EnumerateFiles();
+            latestFullName = null;
+            latestDT = DateTime.MinValue;
+            latestSize = 0;
+            foreach (var fi in fis)
+            {
+                Match m = reDump.Match(fi.Name);
+                if (!m.Success) continue;
+                DateTime dt = new DateTime(int.Parse(m.Groups[1].Value), int.Parse(m.Groups[2].Value), int.Parse(m.Groups[3].Value),
+                    int.Parse(m.Groups[4].Value), int.Parse(m.Groups[5].Value), int.Parse(m.Groups[6].Value));
+                dt = dt.ToLocalTime();
+                if (dt <= latestDT) continue;
+                latestDT = dt;
+                latestFullName = fi.FullName;
+                latestSize = (int)fi.Length;
+            }
+        }
 
         public static string Exec(string cmd, string args, out string stdout, out string stderr, Dictionary<string, string> env = null)
         {

@@ -2,7 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 using System.Net;
-using System.Threading;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -33,6 +33,8 @@ namespace ZDO.Console.Logic
             {
                 bool srvRunning = Helpers.IsSrvRunning(Path.Combine(sc.AppRoot, "service/service.pid"));
                 var config = Helpers.GetAppConfig(sc.EtcRoot);
+                string logLevel, appLogInfo, queryLogInfo;
+                getLogInfo(config, out logLevel, out appLogInfo, out queryLogInfo);
 
                 SiteValues sv = new SiteValues
                 {
@@ -40,10 +42,10 @@ namespace ZDO.Console.Logic
                     Service = srvRunning ? "running" : "stopped",
                     DbModel = Helpers.GetDbModel(config),
                     AppVersion = Helpers.GetAppVer(sc.AppRoot),
-                    LogLevel = "?",
-                    AppLog = "?",
-                    DbDump = "?",
-                    QueryLog = "?",
+                    LogLevel = logLevel,
+                    AppLog = appLogInfo,
+                    DbDump = getDumpInfo(sc),
+                    QueryLog = queryLogInfo,
                     DictExport = "?",
                 };
                 return new ObjectResult(sv);
@@ -52,6 +54,30 @@ namespace ZDO.Console.Logic
             {
                 return StatusCode(500, "Unexpected error\n" + ex.Message);
             }
+        }
+
+        private void getLogInfo(IConfiguration cfg, out string logLevel, out string appLogInfo, out string queryLogInfo)
+        {
+            logLevel = cfg["logLevel"];
+            FileInfo fi = new FileInfo(cfg["logFileName"]);
+            appLogInfo = Helpers.GetDTString(fi.LastWriteTimeUtc.ToLocalTime()) + " • " + Helpers.GetSizeString((int)fi.Length);
+            fi = new FileInfo(cfg["queryLogFileName"]);
+            queryLogInfo = Helpers.GetDTString(fi.LastWriteTimeUtc.ToLocalTime()) + " • " + Helpers.GetSizeString((int)fi.Length);
+        }
+
+        private string getDumpInfo(SiteConfig sc)
+        {
+            string expFolder = Path.Combine(sc.EtcRoot, "backups");
+            string latestFullName;
+            DateTime latestDT;
+            int latestSize;
+            Helpers.FindLatestBackup(expFolder, out latestFullName, out latestDT, out latestSize);
+
+            if (latestFullName == null) return "n/a";
+            string res = Helpers.GetDTString(latestDT);
+            res += " • ";
+            res += Helpers.GetSizeString(latestSize);
+            return res;
         }
 
         public IActionResult GetStatus([FromQuery] bool clearStatus)

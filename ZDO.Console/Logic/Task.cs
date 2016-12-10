@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Diagnostics;
 using System.IO;
@@ -36,6 +37,11 @@ namespace ZDO.Console.Logic
                 else if (cmd == "resetDB") funRecreateDB();
                 else if (cmd == "importFreq") funImportFreq();
                 else if (cmd == "importDict") funImportDict();
+                else if (cmd == "backupDB") funBackupDB();
+                else if (cmd == "dumpCleanup") funDumpCleanup();
+                else if (cmd == "fetchLatestBackup") funFetchBackup();
+                else if (cmd == "fetchAppLog") funFetchLog(true);
+                else if (cmd == "fetchQueryLog") funFetchLog(false);
                 else
                 {
                     string cmdStr = cmd == null ? "null" : cmd;
@@ -72,6 +78,170 @@ namespace ZDO.Console.Logic
             Succeeded = err == null;
             StatusMsg = "Finished.";
             msgOutErr(stdout, stderr, err);
+        }
+
+        private void funFetchLog(bool appLog)
+        {
+            string stdout, stderr, err;
+            StatusMsg = "Preparing to fetch log...";
+
+            var cfg = Helpers.GetAppConfig(sconf.EtcRoot);
+            string src = appLog ? cfg["logFileName"] : cfg["queryLogFileName"];
+            string fn = Path.GetFileName(src);
+            string trg = Path.Combine(opt.WarehousePath, fn);
+
+            StatusMsg = "Copying " + fn + " ...";
+            string args = src + " " + trg;
+            err = Helpers.Exec("cp", args, out stdout, out stderr);
+            if (err != null)
+            {
+                StatusMsg = "Failed to copy file.";
+                msgOutErr(stdout, stderr, err);
+                return;
+            }
+            StatusMsg = "Compressing in warehouse...";
+            err = Helpers.Exec("gzip", trg, out stdout, out stderr);
+            if (err != null)
+            {
+                StatusMsg = "Failed to compress in warehouse.";
+                msgOutErr(stdout, stderr, err);
+                return;
+            }
+            StatusMsg = appLog ? "App log is in warehouse folder." : "Query log is in warehouse folder.";
+            Succeeded = true;
+        }
+
+        private void funFetchBackup()
+        {
+            string stdout, stderr, err;
+            StatusMsg = "Preparing to fetch latest backup...";
+
+            string expFolder = Path.Combine(sconf.EtcRoot, "backups");
+            string latestFullName;
+            DateTime latestDT;
+            int latestSize;
+            Helpers.FindLatestBackup(expFolder, out latestFullName, out latestDT, out latestSize);
+            if (latestFullName == null)
+            {
+                StatusMsg = "No backup found.";
+                return;
+            }
+            StatusMsg = "Copying...";
+            string args = latestFullName + " " + opt.WarehousePath;
+            err = Helpers.Exec("cp", args, out stdout, out stderr);
+            if (err != null)
+            {
+                StatusMsg = "Failed to copy file.";
+                msgOutErr(stdout, stderr, err);
+                return;
+            }
+            StatusMsg = "Latest backup is in warehouse folder.";
+            Succeeded = true;
+        }
+
+        private void funDumpCleanup()
+        {
+            string stdout, stderr, err;
+            StatusMsg = "Preparing to remove excess backup files...";
+
+            // Enumerate dump files
+            string expFolder = Path.Combine(sconf.EtcRoot, "backups");
+            DirectoryInfo di = new DirectoryInfo(expFolder);
+            var fis = di.EnumerateFiles();
+            List<FileInfo> lst = new List<FileInfo>();
+            Regex reDump = new Regex(Helpers.BupRegex);
+            foreach (var fi in fis)
+            {
+                if (!reDump.Match(fi.Name).Success) continue;
+                lst.Add(fi);
+            }
+            lst.Sort((x, y) => x.LastWriteTimeUtc.CompareTo(y.LastWriteTimeUtc));
+            // Decide what to keep
+            HashSet<string> toKeep = new HashSet<string>();
+            if (lst.Count <= 7) foreach (var x in lst) toKeep.Add(x.FullName);
+            else
+            {
+                // Keep first file from each month
+                int lastMonthFirst = 100101;
+                foreach (var x in lst)
+                {
+                    int currMonth = x.LastWriteTimeUtc.Year * 100 + x.LastWriteTimeUtc.Month;
+                    if (currMonth > lastMonthFirst)
+                    {
+                        lastMonthFirst = currMonth;
+                        toKeep.Add(x.FullName);
+                    }
+                }
+                // Keep latest 7 files
+                for (int i = 0; i != 7 && lst.Count - i - 1 >= 0; ++i) toKeep.Add(lst[lst.Count - i - 1].FullName);
+            }
+
+            // Delete all non-keepers
+            StatusMsg = "Removing excess files...";
+            foreach (var x in lst)
+            {
+                if (toKeep.Contains(x.FullName)) continue;
+                err = Helpers.Exec("rm", x.FullName, out stdout, out stderr);
+                if (err != null)
+                {
+                    StatusMsg = "Failed to remove file: " + x.FullName;
+                    msgOutErr(stdout, stderr, err);
+                    return;
+                }
+            }
+
+            // Donez.
+            StatusMsg = "Done removing excess DB dumps.";
+            Succeeded = true;
+        }
+
+        private void funBackupDB()
+        {
+            string stdout, stderr, err;
+            StatusMsg = "Preparing to back up database...";
+
+            // Instance's DB connection: well, usr/pass/db name
+            // We're assuming localhost otherwise: mysqldump command
+            var cfg = Helpers.GetAppConfig(sconf.EtcRoot);
+            string args = cfg["dbDatabase"] + " --single-transaction --user=" + cfg["dbUserID"] + " --password=" + cfg["dbPass"];
+            DateTime dt = DateTime.UtcNow;
+            string dumpName = "db-dump-" + dt.Year + "-" + dt.Month.ToString("00") + "-" + dt.Day.ToString("00") + "T";
+            dumpName += dt.Hour.ToString("00") + "-" + dt.Minute.ToString("00") + "-" + dt.Second.ToString("00") + "Z";
+            dumpName += ".sql";
+            string dumpDir = Path.Combine(sconf.EtcRoot, "backups");
+            dumpName = Path.Combine(dumpDir, dumpName);
+            args += " --result-file=" + dumpName;
+
+            StatusMsg = "Performing backup...";
+            err = Helpers.Exec("mysqldump", args, out stdout, out stderr);
+            if (err != null)
+            {
+                StatusMsg = "Failed to back up database";
+                msgOutErr(stdout, stderr, err);
+                return;
+            }
+
+            StatusMsg = "Compressing dump...";
+            err = Helpers.Exec("gzip", dumpName, out stdout, out stderr);
+            if (err != null)
+            {
+                StatusMsg = "Failed to back up database";
+                msgOutErr(stdout, stderr, err);
+                return;
+            }
+
+            StatusMsg = "Copying to db-dump.sql.gz...";
+            args = dumpName + ".gz " + Path.Combine(dumpDir, "db-dump.sql.gz");
+            err = Helpers.Exec("cp", args, out stdout, out stderr);
+            if (err != null)
+            {
+                StatusMsg = "Failed to back up database";
+                msgOutErr(stdout, stderr, err);
+                return;
+            }
+
+            StatusMsg = "Backup complete.";
+            Succeeded = true;
         }
 
         private void funImportDict()

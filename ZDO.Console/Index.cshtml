@@ -45,28 +45,28 @@
         <span class="label">DB model:</span><span class="info" data-infofield="dbModel"></span>
       </div>
       <div class="row">
-        <span class="label">App version: </span><span class="info" data-infofield="appVersion"></span>
+        <span class="label">App version:</span><span class="info" data-infofield="appVersion"></span>
       </div>
     </div>
     <div class="section datalogs">
       <div class="title">Data &amp; logs</div>
       <div class="row">
-        <span class="label">Log level: </span><span class="info" data-infofield="logLevel"></span>
+        <span class="label">Log level:</span><span class="info" data-infofield="logLevel"></span>
         <span class="command">Dbg</span>
         <span class="command">Wrn</span>
         <span class="command">Err</span>
       </div>
       <div class="row">
         <span class="label">App log:</span><span class="info" data-infofield="appLog"></span>
-        <span class="command">Fetch</span>
+        <span class="command" data-command="fetchAppLog">Fetch</span>
       </div>
       <div class="row">
         <span class="label">DB dump:</span><span class="info" data-infofield="dbDump"></span>
-        <span class="command">Fetch</span>
+        <span class="command" data-command="fetchLatestBackup">Fetch</span>
       </div>
       <div class="row">
         <span class="label">Query log:</span><span class="info" data-infofield="queryLog"></span>
-        <span class="command">Fetch</span>
+        <span class="command" data-command="fetchQueryLog">Fetch</span>
       </div>
       <div class="row">
         <span class="label">Dict export:</span><span class="info" data-infofield="dictExport"></span>
@@ -77,19 +77,16 @@
     <div class="section maintenance">
       <div class="title">Maintenance</div>
       <div class="row">
-        <span class="command">Back up database</span>
+        <span class="command" data-command="backupDB">Back up database</span>
       </div>
       <div class="row">
         <span class="command" data-command="deployApp">Deploy app</span>
       </div>
       <div class="row">
-        <span class="command">Deploy static data</span>
-      </div>
-      <div class="row">
         <span class="command">Upgrade database</span><br /><br />
       </div>
       <div class="row">
-        <span class="command">Clone into staging</span>
+        <span class="command" data-command="dumpCleanup">Dump cleanup</span>
       </div>
     </div>
     <div class="section installation">
