@@ -689,18 +689,15 @@ namespace ZDO.CHSite.Logic
                     EntryVersion ver = vers[i];
                     hw = null; trg = null;
                     if (ver.Entry != null) CedictWriter.Write(ver.Entry, out hw, out trg);
-                    // Find previous different HW and TRG, if any
-                    string hwLast = null;
-                    string trgLast = null;
-                    if (ver.Entry != null)
+                    // Find previous HW and TRG. Then null if no change from previous version to this.
+                    string hwPrev = null;
+                    string trgPrev = null;
+                    if (i > 0)
                     {
-                        for (int j = i - 1; j >= 0 && hwLast == null && trgLast == null; --j)
-                        {
-                            if (vers[j].Entry == null) continue;
-                            CedictWriter.Write(vers[j].Entry, out hwLast, out trgLast);
-                            if (hwLast == hw) hwLast = null;
-                            if (trgLast == trg) trgLast = null;
-                        }
+                        string hwTmp, trgTmp;
+                        CedictWriter.Write(vers[i - 1].Entry, out hwTmp, out trgTmp);
+                        if (hwTmp != hw) hwPrev = hwTmp;
+                        if (trgTmp != trg) trgPrev = trgTmp;
                     }
                     // Find previous status
                     EntryStatus prevStatus = ver.Status;
@@ -710,15 +707,15 @@ namespace ZDO.CHSite.Logic
                     int bulkRef = ver.BulkRef <= 0 ? -1 : ver.BulkRef;
                     byte change;
                     if (i == 0) change = 0; // New entry
-                    else if (hwLast != null || trgLast != null) change = 2; // Edit
+                    else if (hwPrev != null || trgPrev != null) change = 2; // Edit
                     else if (ver.Status != prevStatus) change = 4; // Status changed
                     else change = 3; // Simply commented
                     // Store in DB
                     cmdInsModif.Parameters["@parent_id"].Value = parentId;
                     cmdInsModif.Parameters["@bulk_ref"].Value = bulkRef;
-                    if (hwLast != null) cmdInsModif.Parameters["@hw_before"].Value = hwLast;
+                    if (hwPrev != null) cmdInsModif.Parameters["@hw_before"].Value = hwPrev;
                     else cmdInsModif.Parameters["@hw_before"].Value = "";
-                    if (trgLast != null) cmdInsModif.Parameters["@trg_before"].Value = trgLast;
+                    if (trgPrev != null) cmdInsModif.Parameters["@trg_before"].Value = trgPrev;
                     else cmdInsModif.Parameters["@trg_before"].Value = "";
                     cmdInsModif.Parameters["@timestamp"].Value = ver.Timestamp;
                     cmdInsModif.Parameters["@user_id"].Value = userToId[ver.User];
@@ -734,10 +731,10 @@ namespace ZDO.CHSite.Logic
                     userIdToScore[userToId[ver.User]] += getContribScore(change);
                 }
                 // Update previous version counts
-                cmdInsModifPreCounts1.Parameters["@top_id"].Value = cmdInsModif.LastInsertedId;
+                cmdInsModifPreCounts1.Parameters["@top_id"].Value = topModifId;
                 cmdInsModifPreCounts1.Parameters["@entry_id"].Value = entryId;
                 cmdInsModifPreCounts1.ExecuteNonQuery();
-                cmdInsModifPreCounts2.Parameters["@top_id"].Value = cmdInsModif.LastInsertedId;
+                cmdInsModifPreCounts2.Parameters["@top_id"].Value = topModifId;
                 cmdInsModifPreCounts2.Parameters["@entry_id"].Value = entryId;
                 cmdInsModifPreCounts2.ExecuteNonQuery();
                 return true;

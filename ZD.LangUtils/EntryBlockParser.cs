@@ -45,6 +45,8 @@ namespace ZD.LangUtils
                     {
                         currVersion.Entry = parser.ParseEntry(line, -1, null);
                         vers.Add(currVersion);
+                        // Forward-propagate unchanged entries (null at this point)
+                        for (int i = 1; i < vers.Count; ++i) if (vers[i].Entry == null) vers[i].Entry = vers[i - 1].Entry;
                         return id;
                     }
                     // Commented lines are either version declarations, or past forms of entries following a version declaration
@@ -63,6 +65,9 @@ namespace ZD.LangUtils
                     }
                 }
             }
+            // Forward-propagate unchanged entries (null at this point)
+            for (int i = 1; i < vers.Count; ++i) if (vers[i].Entry == null) vers[i].Entry = vers[i - 1].Entry;
+            // Done.
             return id;
         }
 
@@ -80,6 +85,7 @@ namespace ZD.LangUtils
             string statStr = m.Groups[3].Value;
             string cmtIntro = m.Groups[4].Value;
             string cmt = m.Groups[5].Value;
+            cmt = unesc(cmt);
             // Resolve UTC timestamp
             m = reDate.Match(dateStr);
             if (!m.Success) throw new Exception("Invalid date format: " + dateStr);
@@ -106,5 +112,17 @@ namespace ZD.LangUtils
                 Comment = cmt,
             };
         }
+
+        private static readonly string pua = (char)0xe000 + "";
+
+        private string unesc(string str)
+        {
+            if (!str.Contains(@"\")) return str;
+            str = str.Replace(@"\\", pua);
+            str = str.Replace(@"\n", "\n");
+            str = str.Replace(pua, @"\");
+            return str;
+        }
     }
 }
+

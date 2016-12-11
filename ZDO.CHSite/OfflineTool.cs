@@ -108,8 +108,8 @@ namespace ZDO.CHSite
                             };
                             bulks[ver.BulkRef] = bci;
                         }
-                        // Seen before
-                        else
+                        // Bulk, and seen before
+                        else if (ver.BulkRef != -1)
                         {
                             if (i == 0) ++bulks[ver.BulkRef].NewEntries;
                             else ++bulks[ver.BulkRef].ChangedEntries;

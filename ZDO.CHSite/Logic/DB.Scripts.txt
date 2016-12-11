@@ -102,6 +102,7 @@ CREATE INDEX idx_modifs_user_id ON modifs(user_id);
 CREATE INDEX idx_modifs_entry_id ON modifs(entry_id);
 CREATE INDEX idx_modifs_parent_id ON modifs(parent_id);
 CREATE INDEX idx_modifs_count_a ON modifs(count_a);
+CREATE INDEX idx_modifs_timestamp ON modifs(timestamp);
 
 DROP TABLE IF EXISTS users;
 CREATE TABLE users(
@@ -385,13 +386,20 @@ SELECT COUNT(*) FROM modifs WHERE parent_id=-1 AND count_a<>-1;
 # @page_len INT
 SELECT  M.id, M.timestamp, E.id, E.hw, E.trg, M.note, M.chg, M.bulk_ref, U.id, U.user_name, M.count_a, M.count_b, M.hw_before, M.trg_before, M.status_before, E.status
 FROM	(
-		SELECT id, entry_id, user_id FROM modifs WHERE parent_id=-1 AND count_a<>-1
-		ORDER BY id DESC LIMIT @page_start, @page_len
+		SELECT id, entry_id, user_id, timestamp FROM modifs WHERE parent_id=-1 AND count_a<>-1
+		ORDER BY timestamp DESC LIMIT @page_start, @page_len
 		) X
 JOIN modifs M ON M.id = X.id
 LEFT OUTER JOIN entries E ON E.id = X.entry_id
 JOIN users U ON U.id = X.user_id
-ORDER BY M.id DESC;
+ORDER BY M.timestamp DESC;
+# End
+
+# Script SelAllHistory
+SELECT E.id, E.hw, E.trg, E.status, E.deleted, M.user_id, M.timestamp, M.note, M.bulk_ref, M.chg, M.hw_before, M.trg_before, M.status_before
+FROM entries E
+JOIN modifs M ON M.entry_id=E.id
+ORDER BY E.id;
 # End
 
 # Script SelBinaryEntry

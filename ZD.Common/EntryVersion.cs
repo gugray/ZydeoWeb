@@ -33,7 +33,8 @@ namespace ZD.Common
         public string Comment;
 
         /// <summary>
-        /// The entry, or null if it's identical to *next* (later) version.
+        /// <para>The entry at this version.</para>
+        /// <para>For export, null when entry didn't change from previous version, except first and last version, which are always present.</para>
         /// </summary>
         public CedictEntry Entry = null;
     }
