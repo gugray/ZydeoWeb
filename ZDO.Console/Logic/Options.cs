@@ -4,6 +4,7 @@
     {
         public string LogFileName { get; set; }
         public string WarehousePath { get; set; }
+        public string DropboxUploader { get; set; }
         public SiteConfig[] Sites { get; set; }
     }
 }

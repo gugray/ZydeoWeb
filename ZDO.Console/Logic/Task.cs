@@ -38,7 +38,7 @@ namespace ZDO.Console.Logic
                 else if (cmd == "importFreq") funImportFreq();
                 else if (cmd == "importDict") funImportDict();
                 else if (cmd == "backupDB") funBackupDB();
-                else if (cmd == "dumpCleanup") funDumpCleanup();
+                else if (cmd == "cronJob") funCronJob();
                 else if (cmd == "fetchLatestBackup") funFetchBackup();
                 else if (cmd == "fetchAppLog") funFetchLog(true);
                 else if (cmd == "fetchQueryLog") funFetchLog(false);
@@ -139,7 +139,87 @@ namespace ZDO.Console.Logic
             Succeeded = true;
         }
 
-        private void funDumpCleanup()
+        private void funCronJob()
+        {
+            bool ok = true;
+            if (ok) ok &= doBackupDB();
+            if (ok) ok &= doCleanupDumps();
+            if (ok) ok &= doSyncDumps();
+
+            if (ok)
+            {
+                StatusMsg = "Cron job complete.";
+                Succeeded = true;
+            }
+        }
+
+        private bool doSyncDumps()
+        {
+            string stdout, stderr, err;
+            StatusMsg = "Preparing to sync with cloud backup...";
+
+            // Enumerate dump files (filename only)
+            HashSet<string> filesHere = new HashSet<string>();
+            string expFolder = Path.Combine(sconf.EtcRoot, "backups");
+            Regex reDump = new Regex(Helpers.BupRegex);
+            var lstHere = Directory.EnumerateFiles(expFolder);
+            foreach (string fileHere in lstHere)
+            {
+                string fn = Path.GetFileName(fileHere);
+                if (!reDump.Match(fn).Success) continue;
+                filesHere.Add(fn);
+            }
+            // Enumerate files on Dropbox
+            err = Helpers.Exec(opt.DropboxUploader, "list " + sconf.DropboxBackupFolder, out stdout, out stderr);
+            if (err != null)
+            {
+                StatusMsg = "Failed to list contents of dropbox folder";
+                msgOutErr(stdout, stderr, err);
+                return false;
+            }
+            string[] lstThere = stdout.Split('\n');
+            Regex reDrop = new Regex(@" +\[F\] +[^ ]+ +([^ ]+)$");
+            HashSet<string> filesThere = new HashSet<string>();
+            foreach (string fileThere in lstThere)
+            {
+                Match m = reDrop.Match(fileThere);
+                if (!m.Success) continue;
+                filesThere.Add(m.Groups[1].Value);
+            }
+            // For each file that's not on remote: upload
+            StatusMsg = "Uploading new backups";
+            foreach (string fn in filesHere)
+            {
+                if (filesThere.Contains(fn)) continue;
+                string localFull = Path.Combine(expFolder, fn);
+                string remoteFull = sconf.DropboxBackupFolder + "/" + fn;
+                err = Helpers.Exec(opt.DropboxUploader, "upload " + localFull + " " + remoteFull, out stdout, out stderr);
+                if (err != null)
+                {
+                    StatusMsg = "Failed to upload backup";
+                    msgOutErr(stdout, stderr, err);
+                    return false;
+                }
+            }
+            // For each file that's not present locally: delete on remote
+            StatusMsg = "Removing unneeded remote copies";
+            foreach (string fn in filesThere)
+            {
+                if (filesHere.Contains(fn)) continue;
+                string remoteFull = sconf.DropboxBackupFolder + "/" + fn;
+                err = Helpers.Exec(opt.DropboxUploader, "delete " + remoteFull, out stdout, out stderr);
+                if (err != null)
+                {
+                    StatusMsg = "Failed to delete remote backup copy";
+                    msgOutErr(stdout, stderr, err);
+                    return false;
+                }
+            }
+            // Success
+            return true;
+        }
+
+        private bool doCleanupDumps()
         {
             string stdout, stderr, err;
             StatusMsg = "Preparing to remove excess backup files...";
@@ -186,16 +266,14 @@ namespace ZDO.Console.Logic
                 {
                     StatusMsg = "Failed to remove file: " + x.FullName;
                     msgOutErr(stdout, stderr, err);
-                    return;
+                    return false;
                 }
             }
-
-            // Donez.
-            StatusMsg = "Done removing excess DB dumps.";
-            Succeeded = true;
+            // Success
+            return true;
         }
 
-        private void funBackupDB()
+        private bool doBackupDB()
         {
             string stdout, stderr, err;
             StatusMsg = "Preparing to back up database...";
@@ -218,7 +296,7 @@ namespace ZDO.Console.Logic
             {
                 StatusMsg = "Failed to back up database";
                 msgOutErr(stdout, stderr, err);
-                return;
+                return false;
             }
 
             StatusMsg = "Compressing dump...";
@@ -227,21 +305,19 @@ namespace ZDO.Console.Logic
             {
                 StatusMsg = "Failed to back up database";
                 msgOutErr(stdout, stderr, err);
-                return;
+                return false;
             }
+            // Success
+            return true;
+        }
 
-            StatusMsg = "Copying to db-dump.sql.gz...";
-            args = dumpName + ".gz " + Path.Combine(dumpDir, "db-dump.sql.gz");
-            err = Helpers.Exec("cp", args, out stdout, out stderr);
-            if (err != null)
+        private void funBackupDB()
+        {
+            if (doBackupDB())
             {
-                StatusMsg = "Failed to back up database";
-                msgOutErr(stdout, stderr, err);
-                return;
+                StatusMsg = "Backup complete.";
+                Succeeded = true;
             }
-
-            StatusMsg = "Backup complete.";
-            Succeeded = true;
         }
 
         private void funImportDict()

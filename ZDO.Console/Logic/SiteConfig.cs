@@ -11,5 +11,6 @@
         public string EtcRoot { get; set; }
         public string NginxPubCfg { get; set; }
         public string NginxOffCfg { get; set; }
+        public string DropboxBackupFolder { get; set; }
     }
 }
