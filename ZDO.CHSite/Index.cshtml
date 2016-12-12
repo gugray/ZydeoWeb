@@ -26,7 +26,7 @@
     <link rel="stylesheet" href="/dev-style/history.css">
     <link rel="stylesheet" href="/dev-style/lookup.css">
     <link rel="stylesheet" href="/dev-style/user.css">
-    <link rel="stylesheet" href="/dev-style/diagnostics.css">
+    <link rel="stylesheet" href="/dev-style/download.css">
   </environment>
   <environment names="Staging,Production">
     <link rel="stylesheet" href="/prod-style/app.min.css" asp-append-version="true">
@@ -64,7 +64,7 @@
         {
             <a class="topMenu ajax" id="topMenuEdit" href="/@Model.Lang/edit/history">@Model.Str("header.topEdit")</a>
             <a class="topMenu ajax" id="topMenuRead" href="/@Model.Lang/read/search-tips">@Model.Str("header.topRead")</a>
-            <a class="topMenu ajax" id="topMenuDownload" href="/@Model.Lang/download/dictionary">@Model.Str("header.topDownload")</a>
+            <a class="topMenu ajax" id="topMenuDownload" href="/@Model.Lang/download">@Model.Str("header.topDownload")</a>
         }
         <div id="hdrMenuRight">
           <a class="loginIcon ajax" href="/@Model.Lang/user/users"><i class="fa fa-user"></i></a>
@@ -108,10 +108,6 @@
             <span id="smReadSearchTips"><a class="ajax" href="/@Model.Lang/read/search-tips">@Model.Str("header.subReadSearchTipsHDD")</a></span>
             <span id="smReadFAQ"><a class="ajax" href="/@Model.Lang/read/faq">@Model.Str("header.subReadFAQ")</a></span>
             <span id="smReadDetails"><a class="ajax" href="/@Model.Lang/read/details">@Model.Str("header.subReadDetails")</a></span>
-            <!--
-            <span id="smReadAbout"><a class="ajax" href="/@Model.Lang/read/about">@Model.Str("header.subReadAboutHDD")</a></span>
-            <span id="smReadVersionHistory"><a class="ajax" href="/@Model.Lang/read/version-history">@Model.Str("header.subReadVersionHistory")</a></span>
-            -->
           </div>
           <div class="subMenu" id="subMenuUser">
             <span id="smUserUsers"><a class="ajax" href="/@Model.Lang/user/users">@Model.Str("header.subUserList")</a></span>
@@ -119,9 +115,7 @@
             <span id="smUserLogInOut"><span></span></span>
           </div>
           <div class="subMenu" id="subMenuDownload">
-            <span id="smDownloadDict"><a class="ajax" href="/@Model.Lang/download/dictionary">@Model.Str("header.subDownloadDict")</a></span>
-            <span id="smDownloadSoft"><a class="ajax" href="/@Model.Lang/download/software">@Model.Str("header.subDownloadSoft")</a></span>
-            <span id="smDownloadLic"><a class="ajax" href="/@Model.Lang/download/license">@Model.Str("header.subDownloadLic")</a></span>
+            <span id="smDownload"><span>@Model.Str("header.subDownloadHDD")</span></span>
           </div>
       }
     </div>
@@ -172,10 +166,7 @@
           <a class="ajax sub" href="/@Model.Lang/read/search-tips">@Model.Str("header.subReadSearchTipsHDD")</a>
           <a class="ajax sub" href="/@Model.Lang/read/faq">@Model.Str("header.subReadFAQ")</a>
           <a class="ajax sub" href="/@Model.Lang/read/details">@Model.Str("header.subReadDetails")</a>
-          <a class="ajax" href="/@Model.Lang/download/dictionary">@Model.Str("header.topDownload")</a>
-          <a class="ajax sub" href="/@Model.Lang/download/dictionary">@Model.Str("header.subDownloadDict")</a>
-          <a class="ajax sub" href="/@Model.Lang/download/software">@Model.Str("header.subDownloadSoft")</a>
-          <a class="ajax sub" href="/@Model.Lang/download/license">@Model.Str("header.subDownloadLic")</a>
+          <a class="ajax" href="/@Model.Lang/download">@Model.Str("header.topDownload")</a>
           <a class="ajax" href="/@Model.Lang/user/users">@Model.Str("header.subUserList")</a>
           <div class="hdrHamMenuSep"></div>
           <div id="hdrHamLangs">
@@ -230,7 +221,7 @@
     <script src="/dev-js/lookup.js"></script>
     <script src="/dev-js/history.js"></script>
     <script src="/dev-js/profile.js"></script>
-    <script src="/dev-js/diagnostics.js"></script>
+    <script src="/dev-js/download.js"></script>
   </environment>
   <environment names="Staging,Production">
     <script src="/prod-js/app.min.js" asp-append-version="true"></script>

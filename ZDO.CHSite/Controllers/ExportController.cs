@@ -13,6 +13,7 @@ using System.Reflection;
 using ZDO.CHSite.Logic;
 using ZD.Common;
 using ZD.LangUtils;
+using ZDO.CHSite.Entities;
 
 namespace ZDO.CHSite.Controllers
 {
@@ -27,6 +28,33 @@ namespace ZDO.CHSite.Controllers
         {
             this.config = config;
             logger = loggerFactory.CreateLogger("ExportController");
+        }
+
+        public IActionResult DownloadInfo()
+        {
+            string fileName = config["exportFileNameRaw"] + ".gz";
+            string filePath = Path.Combine(config["exportFolder"], fileName);
+            FileInfo fi = new FileInfo(filePath);
+            DateTime dt = fi.LastWriteTimeUtc.ToLocalTime();
+            string strDate = dt.Year + "-" + dt.Month.ToString("00") + "-" + dt.Day.ToString("00") + "T";
+            strDate += dt.Hour.ToString("00") + ":" + dt.Minute.ToString("00") + ":" + dt.Second.ToString("00") + "Z";
+            string sizeStr = "{0:#,0}";
+            sizeStr = string.Format(sizeStr, fi.Length);
+            DownloadInfo res = new DownloadInfo
+            {
+                FileName = fileName,
+                Timestamp = strDate,
+                Size = sizeStr,
+            };
+            return new ObjectResult(res);
+        }
+
+        public FileResult Download()
+        {
+            string fileName = config["exportFileNameRaw"] + ".gz";
+            string filePath = Path.Combine(config["exportFolder"], fileName);
+            FileInfo fi = new FileInfo(filePath);
+            return PhysicalFile(fi.FullName, "application/gzip", fileName);
         }
 
         public IActionResult Go()

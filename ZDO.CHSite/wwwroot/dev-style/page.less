@@ -240,11 +240,12 @@ body {
     margin-right: 1.5rem;
     a, span { 
       border-bottom: 0.3rem solid @clrDefBg; padding-bottom: 0.3rem;
-      color: @clrStrong; cursor: pointer; text-decoration: none;
+      color: @clrStrong; text-decoration: none;
       transition: border 0.5s ease;
     }
     a:hover { border-bottom-color: @clrMedium; }
     &.on a { border-bottom-color: @clrStrong; }
+    span { cursor: default; }
   }
   #smUserLogInOut {
     display: inline-block; position: relative; float: right; margin-right: 0;
