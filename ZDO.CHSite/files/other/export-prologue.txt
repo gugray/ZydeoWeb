@@ -1,0 +1,20 @@
+﻿# HanDeDict
+# Kollaborativ entwickeltes, freies chinesisch-deutsches Wörterbuch
+# Veröffentlicht von Gábor L Ugray
+# Datenstand: {0}
+#
+# Lizenz: CC-BY-SA 3.0
+# https://creativecommons.org/licenses/by-sa/3.0/deed.de
+#
+# Online-Suche und Redaktionsoberfläche:
+# https://handedict.zydeo.net/
+#
+# Ursprünglich erstellt mit der Unterstützung der Chinesisch-Deutschen Gesellschaft e.V. Hamburg,
+# unter der Leitung von Dr. Michael Klaus Engel und Jan Hefti
+# https://web.archive.org/web/20150325185952/http://www.handedict.de/chinesisch_deutsch.php?mode=dl
+# https://web.archive.org/web/20150325174145/http://www.handedict.de/chinesisch_deutsch.php?mode=about
+#
+# Format: Diese Datei ist kompatibel mit dem ursprünglichen CEDICT-Format.
+# Als Erweiterung enthält die Datei die gesamte Änderungsgeschichte jedes Eintrags.
+# Die Benutzernamen deuten die Urheber der Änderungen/Beiträge an.
+# Siehe https://handedict.zydeo.net/de/read/details oder https://github.com/gugray/HanDeDict

@@ -8,10 +8,9 @@ using System.Threading;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Reflection;
 
-using ZDO.CHSite.Entities;
 using ZDO.CHSite.Logic;
-using ZDO.CHSite.Renderers;
 using ZD.Common;
 using ZD.LangUtils;
 
@@ -73,9 +72,19 @@ namespace ZDO.CHSite.Controllers
 
         private void writePrologue(StreamWriter sw)
         {
-            // TO-DO: from embedded resource in files/other
-            sw.WriteLine("# HanDeDict");
-            sw.WriteLine("# " + DateTime.UtcNow.ToString());
+            string strPrologue;
+            Assembly a = typeof(ExportController).GetTypeInfo().Assembly;
+            string fileName = "ZDO.CHSite.files.other.export-prologue.txt";
+            using (Stream s = a.GetManifestResourceStream(fileName))
+            using (StreamReader sr = new StreamReader(s))
+            {
+                strPrologue = sr.ReadToEnd();
+            }
+            DateTime dt = DateTime.UtcNow;
+            string strDate = dt.Year + "-" + dt.Month.ToString("00") + "-" + dt.Day.ToString("00") + "T";
+            strDate += dt.Hour.ToString("00") + ":" + dt.Minute.ToString("00") + ":" + dt.Second.ToString("00") + "Z";
+            strPrologue = string.Format(strPrologue, strDate);
+            sw.WriteLine(strPrologue);
         }
 
         private void doShellStuff()
