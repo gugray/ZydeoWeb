@@ -85,10 +85,10 @@ namespace ZDO.CHSite.Controllers
             ShellHelper.ExecWorkingDir = config["workingFolder"];
             // GZIP our export
             string exportFileName = Path.Combine(config["exportFolder"], config["exportFileNameRaw"]);
-            err = ShellHelper.Exec("gzip", "-k " + exportFileName, out stdout, out stderr);
+            err = ShellHelper.Exec("gzip", "-k -f " + exportFileName, out stdout, out stderr);
             if (err != null)
             {
-                logger.LogError(err);
+                logger.LogError("Failed to gzip export: " + err);
                 return;
             }
             // If we have Dropbox uploader specified, upload
@@ -96,8 +96,33 @@ namespace ZDO.CHSite.Controllers
             if (!string.IsNullOrEmpty(dbuploader))
             {
                 string dropName = config["dropboxFolder"] + "/" + config["exportFileNameRaw"] + ".gz";
-                err = ShellHelper.Exec(dbuploader, "upload " + exportFileName + " " + dropName, out stdout, out stderr);
-                if (err != null) logger.LogError(err);
+                err = ShellHelper.Exec(dbuploader, "upload " + exportFileName + ".gz " + dropName, out stdout, out stderr);
+                if (err != null) logger.LogError("Failed to upload to Dropbox: " + err);
+            }
+            // If we have a Git folder specified, copy export there; stage-commit-push
+            string gitCloneFolder = config["gitCloneFolder"];
+            if (!string.IsNullOrEmpty(gitCloneFolder))
+            {
+                while (true) // Sorry for the GOTO & thanks for all the fish
+                {
+                    // Copy
+                    err = ShellHelper.Exec("cp", exportFileName + " " + gitCloneFolder, out stdout, out stderr);
+                    if (err != null) { logger.LogError("Failed to copy export to Git clone folder: " + err); break; }
+                    // For all the Git stuff, working folder must be Git clone
+                    ShellHelper.ExecWorkingDir = gitCloneFolder;
+                    // Stage
+                    err = ShellHelper.Exec("git", "add .", out stdout, out stderr);
+                    if (err != null) { logger.LogError("Git add failed: " + err); break; }
+                    // Commit with message
+                    string commitMessage = config["gitCommitMessage"];
+                    err = ShellHelper.Exec("git", "commit -m \"" + commitMessage + "\"", out stdout, out stderr);
+                    if (err != null) { logger.LogError("Git commit failed: " + err); break; }
+                    // Push
+                    err = ShellHelper.Exec("git", "push", out stdout, out stderr);
+                    if (err != null) { logger.LogError("Git push failed: " + err); break; }
+                    // Done.
+                    break;
+                }
             }
         }
 
