@@ -777,8 +777,8 @@ namespace ZDO.CHSite.Logic
                 // Unindex in DB: simple: just fire off deletes for collected entry IDs
                 foreach (int entryId in entriesToUnindex)
                 {
-                    sc.CmdDelEntryHanziInstances.Parameters["@blob_id"].Value = entryId;
-                    sc.CmdDelEntryHanziInstances.ExecuteNonQuery();
+                    sc.CmdDelEntryTrgInstances.Parameters["@blob_id"].Value = entryId;
+                    sc.CmdDelEntryTrgInstances.ExecuteNonQuery();
                 }
                 // In memory: from all affected normwords' instances, remove all items for unindexed entries
                 foreach (string norm in trgToUnindex)
