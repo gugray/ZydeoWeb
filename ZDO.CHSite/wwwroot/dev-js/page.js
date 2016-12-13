@@ -222,6 +222,8 @@ var zdPage = (function () {
 
     // Show dynamic content, title etc.
     applyDynContent(data);
+    // Fix title in hamburger mode
+    fixHamTitle();
     // GA single-page navigation
     ga('set', 'page', path);
     ga('send', {
@@ -374,10 +376,8 @@ var zdPage = (function () {
     else if (startsWith(rel, "download/license")) $("#smDownloadLic").addClass("on");
     else if (startsWith(rel, "user/users")) $("#smUserUsers").addClass("on");
     else if (startsWith(rel, "user/profile")) $("#smUserProfile").addClass("on");
-    // In hamburger mode, steal title from selected submenu; or page's ".page-title" element
-    var hamTitle = $(".subMenu span.on").text();
-    if (!hamTitle || hamTitle == "") hamTitle = $("#page-title").text();
-    $(".hdrTitle").text(hamTitle);
+    // Fix title in hamburger mode
+    fixHamTitle();
     // Language selector
     $(".langSelDe").attr("href", "/de/" + rel);
     $(".langSelHu").attr("href", "/hu/" + rel);
@@ -386,6 +386,14 @@ var zdPage = (function () {
     if (lang == "en") $(".langSelEn").addClass("on");
     else if (lang == "hu") $(".langSelHu").addClass("on");
     else if (lang == "de") $(".langSelDe").addClass("on");
+  }
+
+  // Fix title in hamburger mode if there is no submenu
+  function fixHamTitle() {
+    // In hamburger mode, steal title from selected submenu; or page's ".page-title" element
+    var hamTitle = $(".subMenu span.on").text();
+    if (!hamTitle || hamTitle == "") hamTitle = $("#page-title").text();
+    $(".hdrTitle").text(hamTitle);
   }
 
   // Closes a standard modal dialog (shown by us).
