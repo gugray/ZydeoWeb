@@ -27,6 +27,13 @@ var zdHandwriting = (function () {
   // Canvas coordinates of each point in current stroke, in raw (unanalyzed) form.
   var currentStroke = null;
 
+  // Interaction log for current session
+  var uxLog = {
+    timeShown: null, // Timestamp when UI was shown (msec counter)
+    pickedInSession: false, // True if at least 1 char has been picked since session started
+    drawingActions: [] // Drawing actions: { action: "stroke", points: [], results: [] } or { action: "undo" } or { action: "clear" }
+  };
+
   // Draws a clear canvas, with gridlines
   function drawClearCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -88,10 +95,17 @@ var zdHandwriting = (function () {
     ctx.lineTo(x, y);
     ctx.stroke();
     currentStroke.push([x, y]);
+    // Store stroke
     rawStrokes.push(currentStroke);
     currentStroke = [];
     // Character lookup
-    matchAndShow();
+    var matches = matchAndShow();
+    // Log interaction
+    uxLog.drawingActions.push({
+      action: "stroke",
+      points: rawStrokes[rawStrokes.length - 1],
+      results: matches
+    });
   }
 
   // Redraws raw strokes on the canvas.
@@ -112,13 +126,44 @@ var zdHandwriting = (function () {
     }
   }
 
+  function uxLogSubmit(selectedChar, selectedIx) {
+    // Don't submit "closed with no actions" event after sucessful session
+    if (uxLog.pickedInSession && uxLog.drawingActions.length == 0) {
+      // NOP
+    }
+    else {
+      // The actual interaction log that we submit
+      var obj = {
+        char: selectedChar,
+        ix: selectedIx,
+        duration: (new Date().getTime() - uxLog.timeShown),
+        actions: uxLog.drawingActions
+      };
+      var json = JSON.stringify(obj);
+      // Submit it
+      var req = $.ajax({
+        url: "/api/smarts/handwritingfinished",
+        type: "POST",
+        contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+        data: { json: json }
+      });
+    }
+    // Clear UX log
+    uxLog.timeShown = new Date().getTime();
+    uxLog.drawingActions = [];
+  }
+
   function matchAndShow() {
     var matches = zdCharMatcher.match(rawStrokes, 8);
     $("#" + prms.suggestionsId).html('');
     for (var i = 0; ((i < 8) && matches[i]) ; i++) {
       var sug = document.createElement('span');
-      $(sug).append(matches[i]).attr('class', prms.suggestionClass);
+      $(sug).append(matches[i]).attr('class', prms.suggestionClass).data("matchix", i);
       $(sug).click(function () {
+        // Complete and submit interaction log
+        uxLog.pickedInSession = true;
+        uxLogSubmit($(this).text(), $(this).data("matchix"));
+        // Insert user's pick into search field
         if (appendNotOverwrite)
           $("." + prms.insertionTargedClass).val($("." + prms.insertionTargedClass).val() + $(this).html());
         else
@@ -129,6 +174,7 @@ var zdHandwriting = (function () {
       });
       $("#" + prms.suggestionsId).append(sug);
     }
+    return matches;
   }
 
   function clearCanvas() {
@@ -143,6 +189,11 @@ var zdHandwriting = (function () {
   return {
     // Initializes handwriting recognition (events etc.)
     init: function (params) {
+      uxLog.timeShown = new Date().getTime();
+      uxLog.timeClosed = null;
+      uxLog.drawingActions = [];
+      uxLog.pickedInSession = false;
+
       prms = params;
       canvas = document.getElementById(prms.canvasId);
       if (canvas === null) return;
@@ -192,7 +243,17 @@ var zdHandwriting = (function () {
     },
 
     // Clear canvas and resets gathered strokes data for new input.
-    clearCanvas: function () { clearCanvas(); },
+    clearCanvas: function () {
+      // Start afresh
+      clearCanvas();
+      // Log interaction
+      if (uxLog.drawingActions.length > 0) uxLog.drawingActions.push({ action: "clear" });
+    },
+
+    // Called just before popup is hidden, so we can submit and reset UX log
+    endSession: function () {
+      uxLogSubmit("X", -1);
+    },
 
     // Undoes the last stroke input by the user.
     undoStroke: function () {
@@ -206,6 +267,8 @@ var zdHandwriting = (function () {
       redrawInput();
       // Lookup best matching characters for what's left on canvas now
       matchAndShow();
+      // Log interaction
+      uxLog.drawingActions.push({ action: "clear" });
     },
 
     // Sets whether inserting match should overwrite search field, or append to it.
