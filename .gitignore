@@ -1,4 +1,5 @@
 # Special folders (deployment, runtime data etc.)
+_localization
 _dev_site_data
 _deploy*
 _work
