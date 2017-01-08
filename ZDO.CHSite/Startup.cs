@@ -107,6 +107,7 @@ namespace ZDO.CHSite
             // These below have a shutdown action, so we store them in a member too.
             auth = new Auth(loggerFactory, config, emailer, pageProvider);
             services.AddSingleton(auth);
+            qlog = new QueryLogger(config["queryLogFileName"], config["hwriteLogFileName"]);
             services.AddSingleton(qlog);
             // MVC for serving pages and REST
             services.AddMvc();
