@@ -100,7 +100,7 @@ namespace ZDO.CHSite
             services.AddSingleton(new PageProvider(loggerFactory, env.IsDevelopment(), mut, config["baseUrl"]));
             services.AddSingleton(new LangRepo(config["uniHanziFileName"]));
             services.AddSingleton(new SqlDict(loggerFactory));
-            qlog = new QueryLogger(config["queryLogFileName"]);
+            qlog = new QueryLogger(config["queryLogFileName"], config["hwriteLogFileName"]);
             services.AddSingleton(qlog);
             // MVC for serving pages and REST
             services.AddMvc();

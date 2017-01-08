@@ -407,6 +407,7 @@ var zdLookup = (function () {
 
   // Hides the handwriting recognition popup
   function hideStrokeInput() {
+    zdHandwriting.endSession();
     $("#handwritingBox").empty();
     $("#handwritingBox").removeClass("visible");
     zdPage.modalHidden();

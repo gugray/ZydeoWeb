@@ -37,6 +37,16 @@ namespace ZDO.CHSite.Controllers
         }
 
         /// <summary>
+        /// Logs a handwriting recognition event.
+        /// </summary>
+        public IActionResult HandwritingFinished([FromForm] string json)
+        {
+            if (string.IsNullOrEmpty(json)) return StatusCode(400);
+            qlog.LogHandwriting(json);
+            return new ObjectResult(true);
+        }
+
+        /// <summary>
         /// Returns target-language search suggestions based on query prefix.
         /// </summary>
         public IActionResult PrefixHints([FromQuery] string prefix)

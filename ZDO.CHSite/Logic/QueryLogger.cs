@@ -65,6 +65,29 @@ namespace ZDO.CHSite.Logic
             }
         }
 
+        private class HandritingItem : IAuditItem
+        {
+            private readonly DateTime time;
+            private readonly string data;
+
+            public HandritingItem(string data)
+            {
+                this.time = DateTime.UtcNow;
+                this.data = data;
+            }
+            public string LogLine
+            {
+                get
+                {
+                    StringBuilder sb = new StringBuilder();
+                    sb.Append(QueryLogger.FormatTime(time));
+                    sb.Append('\t');
+                    sb.Append(data);
+                    return sb.ToString();
+                }
+            }
+        }
+
         private class QueryItem : IAuditItem
         {
             private readonly DateTime time;
@@ -146,14 +169,16 @@ namespace ZDO.CHSite.Logic
         }
 
         private readonly string logFileName;
+        private readonly string hwriteFileName;
         private Thread thr;
         private AutoResetEvent evt = new AutoResetEvent(false);
         private readonly List<IAuditItem> ilist = new List<IAuditItem>();
         private bool closing = false;
 
-        public QueryLogger(string logFileName)
+        public QueryLogger(string logFileName, string hwriteFileName)
         {
             this.logFileName = logFileName;
+            this.hwriteFileName = hwriteFileName;
             thr = new Thread(threadFun);
             thr.IsBackground = true;
             thr.Start();
@@ -181,13 +206,17 @@ namespace ZDO.CHSite.Logic
                 if (myList.Count == 0) continue;
                 using (FileStream fsQueryLog = new FileStream(logFileName, FileMode.Append, FileAccess.Write))
                 using (StreamWriter swQueryLog = new StreamWriter(fsQueryLog))
+                using (FileStream fsHwriteLog = new FileStream(hwriteFileName, FileMode.Append, FileAccess.Write))
+                using (StreamWriter swHwriteLog = new StreamWriter(fsHwriteLog))
                 {
                     foreach (IAuditItem itm in myList)
                     {
                         if (itm is QueryItem) swQueryLog.WriteLine(itm.LogLine);
                         else if (itm is HanziItem) swQueryLog.WriteLine(itm.LogLine);
+                        else if (itm is HandritingItem) swHwriteLog.WriteLine(itm.LogLine);
                     }
                     swQueryLog.Flush();
+                    swHwriteLog.Flush();
                 }
             }
         }
@@ -207,6 +236,16 @@ namespace ZDO.CHSite.Logic
         public void LogHanzi(string countryCode, char hanzi, bool found)
         {
             HanziItem itm = new HanziItem(countryCode, hanzi, found);
+            lock (ilist)
+            {
+                ilist.Add(itm);
+                evt.Set();
+            }
+        }
+
+        public void LogHandwriting(string data)
+        {
+            HandritingItem itm = new HandritingItem(data);
             lock (ilist)
             {
                 ilist.Add(itm);
