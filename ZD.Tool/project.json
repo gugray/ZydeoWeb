@@ -9,6 +9,7 @@
       "type": "platform",
       "version": "1.0.0"
     },
+    "Newtonsoft.Json": "9.0.1",
     "ZD.Common": "1.0.0-*",
     "ZD.LangUtils": "1.0.0-*"
   },

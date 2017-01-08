@@ -2,7 +2,7 @@
   "profiles": {
     "ZD.Tool": {
       "commandName": "Project",
-      "commandLineArgs": "--20-cleanse",
+      "commandLineArgs": "--mmah-medians",
       "workingDirectory": "D:\\Development\\ZydeoWeb\\_work"
     }
   }
