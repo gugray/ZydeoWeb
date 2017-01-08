@@ -417,7 +417,9 @@ var zdLookup = (function () {
 
   // Hides the handwriting recognition popup
   function hideStrokeInput() {
-    zdHandwriting.endSession();
+    // If UI really was visible, end session (submits UX interaction log)
+    if ($("#handwritingBox").hasClass("visible")) zdHandwriting.endSession();
+    // Hide UI
     $("#handwritingBox").empty();
     $("#handwritingBox").removeClass("visible");
     zdPage.modalHidden();
