@@ -433,7 +433,11 @@ var zdLookup = (function () {
   // Submits a dictionary search as simple GET URL
   function submitSearch() {
     var queryStr = $('.txtSearch.active').val();
-    queryStr = queryStr.replace(" ", "+");
+    // Bugfix for IE: must URL-encode ourselves
+    // Like, every browser gets this right by themselves, except the beast
+    // https://answers.microsoft.com/en-us/ie/forum/ie11-windows_other/ie11-sends-unencoded-url-referer-header/7420a770-56eb-4317-b00f-3322637dc62b
+    queryStr = encodeURIComponent(queryStr);
+    queryStr = queryStr.replace("%20", "+");
     killPrefixHints();
     hideStrokeInput();
     hideSettings();
