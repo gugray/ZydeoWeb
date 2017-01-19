@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Diagnostics;
 
 namespace ZD.Tool
@@ -26,10 +29,6 @@ namespace ZD.Tool
             Console.WriteLine("  Converts binary file to byte array");
             Console.WriteLine("  Input name fixed: medians.bin");
             Console.WriteLine("  Outputs chardata.js");
-            Console.WriteLine("--mmah-medians");
-            Console.WriteLine("  Converts MMAH's graphics.txt to JSON");
-            Console.WriteLine("  Input name fixed: graphics.txt");
-            Console.WriteLine("  Outputs x-mmah-medians.js; x-mmah-strokes.js");
             Console.WriteLine();
         }
 
@@ -40,7 +39,6 @@ namespace ZD.Tool
             if (args[0] == "--20-cleanse") return args[0];
             if (args[0] == "--compile-hwinfo") return args[0];
             if (args[0] == "--tobytes") return args[0];
-            if (args[0] == "--mmah-medians") return args[0];
             return null;
         }
 
@@ -53,7 +51,6 @@ namespace ZD.Tool
                 if (opt as string == "--20-cleanse") return new Wrk20Cleanse();
                 if (opt as string == "--compile-hwinfo") return new WrkUnihanzi();
                 if (opt as string == "--tobytes") return new WrkToBytes();
-                if (opt as string == "--mmah-medians") return new WrkMmahMedians();
             }
             throw new Exception(opt.GetType().ToString() + " is not recognized as an options type.");
         }
