@@ -301,7 +301,7 @@ var zdPage = (function () {
     });
     // Link to imprint
     $("#imprint").click(function () {
-      window.open("/" + zdPage.getLang() + "/read/imprint");
+      window.open("/" + zdPage.getLang() + "/read/details/imprint");
     });
   }
 
