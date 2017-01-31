@@ -56,12 +56,12 @@ namespace ZD.Tool
 
         private string cleanse(string line)
         {
-            // Curly quotes, non-breakding spaces
+            // Curly quotes, non-breaking spaces
             line = line.Replace(' ', ' '); // NBSP
             line = line.Replace('\t', ' '); // TAB
             line = line.Replace('“', '"'); // Curly quote
             line = line.Replace('”', '"'); // Curly quote
-            // Remove "(u.E.)" from entry itself. We out this info into the Status meta field.
+            // Remove "(u.E.)" from entry itself. We put this info into the Status meta field.
             line = line.Replace("(u.E.)", "");
             // Fix &gt in place of >
             line = line.Replace("&gt", ">");

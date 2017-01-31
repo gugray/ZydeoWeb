@@ -1,0 +1,75 @@
+﻿<div id="x-mutation">hdd</div>
+<div id="x-lang">en</div>
+<div id="x-rel">/read/details/change-001</div>
+<div id="x-description"></div>
+<div id="x-keywords"></div>
+<div id="x-title">Bulk change 001: Initial import - HanDeDict @ Zydeo Chinese-German dictionary</div>
+
+<div class="content">
+  <h2>Bulk change 001: Initial import</h2>
+  <p>
+    The history of every entry that comes from the original HanDeDict file starts with this version. To
+    prepare for the initial import, the
+    <a href="https://web.archive.org/web/20150325185952/http:/www.handedict.de/handedict/handedict-20110528.zip" rel="noreferrer">dictionary file</a>
+    salvaged from the Internet Archive’s Wayback Machine was transformed into the new, extended format. Specifically:
+  </p>
+  <ul>
+    <li>
+      A random ID was assigned to every entry, and the output file was sorted by entry ID.
+    </li>
+    <li>
+      Markup was added to represent the initial version of each entry. The changing user is <i>HanDeDict</i>,
+      which is a placeholder to represent the dictionary’s original authors. The change’s timestamp is
+      May 28, 2011, reflecting the retrieved data file’s “last changed” declaration.
+    </li>
+    <li>
+      The version history markup incorporates each entry’s status from the original data file. Unverified entries
+      contained <i>(u.E.)</i> in a German sense. Where this was found, <i>Stat-New</i> is stated in the
+      extended format. For verified entries, which did not contain <i>(u.E.)</i>, <i>Stat-Verif</i> is
+      stated in the extended format.
+    </li>
+    <li>
+      Every line in the original data file was checked for syntax. 49 entries were discarded, mostly because
+      they didn’t contain the same number of Hanzi and Pinyin syllables. A smaller number were discarded
+      because they contained rare Hanzi at Unicode code points above the two-byte range, which are not
+      supported by HanDeDict @ Zydeo.
+    </li>
+  </ul>
+  <h3>Repro</h3>
+  <p>
+    <a href="https://github.com/gugray/ZydeoWeb/blob/master/ZD.Tool/Wrk10Prepare.cs" rel="noreferrer" target="_blank">Wrk10Prepare.cs</a>
+    in ZD.Tool is the script that was used for the initial transformation. To execute:
+  </p>
+  <ol>
+    <li>
+      Place
+      <span class="inline-code">handedict.u8</span> in a subfolder named
+      <span class="inline-code">_work</span> under the solution root
+    </li>
+    <li>
+      Compile and run ZD.Tool with the <span class="inline-code">--10-prepare</span> argument
+    </li>
+  </ol>
+  <p>
+    Output: <a href="/files/x-10-handedict.txt.zip">x-10-handedict.txt</a> contains the enriched entries in the new format.
+  </p>
+  <h3>Diagnostics</h3>
+  <p>
+    <a href="https://github.com/gugray/ZydeoWeb/blob/master/ZD.Tool/WrkExamine.cs" rel="noreferrer" target="_blank">WrkExamine.cs</a>
+    in ZD.Tool is a diagnostic script that was executed before the transformation. Its outputs:
+  </p>
+  <ol>
+    <li>
+      <a href="/files/hdd-diag.txt">hdd-diag.txt</a> contains entries that are discarded in the transformation.
+    </li>
+    <li>
+      hdd-trip.txt contains entries that don’t roundtrip unchanged through the CC-CEDICT parser used throughout the
+      HanDeDict @ Zydeo code base. This file is empty.
+    </li>
+    <li>
+      <a href="/files/hdd-diag.txt">hdd-tags.txt</a> contains all the different words that are contained within parantheses
+      in the original dictionary file, ordered by frequency. This includes, as a subset, a comprehensive list of the
+      metainformation labels used by HanDeDict’s creators.
+    </li>
+  </ol>
+</div>

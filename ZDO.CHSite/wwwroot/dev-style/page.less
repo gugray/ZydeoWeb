@@ -341,11 +341,23 @@ textarea, input { outline: none; border: none; background-color: @clrLightLight;
 
 #dynPage .content {
   position: relative; float: left; width: 100%; font-size: 1.1rem;
+  //line-height: 1rem;
   :first-child { margin-top: 0; }
   p, ul, li { line-height: 130%; margin-bottom: 0.7rem; }
   h2 { font-family: @fntSerif; font-size: 2rem; margin: 1.5rem 0 1rem 0; }
+  h3 { font-family: @fntSansAlt; font-size: 1.3rem; margin: 1.5rem 0 0.5rem 0; }
   a { text-decoration: none; color: @clrStrongAccent; }
   a:hover { color: @clrStrongRed; }
+  .inline-code { 
+    font-family: monospace; font-size: 1rem; background-color: @clrLightLightGray; border-radius: 0.1rem; 
+    padding: 0.05rem 0.2rem; display: inline-block;
+  }
+  .pre-wrap { overflow-x: scroll; background-color: @clrLightLightGray; margin-bottom: 0.7rem; }
+  pre {
+    font-size: 1rem; white-space: pre;
+    padding: 0.5rem 0.5rem;
+  }
+  .pinyin { color: #606060; background-color: @clrLightLightGray; padding: 0 0.2rem; border-radius: 0.1rem; }
 }
 
 

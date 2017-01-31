@@ -1,0 +1,105 @@
+﻿<div id="x-mutation">hdd</div>
+<div id="x-lang">en</div>
+<div id="x-rel">/read/details/change-002</div>
+<div id="x-description"></div>
+<div id="x-keywords"></div>
+<div id="x-title">Bulk change 002: Data cleansing - HanDeDict @ Zydeo Chinese-German dictionary</div>
+
+<div class="content">
+  <h2>Bulk change 002: Data cleansing</h2>
+  <p>
+    The original HanDeDict data file has several issues. Some of these are marginal, such as inconsistenly used curly or
+    straight quotation marks. Some are annoying, such as <span class="inline-code">&lt;&gt;</span> and
+    <span class="inline-code">()</span> used inconsistently as parantheses, or double spaces.
+    Some might have been caused by a script error in the original HanDeDict site, or in the Wayback Machine, such as
+    <span class="inline-code">&amp;gt</span> (without a semicolon) showing up in various entries.
+    Some are serious but easy to fix: e.g., missing spaces, because these obscure true word boundaries and prevent
+    searching from retrieving German words that are actually in the dictionary.
+    Some problems are serious
+    but not fixable: the file often contains <span class="inline-code">/</span> as text, but this cannot be distinguished from
+    <span class="inline-code">/</span> as the sense separator. Finally, the majority of the entries contains
+    <i>(u.E.)</i>, which in HanDeDict @ Zydeo belongs in the extended format, not in the displayed entry text.
+  </p>
+  <p>
+    Before import, a second script was executed to fix as many of these issues as possible without human intervention.
+    The script records a new version for every changed entry, with <i>zydeo-robot</i> as the changing user.
+    That is a placeholder for scripted transformations, so that bulk changes like this do not show up under a real user’s
+    account that also contributes to the dictionary as a human.
+  </p>
+  <p>
+    For the technical reader, it is easiest to directly include the relevant code that was executed for every entry:
+  </p>
+  <pre><code class="cs">private Regex reLtGt = new Regex(@"&lt;([^&gt;\/]+)&gt;");
+private Regex reAngled = new Regex(@"\[([^\]\/]+)\]");
+private Regex reCommaSpace = new Regex(@",(\p{L})");
+private Regex reParenSpace1 = new Regex(@"\( *([^\)]+)\)");
+private Regex reParenSpace2 = new Regex(@" +\)");
+private string cleanse(string line)
+{
+    // Curly quotes, non-breaking spaces
+    line = line.Replace(' ', ' '); // NBSP
+    line = line.Replace('\t', ' '); // TAB
+    line = line.Replace('“', '"'); // Curly quote
+    line = line.Replace('”', '"'); // Curly quote
+    // Remove "(u.E.)" from entry itself. We put this info into the Status meta field.
+    line = line.Replace("(u.E.)", "");
+    // Fix &amp;gt in place of &gt;
+    line = line.Replace("&amp;gt", "&gt;");
+    // &lt;something&gt; -&gt; (something)
+    line = reLtGt.Replace(line, "($1)");
+    // Angle [brackets] inside body
+    int spos = line.IndexOf('/');
+    string head = line.Substring(0, spos);
+    string body = line.Substring(spos);
+    body = reAngled.Replace(body, "($1)");
+    line = head + body;
+    // No space after comma
+    line = reCommaSpace.Replace(line, ", $1");
+    // Multiple spaces
+    while (true)
+    {
+        string b = line.Replace("  ", " ");
+        if (b == line) break;
+        line = b;
+    }
+    // Spaces inside ( parentheses )
+    line = reParenSpace1.Replace(line, "($1)");
+    line = reParenSpace2.Replace(line, ")");
+    // Trailing / leading spaces in senses
+    spos = line.IndexOf('/');
+    head = line.Substring(0, spos);
+    body = line.Substring(spos);
+    body = body.Replace("/ ", "/");
+    body = body.Replace(" /", "/");
+    line = head + body;
+    // Phew
+    return line;
+}
+</code></pre>
+  <h3>Repro</h3>
+  <p>
+    <a href="https://github.com/gugray/ZydeoWeb/blob/master/ZD.Tool/Wrk20Cleanse.cs" rel="noreferrer" target="_blank">Wrk20Cleanse.cs</a>
+    from ZD.Tool is the script that was used. To execute:
+  </p>
+  <ol>
+    <li>
+      Put <span class="inline-code">x-10-handedict.txt</span> from the initial transformation script in a subfolder named
+      <span class="inline-code">_work</span> under the solution root
+    </li>
+    <li>
+      Compile and run ZD.Tool with the <span class="inline-code">--20-cleanse</span> argument
+    </li>
+  </ol>
+  <p>
+    Output: <a href="/files/x-20-handedict.txt.zip">x-20-handedict.txt</a>
+    is the file that was initially imported into HanDeDict @ Zydeo.
+  </p>
+</div>
+
+<script>
+  window.onload = function () {
+    $('pre code').each(function (i, block) {
+      hljs.highlightBlock(block);
+    });
+  };
+</script>

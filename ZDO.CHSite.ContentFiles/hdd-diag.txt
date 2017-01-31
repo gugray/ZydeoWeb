@@ -1,0 +1,49 @@
+Line 166: ERROR: Failed to match hanzi to pinyin: 阿爾及爾. 阿尔及尔. [a1 er3 ji2 er3 a1]
+Line 330: ERROR: Failed to match hanzi to pinyin: 阿拉伯國家聯盟. 阿拉伯国家联盟. [a1 la1 bo2 guo2 jia1 lian2 meng2 a1]
+Line 345: ERROR: Failed to match hanzi to pinyin: 阿拉伯文. 阿拉伯文. [a1 la1 bo2 wen2 a1]
+Line 347: ERROR: Failed to match hanzi to pinyin: 阿拉伯也門共和國. 阿拉伯也门共和国. [a1 la1 bo2 ye3 men2 gong4 he2 guo2 a1]
+Line 350: ERROR: Failed to match hanzi to pinyin: 阿拉伯語. 阿拉伯语. [a1 la1 bo2 yu3 a1]
+Line 460: ERROR: Failed to match hanzi to pinyin: 阿羅漢. 阿罗汉. [a1 luo2 han4 a1]
+Line 814: ERROR: Failed to match hanzi to pinyin: 埃裡希馮·曼施坦因 埃里希馮·曼施坦因 [ai1 li3 xi1 feng2 bi3 man4 shi1 tan3 yin1]
+Line 1934: ERROR: Failed to match hanzi to pinyin: 按年息3％計算 按年息3％计算 [an4 nian2 xi1 3 ％ ji4 suan4]
+Line 1980: ERROR: Failed to match hanzi to pinyin: 按照（某人）來說 按照（某人）来说 [an4 zhao4 （ mou3 ren2 ） lai2 shuo1]
+Line 2290: ERROR: Failed to match hanzi to pinyin: 奧古斯特威廉馮·霍夫曼 奥古斯特威廉馮·霍夫曼 [ao4 gu3 si1 te4 wei1 lian2 feng2 bi3 huo4 fu1 man4]
+Line 7512: ERROR: Failed to match hanzi to pinyin: 畢業生. 毕业生. [bi4 ye4 sheng1 a1]
+Line 9006: ERROR: Unicode surrogate found
+Line 12151: ERROR: Failed to match hanzi to pinyin: 層析X線攝影 层析X线摄影 [ceng2 xi1 xian4 she4 ying3 yi2]
+Line 18717: ERROR: Failed to match hanzi to pinyin: 大O符 大O符 [dai4 fu2 hao4]
+Line 20615: ERROR: Failed to match hanzi to pinyin: 燈不亮！ 灯不亮！ [deng1 bu4 liang4 ！]
+Line 24208: ERROR: Unicode surrogate found
+Line 29309: ERROR: Failed to match hanzi to pinyin: 費迪南馮·李希霍芬 费迪南馮·李希霍芬 [fei4 di2 nan2 feng2 bi3 li3 xi1 huo4 fen1]
+Line 30770: ERROR: Failed to match hanzi to pinyin: 符號＆ 符号＆ [fu2 hao4 ＆]
+Line 37909: ERROR: Failed to match hanzi to pinyin: 國民收入. 国民收入. [guo2 min2 shou1 ru4 a1]
+Line 39345: ERROR: Failed to match hanzi to pinyin: 漢斯恩斯特卡爾格拉伕馮·齊騰 汉斯恩斯特卡尔格拉夫馮·齐腾 [han4 si1 en1 si1 te4 ka3 er3 ge2 la1 fu1 feng2 bi3 qi2 teng2]
+Line 39347: ERROR: Failed to match hanzi to pinyin: 漢斯馮·曼格爾德特 汉斯馮·曼格尔德特 [han4 si1 feng2 bi3 man4 ge2 er3 de2 te2]
+Line 39348: ERROR: Failed to match hanzi to pinyin: 漢斯馮·曼格爾德特 汉斯馮·曼格尔德特 [han4 si1 feng2 bi3 man4 ge2 er3 de2 te4]
+Line 41046: ERROR: Unicode surrogate found
+Line 44733: ERROR: Failed to match hanzi to pinyin: 混合動力汽車. 混合动力汽车. [hun4 he2 dong4 li4 qi4 che1 a1]
+Line 45192: ERROR: Failed to match hanzi to pinyin: 獲得選民所投第二票的5％ 获得选民所投第二票的5％ [huo4 de2 xuan3 min2 suo3 tou2 di4 er4 piao4 de5 5 ％]
+Line 56749: ERROR: Invalid header syntax: 咖啡
+Line 56907: ERROR: Failed to match hanzi to pinyin: 卡拉OK 卡拉OK [ka3 la1 ao4 ke1]
+Line 58231: ERROR: Failed to match hanzi to pinyin: 科學普及. 科学普及. [ke1 xue2 pu3 ji2 a1]
+Line 58390: ERROR: Failed to match hanzi to pinyin: 可持續發展. 可持续发展. [ke3 chi2 xu4 fa1 zhan3 a1]
+Line 60050: ERROR: Failed to match hanzi to pinyin: 口譯. 口译. [kou3 yi4 a1]
+Line 76700: ERROR: Failed to match hanzi to pinyin: 你在幹什麼？ 你在干什么？ [ni3 zai4 gan4 shen2 me5 ？]
+Line 86691: ERROR: Failed to match hanzi to pinyin: 去死！ 去死！ [qu4 si3 ！]
+Line 86699: ERROR: Invalid header syntax: 
+Line 90033: ERROR: Failed to match hanzi to pinyin: 三K 三K [san1 dang3]
+Line 95495: ERROR: Failed to match hanzi to pinyin: 聖誕＆新年快樂 圣诞＆新年快乐 [sheng4 dan4 ＆ xin1 nian2 kuai4 le4]
+Line 98241: ERROR: Failed to match hanzi to pinyin: 試驗. 试验. [shi4 yan4 a1]
+Line 100269: ERROR: Unicode surrogate found
+Line 108115: ERROR: Invalid header syntax: 通
+Line 109758: ERROR: Failed to match hanzi to pinyin: 土木工程. 土木工程. [tu3 mu4 gong1 cheng2 a1]
+Line 112062: ERROR: Failed to match hanzi to pinyin: 威廉馮·洪堡 威廉馮·洪堡 [wei1 lian2 feng2 bi3 hong2 bao3]
+Line 118238: ERROR: Unicode surrogate found
+Line 121473: ERROR: Unicode surrogate found
+Line 124134: ERROR: Failed to match hanzi to pinyin: 秀xiù 秀xiù [xiu4 x i xi5]
+Line 126114: ERROR: Unicode surrogate found
+Line 135286: ERROR: Failed to match hanzi to pinyin: 又保證CD 又保证CD [you4 bao3 zheng4 yin1 zhi4]
+Line 138277: ERROR: Failed to match hanzi to pinyin: 在時間上不允許再V了 在时间上不允许再V了 [zai4 shi2 jian1 shang4 bu4 yun3 xu3 zai4 er5 le5]
+Line 142425: ERROR: Invalid header syntax: 職業
+Line 145340: ERROR: Failed to match hanzi to pinyin: 住嘴！ 住嘴！ [zhu4 zui3 ！]
+Line 149114: ERROR: Failed to match hanzi to pinyin: 做生意. 做生意. [zuo4 sheng1 yi4 a1]
