@@ -1,0 +1,57 @@
+﻿<div id="x-mutation">hdd</div>
+<div id="x-lang">de</div>
+<div id="x-rel">/read/details/change-001</div>
+<div id="x-description"></div>
+<div id="x-keywords"></div>
+<div id="x-title">Massenänderung 001: Import der ursprünglichen HanDeDict-Datei - HanDeDict @ Zydeo chinesisch-deutsches Wörterbuch</div>
+
+<div class="content">
+  <h2>Massenänderung 001: Import der ursprünglichen HanDeDict-Datei</h2>
+  <p>
+    Die Änderungsgeschichte aller Einträge, die aus der originalen HanDeDict-Datei kommen, beginnt mit dieser Version. Als Vorbereitung für den Import wurde die von der Wayback Machine des Internet Archives heruntergeladene <a href="https://web.archive.org/web/20150325185952/http:/www.handedict.de/handedict/handedict-20110528.zip" rel="noreferrer">Wörterbuch-Datei</a> in das neue, erweiterte Format konvertiert. Ganz konkret wurden folgende Schritte ausgeführt:
+  </p>
+  <ul>
+    <li>
+      Jedem Eintrag wurde eine zufällige und eindeutige Kennung zugeordnet, und die Output-Datei wurde aufgrund dieser Kennung sortiert.
+    </li>
+    <li>
+      Die Erstversion wurde in der Syntax des erweiterten Formats deklariert. Als Benutzername für die Veränderung wird <i>HanDeDict</i> angegeben. Dieser Benutzer dient als Platzhalter für die ursprünglichen Verfasser des Wörterbuchs. Der Zeitpunkt der Veränderung ist der 28.05.2011, was dem Zeitstempel für die letzte Veränderung der heruntergeladenen Datei entspricht.
+    </li>
+    <li>
+      Die Deklaration der Erstversion übernimmt den Status des Eintrags aus der Originaldatei. Bei unverifzierten Einträgen stand dort <i>(u.E.)</i> in den deutschen Bedeutungen. Einträge, die diesen Marker enthielten, zeigen nach der Verarbeitung <i>Stat-New</i> im erweiterten Format an. Verifizierte Einträge, in deren Bedeutungen <i>(u.E.)</i> nicht vorkommt, wurden mit <i>Stat-Verif</i> gekennzeichnet.
+    </li>
+    <li>
+      Die Syntax der Zeilen der Originaldatei wurde automatisch überprüft. 49 Einträge wurden verworfen, der Großteil davon deshalb, weil sie eine unterschiedliche Anzahl Schriftzeichen und Pinyin-Silben im Schlagwort enthielten. Eine kleinere Anzahl Einträge wurde verworfen, weil sie seltene Schriftzeichen aus einem Unicode-Bereich über 0xffff enthielten, die von HanDeDict @ Zydeo nicht unterstützt werden.
+    </li>
+  </ul>
+  <h3>Reproduzierung</h3>
+  <p>
+    <a href="https://github.com/gugray/ZydeoWeb/blob/master/ZD.Tool/Wrk10Prepare.cs" rel="noreferrer" target="_blank">Wrk10Prepare.cs</a> im Projekt ZD.Tool ist das Script, das für die Verarbeitung benutzt wurde. Um das Script auszuführen:
+  </p>
+  <ol>
+    <li>
+      Kopieren Sie <span class="inline-code">handedict.u8</span> in einen Unterordner namens <span class="inline-code">_work</span> unter dem Stammverzeichnis der Solution
+    </li>
+    <li>
+      Kompilieren Sie ZD.Tool und führen Sie es aus mit dem Argument <span class="inline-code">--10-prepare</span>
+    </li>
+  </ol>
+  <p>
+    Output: <a href="/files/x-10-handedict.txt.zip">x-10-handedict.txt</a> enthält die Einträge im erweiterten Format.
+  </p>
+  <h3>Überprüfung</h3>
+  <p>
+    <a href="https://github.com/gugray/ZydeoWeb/blob/master/ZD.Tool/WrkExamine.cs" rel="noreferrer" target="_blank">WrkExamine.cs</a> in ZD.Tool ist ein diagnostisches Script, das vor der Datenverarbeitung ausgeführt wurde. Die Outputs:
+  </p>
+  <ol>
+    <li>
+      <a href="/files/hdd-diag.txt">hdd-diag.txt</a> enthält die verworfenen Einträge.
+    </li>
+    <li>
+      hdd-trip.txt enthält Einträge, die vom CC-CEDICT-Parser von HanDeDict @ Zydeo nicht unverändert verarbeitet und wiedergegeben werden. Diese Datei muss leer sein.
+    </li>
+    <li>
+      <a href="/files/hdd-diag.txt">hdd-tags.txt</a> enthält alle Wörter, die in der originalen Wörterbuchdatei in Klammern vorkommen, nach Häufigkeit sortiert. Diese Datei enthält, als eine Teilmenge, alle Labels, die von HanDeDicts ursprünglichen Autoren als Metainformationen verwendet wurden.
+    </li>
+  </ol>
+</div> 

@@ -1,0 +1,89 @@
+﻿<div id="x-mutation">hdd</div>
+<div id="x-lang">de</div>
+<div id="x-rel">/read/details/change-002</div>
+<div id="x-description"></div>
+<div id="x-keywords"></div>
+<div id="x-title">Massenänderung 002: Datenreinigung - HanDeDict @ Zydeo chinesisch-deutsches Wörterbuch</div>
+
+<div class="content">
+  <h2>Massenänderung 002: Datenreinigung</h2>
+  <p>
+    Die ursprüngliche HanDeDict-Datei hatte verschiedene Probleme. Manche von diesen sind marginal, wie z.B. die inkonsistente Verwendung von geraden und typographischen Anführungszeichen. Andere sind störend, wie der gemischter Gebrauch von <span class="inline-code">&lt;&gt;</span> und <span class="inline-code">()</span> als Klammern, oder multiple Leerzeichen. Manche Probleme sind möglicherweise durch Scriptfehler der ursprünglichen HanDeDict-Seite, oder durch Kodierungsfehler in der Wayback Machine verursacht, wie z.B. die Anwesenheit von <span class="inline-code">&amp;gt</span> (ohne Semikolon) in mehreren Einträgen. Es gibt ernsthafte Probleme, die aber leicht zu korrigieren sind. Ein Beispiel sind fehlende Leerzeichen, da diese die Wortgrenzen verändern und dazu führen, dass die Suchfunktion deutsche Wörter, die eigentlich im Wörterbuch sind, nicht findet. Einige Probleme sind ernsthaft und mit automatischen Methoden leider nicht korrigierbar. <span class="inline-code">/</span> kommt in manchen Einträgen als Text vor, was aber nicht von der wahren Funktion von <span class="inline-code">/</span> als Trennzeichen zwischen Bedeutungen zu unterscheiden ist. Schließlich enhtält die Mehrzahl der Einträge in der Originaldatei <i>(u.E.)</i>, was in HanDeDict @ Zydeo ins erweiterte Format gehört und nicht im Anzeigetext ercheinen muss.
+  </p>
+  <p>
+    Vor dem Import wurde ein zweites Script ausgeführt, um möglichst alle maschinell korrigierbare Probleme zu beseitigen. Das Script generiert eine neue Version für alle Einträge, die geändert werden, mit dem Benutzernamen <i>zydeo-robot</i>. Dieser Benutzer ist ein Platzhalter für automatische Datenverarbeitung, damit ähnliche massenhafte Veränderungen in der Änderungsgeschichte leicht von menschlichen Beiträgen zu unterscheiden sind.
+  </p>
+  <p>
+    Für den technischen Leser ist es am einfachsten, den relevanten Teil des Scripts, der einen einzigen Eintrag verarbeitet, zu lesen:
+  </p>
+  <pre><code class="cs">private Regex reLtGt = new Regex(@"&lt;([^&gt;\/]+)&gt;");
+private Regex reAngled = new Regex(@"\[([^\]\/]+)\]");
+private Regex reCommaSpace = new Regex(@",(\p{L})");
+private Regex reParenSpace1 = new Regex(@"\( *([^\)]+)\)");
+private Regex reParenSpace2 = new Regex(@" +\)");
+private string cleanse(string line)
+{
+    // Curly quotes, non-breaking spaces
+    line = line.Replace(' ', ' '); // NBSP
+    line = line.Replace('\t', ' '); // TAB
+    line = line.Replace('“', '"'); // Curly quote
+    line = line.Replace('”', '"'); // Curly quote
+    // Remove "(u.E.)" from entry itself. We put this info into the Status meta field.
+    line = line.Replace("(u.E.)", "");
+    // Fix &amp;gt in place of &gt;
+    line = line.Replace("&amp;gt", "&gt;");
+    // &lt;something&gt; -&gt; (something)
+    line = reLtGt.Replace(line, "($1)");
+    // Angle [brackets] inside body
+    int spos = line.IndexOf('/');
+    string head = line.Substring(0, spos);
+    string body = line.Substring(spos);
+    body = reAngled.Replace(body, "($1)");
+    line = head + body;
+    // No space after comma
+    line = reCommaSpace.Replace(line, ", $1");
+    // Multiple spaces
+    while (true)
+    {
+        string b = line.Replace("  ", " ");
+        if (b == line) break;
+        line = b;
+    }
+    // Spaces inside ( parentheses )
+    line = reParenSpace1.Replace(line, "($1)");
+    line = reParenSpace2.Replace(line, ")");
+    // Trailing / leading spaces in senses
+    spos = line.IndexOf('/');
+    head = line.Substring(0, spos);
+    body = line.Substring(spos);
+    body = body.Replace("/ ", "/");
+    body = body.Replace(" /", "/");
+    line = head + body;
+    // Phew
+    return line;
+}
+</code></pre>
+  <h3>Reproduzierung</h3>
+  <p>
+    <a href="https://github.com/gugray/ZydeoWeb/blob/master/ZD.Tool/Wrk20Cleanse.cs" rel="noreferrer" target="_blank">Wrk20Cleanse.cs</a> im Projekt ZD.Tool ist das Script, das für die Verarbeitung benutzt wurde. Um das Script auszuführen:
+  </p>
+  <ol>
+    <li>
+      Kopieren Sie <span class="inline-code">x-10-handedict.txt</span> (den Output des vorausgegangenen Scripts) in einen Unterordner namens <span class="inline-code">_work</span> unter dem Stammverzeichnis der Solution
+    </li>
+    <li>
+      Kompilieren Sie ZD.Tool und führen Sie es aus mit dem Argument <span class="inline-code">--20-cleanse</span>
+    </li>
+  </ol>
+  <p>
+    Output: <a href="/files/x-20-handedict.txt.zip">x-20-handedict.txt</a> ist die Datei, die in die HanDeDict @ Zydeo Webseite importiert wurde.
+  </p>
+</div>
+
+<script>
+  window.onload = function () {
+    $('pre code').each(function (i, block) {
+      hljs.highlightBlock(block);
+    });
+  };
+</script> 
