@@ -5,10 +5,16 @@
 <html lang="@Model.DocLang">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>@Model.PR.Title</title>
   <meta name="keywords" content="@Model.PR.Keywords" />
   <meta name="description" content="@Model.PR.Description" />
+  <meta property="og:image" content="@Model.TeaserImageUrl" />
+  <meta property="og:title" content="@Model.PR.Title" />
+  <meta property="og:description" content="@Model.PR.Description" />
+  <meta property="og:url" content="@Model.BaseUrl@Model.Lang@Model.Rel" />
+  <meta property="og:type" content="article" />
+  <meta name="twitter:card" content="summary_large_image" />
   <meta name="google" content="notranslate" />
   @if (Model.PR.NoIndex)
   { <meta name='robots' content='noindex,nofollow' /> }

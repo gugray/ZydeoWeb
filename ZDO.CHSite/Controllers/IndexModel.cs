@@ -15,6 +15,10 @@ namespace ZDO.CHSite.Controllers
         /// </summary>
         public readonly Mutation Mut;
         /// <summary>
+        /// Base URL
+        /// </summary>
+        public readonly string BaseUrl;
+        /// <summary>
         /// Page language (two-letter code, or our funnies for simplified/traditional Chinese).
         /// </summary>
         public readonly string Lang;
@@ -42,9 +46,11 @@ namespace ZDO.CHSite.Controllers
         /// <summary>
         /// Ctor: init immutable instance.
         /// </summary>
-        public IndexModel(Mutation mut, string lang, string rel, PageResult pr, string gaCode, string verStr, string captchaSiteKey)
+        public IndexModel(Mutation mut, string baseUrl, string lang, string rel, 
+            PageResult pr, string gaCode, string verStr, string captchaSiteKey)
         {
             Mut = mut;
+            BaseUrl = baseUrl;
             Lang = lang;
             Rel = rel;
             PR = pr;
@@ -93,6 +99,11 @@ namespace ZDO.CHSite.Controllers
         public string Year
         {
             get { return DateTime.UtcNow.Year.ToString(); }
+        }
+
+        public string TeaserImageUrl
+        {
+            get { return BaseUrl + "static/handedict-teaser.png"; }
         }
     }
 }

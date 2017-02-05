@@ -17,6 +17,10 @@ namespace ZDO.CHSite.Controllers
         /// </summary>
         private readonly Mutation mut;
         /// <summary>
+        /// Site's base URL.
+        /// </summary>
+        private readonly string baseUrl;
+        /// <summary>
         /// Dynamic page controller.
         /// </summary>
         private readonly DynpageController dpc;
@@ -35,6 +39,7 @@ namespace ZDO.CHSite.Controllers
         public IndexController(PageProvider pageProvider, IConfiguration config, ILoggerFactory loggerFactory, Auth auth)
         {
             mut = config["MUTATION"] == "HDD" ? Mutation.HDD : Mutation.CHD;
+            baseUrl = config["baseUrl"];
             dpc = new DynpageController(pageProvider, config, loggerFactory, auth);
             gaCode = config["gaCode"];
             captchaSiteKey = config["captchaSiteKey"];
@@ -74,7 +79,7 @@ namespace ZDO.CHSite.Controllers
             }
             // Infuse requested page right away
             var pr = dpc.GetPageResult(lang, rel, false, false);
-            IndexModel model = new IndexModel(mut, lang, pr.RelNorm, pr, gaCode, AppVersion.VerStr, captchaSiteKey);
+            IndexModel model = new IndexModel(mut, baseUrl, lang, pr.RelNorm, pr, gaCode, AppVersion.VerStr, captchaSiteKey);
             return View("/Index.cshtml", model);
         }
     }
