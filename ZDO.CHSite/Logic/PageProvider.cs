@@ -41,6 +41,10 @@ namespace ZDO.CHSite.Logic
         /// </summary>
         private readonly ILogger logger;
         /// <summary>
+        /// Folder with private pages (not part of repository, e.g., imprint)
+        /// </summary>
+        private readonly string privateContentFolder;
+        /// <summary>
         /// True if current hosting environment is Development.
         /// </summary>
         private readonly bool isDevelopment;
@@ -65,9 +69,11 @@ namespace ZDO.CHSite.Logic
         /// <summary>
         /// Ctor: init; load pages from plain files into cache.
         /// </summary>
-        public PageProvider(ILoggerFactory lf, bool isDevelopment, Mutation mut, string baseUrl)
+        public PageProvider(ILoggerFactory lf, string privateContentFolder,
+            bool isDevelopment, Mutation mut, string baseUrl)
         {
             logger = lf.CreateLogger(GetType().FullName);
+            this.privateContentFolder = privateContentFolder;
             logger.LogInformation("Page provider initializing...");
             this.isDevelopment = isDevelopment;
             this.mut = mut;
@@ -84,16 +90,8 @@ namespace ZDO.CHSite.Logic
         {
             // Recreate entire cache
             pageCache.Clear();
-            var files = Directory.EnumerateFiles("./files/html");
-            foreach (var fn in files)
-            {
-                string name = Path.GetFileName(fn);
-                if (!name.EndsWith(".html")) continue;
-                string rel;
-                PageInfo pi = loadPage(fn, out rel);
-                if (rel == null || pi == null) continue;
-                pageCache[rel] = pi;
-            }
+            readFolder("./files/html");
+            readFolder(privateContentFolder);
             // If running in development env, recreate sitemap
             if (isDevelopment)
             {
@@ -112,6 +110,24 @@ namespace ZDO.CHSite.Logic
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Loads pages from a folder into the cache.
+        /// </summary>
+        private void readFolder(string path)
+        {
+            var files = Directory.EnumerateFiles(path);
+            foreach (var fn in files)
+            {
+                string name = Path.GetFileName(fn);
+                if (!name.EndsWith(".html")) continue;
+                string rel;
+                PageInfo pi = loadPage(fn, out rel);
+                if (rel == null || pi == null) continue;
+                pageCache[rel] = pi;
+            }
+
         }
 
         /// <summary>

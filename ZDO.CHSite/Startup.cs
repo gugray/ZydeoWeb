@@ -98,7 +98,8 @@ namespace ZDO.CHSite
             InitDB(config, loggerFactory, true);
             // Application-specific singletons.
             services.AddSingleton(new CountryResolver(config["ipv4FileName"]));
-            PageProvider pageProvider = new PageProvider(loggerFactory, env.IsDevelopment(), mut, config["baseUrl"]);
+            PageProvider pageProvider = new PageProvider(loggerFactory, config["privatePagesFolder"],
+                env.IsDevelopment(), mut, config["baseUrl"]);
             services.AddSingleton(pageProvider);
             services.AddSingleton(new LangRepo(config["uniHanziFileName"]));
             services.AddSingleton(new SqlDict(loggerFactory));
@@ -157,6 +158,7 @@ namespace ZDO.CHSite
             app.UseMvc(routes =>
             {
                 routes.MapRoute("api", "api/{controller}/{action}/{*paras}", new { paras = "" });
+                routes.MapRoute("files", "files/{name}", new { controller = "Files", action = "Get" });
                 routes.MapRoute("default", "{*paras}", new { controller = "Index", action = "Index", paras = "" });
             });
         }
