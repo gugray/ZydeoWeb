@@ -142,9 +142,16 @@ namespace ZDO.CHSite.Logic
             }
         }
 
-        public static List<HeadAndTrg> GetEntriesBySimp(string simp)
+        public static DateTime GetLatestChangeUtc()
         {
-            return null;
+            using (MySqlConnection conn = DB.GetConn())
+            using (MySqlCommand cmd = DB.GetCmd(conn, "GetLatestChange"))
+            {
+                object o = cmd.ExecuteScalar();
+                if (o == null || o is DBNull) return DateTime.MinValue;
+                long ticks = ((DateTime)o).Ticks;
+                return new DateTime(ticks, DateTimeKind.Utc);
+            }
         }
     }
 }

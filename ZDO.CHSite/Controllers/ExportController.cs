@@ -76,6 +76,15 @@ namespace ZDO.CHSite.Controllers
         private void doExport()
         {
             string exportFileName = Path.Combine(config["exportFolder"], config["exportFileNameRaw"]);
+            bool fileUpToDate = false;
+            if (System.IO.File.Exists(exportFileName))
+            {
+                FileInfo fi = new FileInfo(exportFileName);
+                DateTime dtFile = fi.LastWriteTimeUtc;
+                DateTime dtData = SqlDict.GetLatestChangeUtc();
+                fileUpToDate = dtFile > dtData;
+            }
+            if (fileUpToDate) return;
 
             using (FileStream fs = new FileStream(exportFileName, FileMode.Create, FileAccess.ReadWrite))
             using (StreamWriter sw = new StreamWriter(fs, Encoding.UTF8))

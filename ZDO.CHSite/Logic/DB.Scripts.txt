@@ -367,6 +367,10 @@ UPDATE modifs SET count_a=-1 WHERE id<>@top_id AND entry_id=@entry_id;
 SELECT COUNT(*) FROM entries WHERE hw=@hw;
 # End
 
+# Script GetLatestChange
+SELECT timestamp FROM modifs ORDER BY timestamp DESC LIMIT 1;
+# End
+
 # Script GetEntryChanges
 # @entry_id INT
 SELECT M.timestamp, M.note, M.chg, M.bulk_ref, U.id, U.user_name, M.count_a, M.count_b, M.hw_before, M.trg_before, M.status_before, E.status
