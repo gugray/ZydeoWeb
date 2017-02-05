@@ -49,7 +49,8 @@ var zdAuth = (function () {
     
     var bodyHtml = zdSnippets["login"];
     var loginTerms = zdPage.ui("login", "terms-raw");
-    loginTerms = loginTerms.replace("{0}", "<a href='#' target='_blank'>");
+    var termsUrl = "/" + zdPage.getLang() + "/read/details/terms-and-conditions";
+    loginTerms = loginTerms.replace("{0}", "<a href='" + termsUrl + "' target='_blank'>");
     loginTerms = loginTerms.replace("{1}", "</a>");
     bodyHtml = bodyHtml.replace("{{terms}}", loginTerms);
     bodyHtml = zdPage.localize("login", bodyHtml);
