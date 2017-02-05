@@ -39,7 +39,8 @@ namespace ZDO.CHSite.Logic
             msg.Body = new TextPart("html") { Text = msgHtml };
             using (var client = new SmtpClient())
             {
-                client.Connect(smtpUrl, smtpPort, true);
+                client.SslProtocols = System.Security.Authentication.SslProtocols.Tls12;
+                client.Connect(smtpUrl, smtpPort, false);
                 // Note: since we don't have an OAuth2 token, disable the XOAUTH2 authentication mechanism.
                 client.AuthenticationMechanisms.Remove("XOAUTH2");
                 client.Authenticate(smtpUser, smtpPass);
