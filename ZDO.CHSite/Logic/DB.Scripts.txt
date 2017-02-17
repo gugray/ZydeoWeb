@@ -305,6 +305,15 @@ JOIN entries E ON E.bin_id=B.id AND E.id=@id;
 UPDATE entries SET trg=@trg, bin_id=@bin_id WHERE id=@id;
 # End
 
+# Script UpdEntryHeadAndTrg
+# @id INT
+# @hw VARCHAR
+# @simp_hash INT
+# @trg VARCHAR
+# @bin_id INT
+UPDATE entries SET hw=@hw, simp_hash=@simp_hash, trg=@trg, bin_id=@bin_id WHERE id=@id;
+# End
+
 # Script UpdEntryStatus
 # @id INT
 # @status TINYINT

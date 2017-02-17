@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.IO;
 using System.Collections.Generic;
 using System.Net;
@@ -39,6 +40,8 @@ namespace ZDO.CHSite.Controllers
             auth.CheckSession(HttpContext.Request.Headers, out userId, out userName);
             if (userId < 0) return StatusCode(401, "Request must contain authentication token.");
 
+            EditEntryResult res = new EditEntryResult();
+
             int idVal = EntryId.StringToId(entryId);
             trg = trg.Replace("\r\n", "\n");
             trg = trg.Replace('/', '\\');
@@ -51,34 +54,173 @@ namespace ZDO.CHSite.Controllers
             // Refresh cached contrib score
             auth.RefreshUserInfo(userId);
             // Tell our caller we dun it
-            return new ObjectResult(true);
+            res.Success = true;
+            return new ObjectResult(res);
         }
 
-        public IActionResult GetEntryPreview([FromQuery] string hw, [FromQuery] string trgTxt, [FromQuery] string lang)
+        public IActionResult SaveFullEntry([FromForm] string entryId, [FromForm] string hw, [FromForm] string trg,
+            [FromForm] string note, [FromForm] string lang)
         {
-            if (hw == null || trgTxt == null || lang == null) return StatusCode(400, "Missing parameter(s).");
+            if (entryId == null || hw == null || trg == null || note == null || lang == null)
+                return StatusCode(400, "Missing parameter(s).");
 
+            // Must be authenticated user
+            int userId;
+            string userName;
+            auth.CheckSession(HttpContext.Request.Headers, out userId, out userName);
+            if (userId < 0) return StatusCode(401, "Request must contain authentication token.");
+
+            EditEntryResult res = new EditEntryResult();
+
+            int idVal = EntryId.StringToId(entryId);
+            trg = trg.Replace("\r\n", "\n");
+            trg = trg.Replace('/', '\\');
+            trg = trg.Replace('\n', '/');
+            trg = "/" + trg + "/";
+            CedictParser parser = new CedictParser();
+            CedictEntry entry = null;
+            try { entry = parser.ParseEntry(hw + " " + trg, 0, null); }
+            catch { }
+            if (entry == null)
+            {
+                // TO-DO: localize
+                res.Error = "Your change cannot be saved: the entry is invalid. (Is the headword correct?)";
+                return new ObjectResult(res);
+            }
+
+            bool persisted;
+            using (SqlDict.SimpleBuilder builder = dict.GetSimpleBuilder(userId))
+            {
+                persisted = builder.ChangeHeadAndTarget(userId, idVal, hw, trg, note);
+            }
+            // Not persisted: violates uniqueness constraint
+            if (!persisted)
+            {
+                // TO-DO: localize
+                res.Error = "Your change cannot be saved: an entry with this headword already exists in the dictionary.";
+                return new ObjectResult(res);
+            }
+
+            // Refresh cached contrib score
+            auth.RefreshUserInfo(userId);
+            // Tell our caller we dun it
+            res.Success = true;
+            return new ObjectResult(res);
+        }
+
+        public IActionResult GetEntryPreview([FromQuery] string origHw,
+            [FromQuery] string trad, [FromQuery] string simp, [FromQuery] string pinyin,
+            [FromQuery] string trgTxt, [FromQuery] string lang)
+        {
+            if (origHw == null || trgTxt == null || lang == null) return StatusCode(400, "Missing parameter(s).");
+            if (trad == null) trad = "";
+            if (simp == null) simp = "";
+            if (pinyin == null) pinyin = "";
+            EditEntryPreviewResult res = new EditEntryPreviewResult();
+
+            // Ugly try-catch, but some incorrect input just generates an exception.
+            // We still want to return a meaningful "no preview" response.
             try
             {
                 // DBG
                 if (trgTxt.Contains("micu-barf")) throw new Exception("barf");
 
+                // Validate current headword
+                bool hwParses = 
+                    validateHeadword(simp, trad, pinyin, res.ErrorsSimp, res.ErrorsTrad, res.ErrorsPinyin);
+
                 trgTxt = trgTxt.Replace("\r\n", "\n");
                 trgTxt = trgTxt.Replace('/', '\\');
                 trgTxt = trgTxt.Replace('\n', '/');
                 trgTxt = "/" + trgTxt + "/";
+
+                // Headword: use original if current headword has errors
+                string hw = trad + " " + simp + " [" + pinyin + "]";
+                if (!hwParses) hw = origHw;
+
                 CedictParser parser = new CedictParser();
                 CedictEntry entry = parser.ParseEntry(hw + " " + trgTxt, 0, null);
-                EntryRenderer er = new EntryRenderer(entry, true);
-                er.OneLineHanziLimit = 12;
-                StringBuilder sb = new StringBuilder();
-                er.Render(sb, null);
-                return new ObjectResult(sb.ToString());
+                if (entry != null)
+                {
+                    EntryRenderer er = new EntryRenderer(entry, true);
+                    er.OneLineHanziLimit = 12;
+                    StringBuilder sb = new StringBuilder();
+                    er.Render(sb, null);
+                    res.PreviewHtml = sb.ToString();
+                }
             }
-            catch
+            catch { }
+            return new ObjectResult(res);
+        }
+
+        private bool validateHeadword(string simp, string trad, string pinyin,
+            List<HeadwordProblem> errorsSimp, List<HeadwordProblem> errorsTrad, List<HeadwordProblem> errorsPinyin)
+        {
+            // TO-DO: localize all this
+            string msg;
+            UniHanziInfo[] uhiSimp = langRepo.GetUnihanInfo(simp);
+            for (int i = 0; i != uhiSimp.Length; ++i)
             {
-                return new ObjectResult(null);
+                var uhi = uhiSimp[i];
+                if (!uhi.CanBeSimp)
+                {
+                    msg = "{0} does not appear to be a simplified character";
+                    msg = string.Format(msg, simp[i]);
+                    errorsSimp.Add(new HeadwordProblem(false, msg));
+                }
             }
+            if (trad.Length != simp.Length)
+            {
+                errorsTrad.Add(new HeadwordProblem(true, "Different number of simplified and traditional characters."));
+            }
+            else
+            {
+                for (int i = 0; i != uhiSimp.Length; ++i)
+                {
+                    var uhi = uhiSimp[i];
+                    if (Array.IndexOf(uhi.TradVariants, trad[i]) < 0)
+                    {
+                        msg = "{0} is not a known traditional variant of {1}";
+                        msg = string.Format(msg, simp[i], trad[i]);
+                        errorsTrad.Add(new HeadwordProblem(false, msg));
+                    }
+                }
+            }
+            // Normalize pinyin (multiple spaces, leading/trailing spaces)
+            string pyNorm = pinyin;
+            while (true)
+            {
+                string x = pyNorm.Replace("  ", " ");
+                if (x == pyNorm) break;
+                pyNorm = x;
+            }
+            pyNorm = pyNorm.Trim();
+            if (pyNorm != pinyin) errorsPinyin.Add(new HeadwordProblem(true, "Extra spaces in Pinyin."));
+            // Try to match up normalized pinyin with simplified Hanzi
+            CedictParser parser = new CedictParser();
+            CedictEntry ee = null;
+            try { ee = parser.ParseEntry(trad + " " + simp + " [" + pyNorm + "] /x/", 0, null); }
+            catch { }
+            if (ee == null) errorsPinyin.Add(new HeadwordProblem(true, "Incorrect or invalid Pinyin syllables."));
+            else
+            {
+                if (simp.Length == ee.ChSimpl.Length)
+                {
+                    for (int i = 0; i != uhiSimp.Length; ++i)
+                    {
+                        var uhi = uhiSimp[i];
+                        var py = ee.GetPinyinAt(i);
+                        var cnt = uhi.Pinyin.Count(x => x.GetDisplayString(false) == py.GetDisplayString(false));
+                        if (cnt == 0)
+                        {
+                            msg = "{0} is not a known reading of {1}";
+                            msg = string.Format(msg, py.GetDisplayString(false), simp[i]);
+                            errorsPinyin.Add(new HeadwordProblem(false, msg));
+                        }
+                    }
+                }
+            }
+            return ee != null;
         }
 
         public IActionResult GetEditEntryData([FromQuery] string entryId, [FromQuery] string lang)
@@ -100,13 +242,22 @@ namespace ZDO.CHSite.Controllers
             string hw, trg;
             EntryStatus status;
             SqlDict.GetEntryById(idVal, out hw, out trg, out status);
+            CedictParser parser = new CedictParser();
+            CedictEntry entry = parser.ParseEntry(hw + " " + trg, 0, null);
+
             res.Status = status.ToString().ToLowerInvariant();
-            res.HeadTxt = hw;
+            res.HeadSimp = entry.ChSimpl;
+            res.HeadTrad = entry.ChTrad;
+            res.HeadPinyin = "";
+            for (int i = 0; i != entry.PinyinCount; ++i)
+            {
+                if (res.HeadPinyin.Length > 0) res.HeadPinyin += " ";
+                var pys = entry.GetPinyinAt(i);
+                res.HeadPinyin += pys.GetDisplayString(false);
+            }
             res.TrgTxt = trg.Trim('/').Replace('/', '\n').Replace('\\', '/');
 
             // Entry HTML
-            CedictParser parser = new CedictParser();
-            CedictEntry entry = parser.ParseEntry(hw + " " + trg, 0, null);
             entry.Status = status;
             EntryRenderer er = new EntryRenderer(entry, true);
             er.OneLineHanziLimit = 12;

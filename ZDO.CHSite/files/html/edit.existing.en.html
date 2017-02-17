@@ -23,15 +23,25 @@
       <div class="actionTitle flag">Flag entry<span> &bull; Please add a comment with details</span></div>
       <div class="actionTitle unflag">Unflag entry<span> &bull; Please add a comment with details</span></div>
       <div class="actionTitle approve">Approve entry<span> &bull; Please add a comment with details</span></div>
+      <div class="headwordFields">
+        <input id="txtEditSimp" type="text" maxlength="16" />
+        <div class="errorNote hwError errBadSimp" />
+        <input id="txtEditTrad" type="text" maxlength="16" />
+        <div class="errorNote hwError errBadTrad" />
+        <input id="txtEditPinyin" type="text" maxlength="80" />
+        <div class="errorNote hwError errBadPinyin" />
+      </div>
       <textarea id="txtEditTrg" maxlength="1024"></textarea>
       <div class="errorNote errBadTrg" />
       <textarea id="txtEditCmt" class="txtEditCmt" maxlength="1024" placeholder="Source, comment, reason for change..."></textarea>
       <div class="errorNote errNoComment">
         Please enter a comment to accompany the change in the entry's history. You can reference a source or briefly explain the reason for the change.
       </div>
+      <div class="errorNote errSaveFailed" />
       <span class="previewUpdateFail">Failed to update preview</span>
       <span class="command cmdCancel">Cancel</span>
       <span class="command cmdOK">Save</span>
+      <span class="lnkCommand cmdEditHead">Edit headword</span>
     </div>
   </div>
   <h2>Entry history</h2>

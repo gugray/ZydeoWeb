@@ -72,6 +72,7 @@ namespace ZDO.CHSite.Logic
             protected MySqlCommand cmdInsModifPreCounts2;
             protected MySqlCommand cmdSelBinByEntryId;
             protected MySqlCommand cmdUpdEntryTrg;
+            protected MySqlCommand cmdUpdEntryHeadAndTrg;
             protected MySqlCommand cmdSelEntryStatus;
             protected MySqlCommand cmdUpdEntryStatus;
             protected MySqlCommand cmdUpdBinaryEntry;
@@ -104,6 +105,7 @@ namespace ZDO.CHSite.Logic
                     cmdInsModifPreCounts1 = DB.GetCmd(conn, "InsModifPreCounts1");
                     cmdInsModifPreCounts2 = DB.GetCmd(conn, "InsModifPreCounts2");
                     cmdUpdEntryTrg = DB.GetCmd(conn, "UpdEntryTrg");
+                    cmdUpdEntryHeadAndTrg = DB.GetCmd(conn, "UpdEntryHeadAndTrg");
                     cmdSelEntryStatus = DB.GetCmd(conn, "SelEntryStatus");
                     cmdUpdEntryStatus = DB.GetCmd(conn, "UpdEntryStatus");
                     cmdUpdBinaryEntry = DB.GetCmd(conn, "UpdBinaryEntry");
@@ -152,6 +154,7 @@ namespace ZDO.CHSite.Logic
                     if (cmdInsSkeletonEntry != null) cmdInsSkeletonEntry.Dispose();
                     if (cmdInsHanziInstance != null) cmdInsHanziInstance.Dispose();
                     if (cmdInsBinaryEntry != null) cmdInsBinaryEntry.Dispose();
+                    if (cmdUpdEntryHeadAndTrg != null) cmdUpdEntryTrg.Dispose();
                     if (cmdUpdEntryTrg != null) cmdUpdEntryTrg.Dispose();
                     if (cmdSelEntryStatus != null) cmdSelEntryStatus.Dispose();
                     if (cmdUpdEntryStatus != null) cmdUpdEntryStatus.Dispose();
@@ -389,6 +392,75 @@ namespace ZDO.CHSite.Logic
 
                 // Commit. Otherwise, dispose will roll all this back if it finds non-null transaction.
                 tr.Commit(); tr.Dispose(); tr = null;
+            }
+
+            public bool ChangeHeadAndTarget(int userId, int entryId, string hw, string trg, string note)
+            {
+                tr = conn.BeginTransaction();
+
+                // Is headword unique?
+                var identEntry = GetEntryByHead(hw);
+                if (identEntry != null) return false;
+
+                // Retrieve current entry
+                string oldHw, oldTrg;
+                EntryStatus status;
+                GetEntryById(entryId, out oldHw, out oldTrg, out status);
+
+                // Create new modif
+                cmdInsModif.Parameters["@parent_id"].Value = -1;
+                cmdInsModif.Parameters["@bulk_ref"].Value = -1;
+                cmdInsModif.Parameters["@hw_before"].Value = oldHw;
+                cmdInsModif.Parameters["@trg_before"].Value = oldTrg != trg ? oldTrg : "";
+                cmdInsModif.Parameters["@status_before"].Value = 99;
+                cmdInsModif.Parameters["@timestamp"].Value = DateTime.UtcNow;
+                cmdInsModif.Parameters["@user_id"].Value = userId;
+                cmdInsModif.Parameters["@note"].Value = note;
+                cmdInsModif.Parameters["@chg"].Value = (byte)Entities.ChangeType.Edit;
+                cmdInsModif.Parameters["@entry_id"].Value = entryId;
+                cmdInsModif.ExecuteNonQuery();
+                // Count contrib score
+                cmdAddContribScore.Parameters["@id"].Value = userId;
+                cmdAddContribScore.Parameters["@val"].Value = getContribScore((byte)Entities.ChangeType.Edit);
+                cmdAddContribScore.ExecuteNonQuery();
+                // Update previous version counts
+                cmdInsModifPreCounts1.Parameters["@top_id"].Value = cmdInsModif.LastInsertedId;
+                cmdInsModifPreCounts1.Parameters["@entry_id"].Value = entryId;
+                cmdInsModifPreCounts1.ExecuteNonQuery();
+                cmdInsModifPreCounts2.Parameters["@top_id"].Value = cmdInsModif.LastInsertedId;
+                cmdInsModifPreCounts2.Parameters["@entry_id"].Value = entryId;
+                cmdInsModifPreCounts2.ExecuteNonQuery();
+
+                // Unindex current entry: removes binary record, returns entry deserialized from it
+                CedictEntry oldEntry = unindexEntry(entryId);
+                // Create new entry, index it
+                CedictParser parser = new CedictParser();
+                CedictEntry newEntry = parser.ParseEntry(hw + " " + trg, -1, null);
+                // Infuse corpus frequency: get value for new headword
+                int iFreq = freq.GetFreq(newEntry.ChSimpl);
+                ushort uFreq = iFreq > ushort.MaxValue ? ushort.MaxValue : (ushort)iFreq;
+                newEntry.Freq = uFreq;
+                // Infuse stable ID: same as before (our entry ID)
+                newEntry.StableId = oldEntry.StableId;
+                // Infuse status: same as before
+                newEntry.Status = oldEntry.Status;
+                // Index new entry
+                int newBinId = indexEntry(newEntry);
+                // Update entry itself
+                cmdUpdEntryHeadAndTrg.Parameters["@id"].Value = entryId;
+                cmdUpdEntryHeadAndTrg.Parameters["@hw"].Value = hw;
+                cmdUpdEntryHeadAndTrg.Parameters["@simp_hash"].Value = CedictEntry.Hash(newEntry.ChSimpl);
+                cmdUpdEntryHeadAndTrg.Parameters["@trg"].Value = trg;
+                cmdUpdEntryHeadAndTrg.Parameters["@bin_id"].Value = newBinId;
+                cmdUpdEntryHeadAndTrg.ExecuteNonQuery();
+                // Have index commit filed changes: unindex and index
+                index.ApplyChanges(indexCommands);
+
+                // Commit. Otherwise, dispose will roll all this back if it finds non-null transaction.
+                tr.Commit(); tr.Dispose(); tr = null;
+
+                // True means there was no clash and we dun it
+                return true;
             }
 
             public void CommentEntry(int entryId, string note, StatusChange change)

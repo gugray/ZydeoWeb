@@ -13,7 +13,13 @@ var zdEditEntry = (function () {
   var origEntryHtml;
   var headTxt;
   var canApprove;
+  var simpOrig;
+  var tradOrig;
+  var pinyinOrig;
   var trgOrig;
+  var simpCurrVal = "";
+  var tradCurrVal = "";
+  var pinyinCurrVal = "";
   var trgCurrVal = "";
 
   function init() {
@@ -46,9 +52,17 @@ var zdEditEntry = (function () {
     $(".entry").replaceWith(origEntryHtml);
     $(".entry").addClass("editentry");
     $(".pastChanges").replaceWith(data.historyHtml);
-    headTxt = data.headTxt;
+    simpOrig = data.headSimp;
+    tradOrig = data.headTrad;
+    pinyinOrig = data.headPinyin;
     trgOrig = data.trgTxt;
+    $("#txtEditSimp").val(simpOrig);
+    $("#txtEditTrad").val(tradOrig);
+    $("#txtEditPinyin").val(pinyinOrig);
     $("#txtEditTrg").val(trgOrig);
+    simpCurrVal = $("#txtEditSimp").val();
+    tradCurrVal = $("#txtEditTrad").val();
+    pinyinCurrVal = $("#txtEditPinyin").val();
     trgCurrVal = $("#txtEditTrg").val();
     // Approve disabled if entry is already approved
     if (data.status == "approved") $(".cmdApprove").addClass("disabled");
@@ -126,32 +140,77 @@ var zdEditEntry = (function () {
     actionPanelWireup();
   }
 
+  function entryFieldsChanged(forceUpdate) {
+    $(".errSaveFailed").removeClass("visible");
+    var newSimp = $("#txtEditSimp").val();
+    var newTrad = $("#txtEditTrad").val();
+    var newPinyin = $("#txtEditPinyin").val();
+    var newTrg = $("#txtEditTrg").val();
+    //check to prevent multiple simultaneous triggers
+    if (!forceUpdate) {
+      if (newSimp == simpCurrVal && newTrad == tradCurrVal && newPinyin == pinyinCurrVal && newTrg == trgCurrVal)
+        return;
+    }
+    simpCurrVal = newSimp;
+    tradCurrVal = newTrad;
+    pinyinCurrVal = newPinyin;
+    trgCurrVal = newTrg;
+    // Request entry preview
+    var data = {
+      origHw: tradOrig + " " + simpOrig + " [" + pinyinOrig + "]",
+      trad: tradCurrVal,
+      simp: simpCurrVal,
+      pinyin: pinyinCurrVal,
+      trgTxt: newTrg,
+      lang: zdPage.getLang()
+    };
+    var req = zdAuth.ajax("/api/edit/getentrypreview", "GET", data);
+    req.done(function (res) {
+      if (res.previewHtml) {
+        $(".entry").replaceWith(res.previewHtml);
+        // Hilite changes
+        if (newSimp != simpOrig) $(".entry .hw-simp").addClass("new");
+        else $(".entry .hw-simp").removeClass("new");
+        if (newTrad != tradOrig) $(".entry .hw-trad").addClass("new");
+        else $(".entry .hw-trad").removeClass("new");
+        if (newPinyin != pinyinOrig) $(".entry .hw-pinyin").addClass("new");
+        else $(".entry .hw-pinyin").removeClass("new");
+        if (newTrg != trgOrig) $(".entry .senses").addClass("new");
+        else $(".entry .senses").removeClass("new");
+        $(".previewUpdateFail").removeClass("visible");
+        updateHwErrors(".errBadSimp", res.errorsSimp);
+        updateHwErrors(".errBadTrad", res.errorsTrad);
+        updateHwErrors(".errBadPinyin", res.errorsPinyin);
+      }
+      else $(".previewUpdateFail").addClass("visible");
+    });
+    req.fail(function () {
+      $(".previewUpdateFail").addClass("visible");
+    })
+  }
+
+  function updateHwErrors(elmClass, errors) {
+    if (errors.length > 0) {
+      var html = "";
+      for (var i = 0; i != errors.length; ++i) {
+        var err = errors[i];
+        if (err.error) html += "<span class='error'>";
+        else html += "<span>";
+        html += escapeHTML(err.message);
+        html += "</span><br/>";
+      }
+      $(elmClass).html(html);
+      $(elmClass).addClass("visible");
+    }
+    else { $(elmClass).removeClass("visible"); }
+  }
+
   function actionPanelWireup() {
     // Update entry preview on text change
-    $("#txtEditTrg").on("change keyup paste", function () {
-      var newVal = $(this).val();
-      if (newVal == trgCurrVal) return; //check to prevent multiple simultaneous triggers
-      trgCurrVal = newVal;
-      // Request entry preview
-      var data = {
-        hw: headTxt,
-        trgTxt: newVal,
-        lang: zdPage.getLang()
-      };
-      var req = zdAuth.ajax("/api/edit/getentrypreview", "GET", data);
-      req.done(function (res) {
-        if (res) {
-          $(".entry").replaceWith(res);
-          if (newVal != trgOrig) $(".entry .senses").addClass("new");
-          else $(".entry .senses").removeClass("new");
-          $(".previewUpdateFail").removeClass("visible");
-        }
-        else $(".previewUpdateFail").addClass("visible");
-      });
-      req.fail(function () {
-        $(".previewUpdateFail").addClass("visible");
-      })
-    });
+    $("#txtEditSimp").on("change keyup paste", entryFieldsChanged);
+    $("#txtEditTrad").on("change keyup paste", entryFieldsChanged);
+    $("#txtEditPinyin").on("change keyup paste", entryFieldsChanged);
+    $("#txtEditTrg").on("change keyup paste", entryFieldsChanged);
     // Cancel button clicked
     $(".pnlAction .cmdCancel").click(function () {
       exitCommandPanel();
@@ -167,6 +226,14 @@ var zdEditEntry = (function () {
       // OK, got comment: submit request, depending on which mode we're in
       if ($(".actionTitle.edit").hasClass("visible")) onSubmitEdit();
       else onSubmitComment();
+    });
+    // Edit headword clicked
+    $(".pnlAction .cmdEditHead").click(function () {
+      // Show headword fields; remove link command
+      $(".headwordFields").addClass("visible");
+      $(".cmdEditHead").addClass("hidden");
+      // Trigger preview update: that retrieves headword-related warnings too
+      entryFieldsChanged(true);
     });
   }
 
@@ -200,24 +267,37 @@ var zdEditEntry = (function () {
   }
 
   function onSubmitEdit() {
-    // Edited target
+    // Edited values
+    var newSimp = $("#txtEditSimp").val();
+    var newTrad = $("#txtEditTrad").val();
+    var newPinyin = $("#txtEditPinyin").val();
     var newTrg = $("#txtEditTrg").val();
-    // No API call if edited target is actually unchanged
-    if (newTrg == trgOrig) {
+    // No API call if nothing actually unchanged
+    var hwChanged = (newSimp != simpOrig || newTrad != tradOrig || newPinyin != pinyinOrig);
+    if (!hwChanged && newTrg == trgOrig) {
       exitCommandPanel();
       return;
     }
-    // Submit edit
+    // Data to submit
     var data = {
       entryId: $(".editexisting").data("entry-id"),
       trg: newTrg,
-      note: $("#txtEditCmt").val()
+      note: $("#txtEditCmt").val(),
+      lang: zdPage.getLang()
     };
-    var req = zdAuth.ajax("/api/edit/saveentrytrg", "POST", data);
+    var url = "/api/edit/saveentrytrg";
+    // Headword changed or not: different requests
+    if (hwChanged) {
+      data.hw = newTrad + " " + newSimp + " [" + newPinyin + "]";
+      url = "/api/edit/savefullentry";
+    }
+    // Submit
+    var req = zdAuth.ajax(url, "POST", data);
     req.done(function (res) {
-      // Server didn't return expected "true"
-      if (!res || res != true) {
-        zdPage.showAlert(zdPage.ui("editExisting", "failCaption"), zdPage.ui("editExisting", "failMessage"), true);
+      // Server failed to save
+      if (!res.success) {
+        $(".errSaveFailed").text(res.error);
+        $(".errSaveFailed").addClass("visible");
         return;
       }
       // Yippie.
@@ -235,6 +315,15 @@ var zdEditEntry = (function () {
     $(".entry").replaceWith(origEntryHtml);
     $(".cmdpanel").removeClass("visible");
     $(".pnlTasks").addClass("visible");
+    $(".headwordFields").removeClass("visible");
+    $(".hwError").text("");
+    $(".hwError").removeClass("visible");
+    $(".cmdEditHead").removeClass("hidden");
+    $(".errSaveFailed").text("");
+    $(".errSaveFailed").removeClass("visible");
+    $("#txtEditSimp").val(simpOrig);
+    $("#txtEditTrad").val(tradOrig);
+    $("#txtEditPinyin").val(pinyinOrig);
     $("#txtEditTrg").val(trgOrig);
     $("#txtEditCmt").val("");
   }

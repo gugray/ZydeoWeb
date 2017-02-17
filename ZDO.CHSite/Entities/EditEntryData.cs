@@ -10,7 +10,9 @@ namespace ZDO.CHSite.Entities
     public class EditEntryData
     {
         public string EntryHtml;
-        public string HeadTxt;
+        public string HeadSimp;
+        public string HeadTrad;
+        public string HeadPinyin;
         public string TrgTxt;
         public bool CanApprove;
         public string HistoryHtml;

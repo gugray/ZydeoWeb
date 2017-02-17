@@ -17,6 +17,7 @@
   }
   .entry { width: 99%; }
   .senses.new { background-color: @clrLightGreen; width: 100%; }
+  .hw-simp.new, .hw-trad.new, .hw-pinyin.new { background-color: @clrLightGreen; }
   .commands {
     width: 100%; padding: 0.4rem 0 0.4rem 0; margin: 0 0 1rem 0;
     border-top: 1px dashed @clrBodyText; border-bottom: 1px dashed @clrBodyText;
@@ -32,6 +33,7 @@
     &.cmdCancel { background-color: @clrLightLight; &:hover { background-color: @clrLight; } }
     &.disabled { background-color: @clrGray; color: white; }
   }
+  .cmdEditHead.hidden { display: none; }
   .actionTitle {
     font-size: 1.1rem; font-weight: bold; font-family: @fntSansAlt; color: @clrStrong; margin-bottom: 0.2rem;
     display: none; &.visible { display: block; }
@@ -47,10 +49,21 @@
     &#txtEditTrg { height: 10rem; display: none; &.visible { display: block; } }
     &#txtEditCmt { height: 5rem; overflow-y: auto; }
   }
+  input {
+    display: block; width: 100%; margin: 0 0 0.3rem 0; box-sizing: border-box; padding: 0.5rem;
+    &#txtEditSimp, &#txtEditTrad { font-family: @fntZho; font-size: 1.8rem; }
+    &#txtEditPinyin { font-size: 1rem; font-family:@fntBase; }
+    &.error { color: @clrStrongRed; }
+  }
+  .headwordFields { display: none; &.visible { display: block; } }
   .errorNote { color: @clrStrongRed; margin: -0.2rem 0 0.5rem 0; display: none; }
   .errorNote.visible { display: block; }
-  .pnlAction .command {
-    padding-left: 1rem; padding-right: 1rem; float: right; margin-left: 0.5rem;
+  .pnlAction {
+    .command { padding-left: 1rem; padding-right: 1rem; float: right; margin-left: 0.5rem; }
+    .lnkCommand { 
+      float: right; padding-top: 0.3rem; font-size: 1rem; font-weight: bold; color: @clrStrongAccent; 
+      cursor: pointer;
+    }
   }
   .previewUpdateFail { display: none; float: left; color: @clrStrongRed; font-size: 0.9rem; &.visible { display: block; } }
   .pastChanges { padding-left: 0.5rem; }
