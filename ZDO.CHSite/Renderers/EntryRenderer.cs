@@ -21,6 +21,7 @@ namespace ZDO.CHSite.Renderers
         private readonly List<PinyinSyllable> hwPinyin;
         private readonly bool dimIdenticalTrad;
         private readonly string entryId;
+        private readonly string extraEntryClass;
 
         /// <summary>
         /// Maximum number of Hanzi in HW before breaking HW into two lines
@@ -46,18 +47,20 @@ namespace ZDO.CHSite.Renderers
             this.tones = UiTones.None;
             this.hanim = false;
             this.dimIdenticalTrad = false;
+            this.extraEntryClass = "";
         }
 
         /// <summary>
         /// Ctor: dictionary entry in change history.
         /// </summary>
-        public EntryRenderer(CedictEntry entry, bool dimIdenticalTrad)
+        public EntryRenderer(CedictEntry entry, bool dimIdenticalTrad, string extraEntryClass = "")
         {
             this.entryToRender = entry;
             this.script = UiScript.Both;
             this.tones = UiTones.None;
             this.hanim = false;
             this.dimIdenticalTrad = dimIdenticalTrad;
+            this.extraEntryClass = extraEntryClass;
         }
 
         /// <summary>
@@ -71,6 +74,7 @@ namespace ZDO.CHSite.Renderers
             this.hanim = true;
             this.dimIdenticalTrad = true;
             this.entryId = entryId;
+            this.extraEntryClass = "";
         }
 
         /// <summary>
@@ -82,6 +86,7 @@ namespace ZDO.CHSite.Renderers
             this.ann = ann;
             this.tones = tones;
             this.hanim = true;
+            this.extraEntryClass = "";
         }
 
         public void Render(StringBuilder sb, string lang)
@@ -90,22 +95,82 @@ namespace ZDO.CHSite.Renderers
             else renderAnnotation(sb);
         }
 
-        public void RenderInner(StringBuilder sb, string extraSensesClass, string lang)
-        {
-            renderResult(sb, lang, false, extraSensesClass);
-        }
-
-        public void RenderSenses(StringBuilder sb, string extraSensesClass)
+        public void XRenderSenses(StringBuilder sb, string extraSensesClass)
         {
             string sensesClass = "senses";
             if (!string.IsNullOrEmpty(extraSensesClass)) sensesClass += " " + extraSensesClass;
             sb.Append("<div class='" + sensesClass + "'>"); // <div class="senses">
             var entry = entryToRender;
+            if (entry == null) entry = res.Entry;
             for (int i = 0; i != entry.SenseCount; ++i)
             {
                 renderSense(sb, entry.GetSenseAt(i), i, null);
             }
             sb.AppendLine("</div>");
+        }
+
+        public void XRenderStatus(StringBuilder sb)
+        {
+            CedictEntry entry = entryToRender;
+            if (entry == null) entry = res.Entry;
+            if (entry.Status != EntryStatus.Neutral)
+            {
+                if (entry.Status == EntryStatus.Flagged) sb.Append("<i class='fa fa-flag-o entryStatus flagged'></i>");
+                else sb.Append("<i class='fa fa-check entryStatus approved'></i>");
+            }
+        }
+
+        public void XRenderHanzi(StringBuilder sb, string extraSimpClass = "", string extraTradClass = "")
+        {
+            CedictEntry entry = entryToRender;
+            if (entry == null) entry = res.Entry;
+            if (script != UiScript.Trad)
+            {
+                sb.Append("<span class='hw-simp " + extraSimpClass + "' lang='zh-CN'>"); // <span class="hw-simp">
+                renderHanzi(entry, true, false, sb);
+                sb.Append("</span>"); // <span class="hw-simp">
+            }
+            if (script == UiScript.Both)
+            {
+                // Up to N hanzi: on a single line
+                if (entry.ChSimpl.Length <= OneLineHanziLimit)
+                {
+                    string clsSep = "hw-sep";
+                    if (tones != UiTones.None) clsSep = "hw-sep faint";
+                    sb.Append("<span class='" + clsSep + "'>"); // <span class="hw-sep">
+                    sb.Append("•");
+                    sb.Append("</span>"); // <span class="hw-sep">
+                }
+                // Otherwise, line break
+                else sb.Append("<bs/>");
+            }
+            if (script != UiScript.Simp)
+            {
+                string clsTrad = "hw-trad";
+                // Need special class so traditional floats left after line break
+                if (script == UiScript.Both && entry.ChSimpl.Length > OneLineHanziLimit)
+                    clsTrad = "hw-trad break";
+                if (extraTradClass != "") clsTrad += " " + extraTradClass;
+                sb.Append("<span class='" + clsTrad + "' lang='zh-TW'>"); // <span class="hw-trad">
+                renderHanzi(entry, false, dimIdenticalTrad && script == UiScript.Both, sb);
+                sb.Append("</span>"); // <span class="hw-trad">
+            }
+        }
+
+        public void XRenderPinyin(StringBuilder sb, string extraClass = "")
+        {
+            CedictEntry entry = entryToRender;
+            if (entry == null) entry = res.Entry;
+            sb.Append("<span class='hw-pinyin " + extraClass + "'>"); // <span class="hw-pinyin">
+            bool firstSyll = true;
+            foreach (var pinyin in entry.Pinyin)
+            {
+                bool isErhua = pinyin.Text == "r" && pinyin.Tone == 0;
+                if (!firstSyll && !isErhua) sb.Append(" ");
+                firstSyll = false;
+                sb.Append(HtmlEncoder.Default.Encode(pinyin.GetDisplayString(true)));
+            }
+            sb.Append("</span>"); // <span class="hw-pinyin">
         }
 
         private void renderAnnotation(StringBuilder sb)
@@ -114,6 +179,7 @@ namespace ZDO.CHSite.Renderers
             string entryClass = "entry";
             if (tones == UiTones.Pleco) entryClass += " toneColorsPleco";
             else if (tones == UiTones.Dummitt) entryClass += " toneColorsDummitt";
+            if (extraEntryClass != "") entryClass += " " + extraEntryClass;
             sb.Append("<div class='" + entryClass + "'>"); // <div class="entry">
 
             sb.Append("<span class='hw-ann'>");// <span class="hw-simp">
@@ -177,8 +243,6 @@ namespace ZDO.CHSite.Renderers
             }
         }
 
-
-
         private void renderResult(StringBuilder sb, string lang, bool renderEntryDiv, string extraSensesClass = "")
         {
             CedictEntry entry = entryToRender;
@@ -192,6 +256,7 @@ namespace ZDO.CHSite.Renderers
             string entryClass = "entry";
             if (tones == UiTones.Pleco) entryClass += " toneColorsPleco";
             else if (tones == UiTones.Dummitt) entryClass += " toneColorsDummitt";
+            if (extraEntryClass != "") entryClass += " " + extraEntryClass;
             if (renderEntryDiv) sb.Append("<div class='" + entryClass + "'>"); // <div class="entry">
 
             if (entryId != null && lang != null)
@@ -200,52 +265,9 @@ namespace ZDO.CHSite.Renderers
                 sb.Append("<i class='fa fa-pencil entryAction edit'></i></a>");
             }
 
-            if (entry.Status != EntryStatus.Neutral)
-            {
-                if (entry.Status == EntryStatus.Flagged) sb.Append("<i class='fa fa-flag-o entryStatus flagged'></i>");
-                else sb.Append("<i class='fa fa-check entryStatus approved'></i>");
-            }
-
-            if (script != UiScript.Trad)
-            {
-                sb.Append("<span class='hw-simp' lang='zh-CN'>"); // <span class="hw-simp">
-                renderHanzi(entry, true, false, sb);
-                sb.Append("</span>"); // <span class="hw-simp">
-            }
-            if (script == UiScript.Both)
-            {
-                // Up to N hanzi: on a single line
-                if (entry.ChSimpl.Length <= OneLineHanziLimit)
-                {
-                    string clsSep = "hw-sep";
-                    if (tones != UiTones.None) clsSep = "hw-sep faint";
-                    sb.Append("<span class='" + clsSep + "'>"); // <span class="hw-sep">
-                    sb.Append("•");
-                    sb.Append("</span>"); // <span class="hw-sep">
-                }
-                // Otherwise, line break
-                else sb.Append("<bs/>");
-            }
-            if (script != UiScript.Simp)
-            {
-                string clsTrad = "hw-trad";
-                // Need special class so traditional floats left after line break
-                if (script == UiScript.Both && entry.ChSimpl.Length > OneLineHanziLimit)
-                    clsTrad = "hw-trad break";
-                sb.Append("<span class='" + clsTrad + "' lang='zh-TW'>"); // <span class="hw-trad">
-                renderHanzi(entry, false, dimIdenticalTrad && script == UiScript.Both, sb);
-                sb.Append("</span>"); // <span class="hw-trad">
-            }
-            sb.Append("<span class='hw-pinyin'>"); // <span class="hw-pinyin">
-            bool firstSyll = true;
-            foreach (var pinyin in entry.Pinyin)
-            {
-                bool isErhua = pinyin.Text == "r" && pinyin.Tone == 0;
-                if (!firstSyll && !isErhua) sb.Append(" ");
-                firstSyll = false;
-                sb.Append(HtmlEncoder.Default.Encode(pinyin.GetDisplayString(true)));
-            }
-            sb.Append("</span>"); // <span class="hw-pinyin">
+            XRenderStatus(sb);
+            XRenderHanzi(sb);
+            XRenderPinyin(sb);
 
             string sensesClass = "senses";
             if (!string.IsNullOrEmpty(extraSensesClass)) sensesClass += " " + extraSensesClass;

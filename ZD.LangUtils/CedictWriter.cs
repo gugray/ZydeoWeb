@@ -33,6 +33,17 @@ namespace ZD.LangUtils
             return sb.ToString();
         }
 
+        public static string WritePinyin(CedictEntry entry)
+        {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i != entry.PinyinCount; ++i)
+            {
+                if (i != 0) sb.Append(' ');
+                sb.Append(entry.GetPinyinAt(i).GetDisplayString(false));
+            }
+            return sb.ToString();
+        }
+
         public static void Write(CedictEntry entry, out string head, out string trg)
         {
             StringBuilder sbHead = new StringBuilder();

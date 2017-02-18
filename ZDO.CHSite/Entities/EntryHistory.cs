@@ -53,6 +53,10 @@ namespace ZDO.CHSite.Entities
         /// </summary>
         public EntryStatus EntryStatus;
         /// <summary>
+        /// Entry head before change, if headword was edited in normal change. Otherwise null.
+        /// </summary>
+        public string HeadBefore;
+        /// <summary>
         /// Entry body before change, if target was edited in normal change. Otherwise null.
         /// </summary>
         public string BodyBefore;

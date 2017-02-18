@@ -29,6 +29,9 @@ namespace ZDO.CHSite.Logic
                         string bodyBefore = null;
                         if (!(cols[9] is DBNull)) bodyBefore = (string)cols[9];
                         if (bodyBefore == "") bodyBefore = null;
+                        string headBefore = null;
+                        if (!(cols[8] is DBNull)) headBefore = (string)cols[8];
+                        if (headBefore == "") headBefore = null;
                         sbyte statusBefore = 99;
                         if (!(cols[10] is DBNull)) statusBefore = (sbyte)cols[10];
                         ChangeItem ci = new ChangeItem
@@ -41,6 +44,7 @@ namespace ZDO.CHSite.Logic
                             BulkRef = (int)cols[3],
                             CountA = (int)cols[6],
                             CountB = (cols[7] is DBNull) ? int.MinValue : (int)cols[7],
+                            HeadBefore = headBefore,
                             BodyBefore = bodyBefore,
                             StatusBefore = (byte)statusBefore,
                             EntryStatus = (EntryStatus)(sbyte)cols[11],
@@ -94,6 +98,9 @@ namespace ZDO.CHSite.Logic
                         string bodyBefore = null;
                         if (!(cols[13] is DBNull)) bodyBefore = (string)cols[13];
                         if (bodyBefore == "") bodyBefore = null;
+                        string headBefore = null;
+                        if (!(cols[12] is DBNull)) headBefore = (string)cols[12];
+                        if (headBefore == "") headBefore = null;
                         sbyte statusBefore = 99;
                         if (!(cols[14] is DBNull)) statusBefore = (sbyte)cols[14];
                         ChangeItem ci = new ChangeItem
@@ -108,6 +115,7 @@ namespace ZDO.CHSite.Logic
                             BulkRef = (int)cols[7],
                             CountA = (int)cols[10],
                             CountB = (cols[11] is DBNull) ? int.MinValue : (int)cols[11],
+                            HeadBefore = headBefore,
                             BodyBefore = bodyBefore,
                             StatusBefore = (byte)statusBefore,
                             EntryStatus = (cols[15] is DBNull) ? EntryStatus.Neutral : (EntryStatus)(sbyte)cols[15],

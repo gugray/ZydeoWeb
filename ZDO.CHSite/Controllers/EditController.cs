@@ -83,8 +83,7 @@ namespace ZDO.CHSite.Controllers
             catch { }
             if (entry == null)
             {
-                // TO-DO: localize
-                res.Error = "Your change cannot be saved: the entry is invalid. (Is the headword correct?)";
+                res.Error = TextProvider.Instance.GetString(lang, "editEntry.badDataOnSave");
                 return new ObjectResult(res);
             }
 
@@ -96,8 +95,7 @@ namespace ZDO.CHSite.Controllers
             // Not persisted: violates uniqueness constraint
             if (!persisted)
             {
-                // TO-DO: localize
-                res.Error = "Your change cannot be saved: an entry with this headword already exists in the dictionary.";
+                res.Error = TextProvider.Instance.GetString(lang, "editEntry.duplicateOnSave");
                 return new ObjectResult(res);
             }
 
@@ -126,8 +124,8 @@ namespace ZDO.CHSite.Controllers
                 if (trgTxt.Contains("micu-barf")) throw new Exception("barf");
 
                 // Validate current headword
-                bool hwParses = 
-                    validateHeadword(simp, trad, pinyin, res.ErrorsSimp, res.ErrorsTrad, res.ErrorsPinyin);
+                bool hwParses =  validateHeadword(lang, simp, trad, pinyin,
+                    res.ErrorsSimp, res.ErrorsTrad, res.ErrorsPinyin);
 
                 trgTxt = trgTxt.Replace("\r\n", "\n");
                 trgTxt = trgTxt.Replace('/', '\\');
@@ -142,7 +140,7 @@ namespace ZDO.CHSite.Controllers
                 CedictEntry entry = parser.ParseEntry(hw + " " + trgTxt, 0, null);
                 if (entry != null)
                 {
-                    EntryRenderer er = new EntryRenderer(entry, true);
+                    EntryRenderer er = new EntryRenderer(entry, true, "mainEntry");
                     er.OneLineHanziLimit = 12;
                     StringBuilder sb = new StringBuilder();
                     er.Render(sb, null);
@@ -153,26 +151,39 @@ namespace ZDO.CHSite.Controllers
             return new ObjectResult(res);
         }
 
-        private bool validateHeadword(string simp, string trad, string pinyin,
+        private bool validateHeadword(string lang, string simp, string trad, string pinyin,
             List<HeadwordProblem> errorsSimp, List<HeadwordProblem> errorsTrad, List<HeadwordProblem> errorsPinyin)
         {
-            // TO-DO: localize all this
+            var tprov = TextProvider.Instance;
             string msg;
+            // Check each simplified: is it really simplified?
             UniHanziInfo[] uhiSimp = langRepo.GetUnihanInfo(simp);
             for (int i = 0; i != uhiSimp.Length; ++i)
             {
                 var uhi = uhiSimp[i];
                 if (!uhi.CanBeSimp)
                 {
-                    msg = "{0} does not appear to be a simplified character";
+                    msg = tprov.GetString(lang, "editEntry.hwProblemNotSimplified");
                     msg = string.Format(msg, simp[i]);
                     errorsSimp.Add(new HeadwordProblem(false, msg));
                 }
             }
-            if (trad.Length != simp.Length)
+            // Check each traditional: is it really traditional?
+            UniHanziInfo[] uhiTrad = langRepo.GetUnihanInfo(trad);
+            for (int i = 0; i != uhiTrad.Length; ++i)
             {
-                errorsTrad.Add(new HeadwordProblem(true, "Different number of simplified and traditional characters."));
+                var uhi = uhiTrad[i];
+                // Traditional chars are listed as their own traditional variant
+                if (Array.IndexOf(uhi.TradVariants, trad[i]) < 0)
+                {
+                    msg = tprov.GetString(lang, "editEntry.hwProblemNotTraditional");
+                    msg = string.Format(msg, trad[i]);
+                    errorsTrad.Add(new HeadwordProblem(false, msg));
+                }
             }
+            // Check each traditional against its simplified friend
+            if (trad.Length != simp.Length)
+                errorsTrad.Add(new HeadwordProblem(true, tprov.GetString(lang, "editEntry.hwProblemSimpTradCounts")));
             else
             {
                 for (int i = 0; i != uhiSimp.Length; ++i)
@@ -180,7 +191,7 @@ namespace ZDO.CHSite.Controllers
                     var uhi = uhiSimp[i];
                     if (Array.IndexOf(uhi.TradVariants, trad[i]) < 0)
                     {
-                        msg = "{0} is not a known traditional variant of {1}";
+                        msg = tprov.GetString(lang, "editEntry.hwProblemNotTradForSimp");
                         msg = string.Format(msg, simp[i], trad[i]);
                         errorsTrad.Add(new HeadwordProblem(false, msg));
                     }
@@ -195,13 +206,13 @@ namespace ZDO.CHSite.Controllers
                 pyNorm = x;
             }
             pyNorm = pyNorm.Trim();
-            if (pyNorm != pinyin) errorsPinyin.Add(new HeadwordProblem(true, "Extra spaces in Pinyin."));
+            if (pyNorm != pinyin) errorsPinyin.Add(new HeadwordProblem(true, tprov.GetString(lang, "editEntry.hwProblemExtraSpacesPinyin")));
             // Try to match up normalized pinyin with simplified Hanzi
             CedictParser parser = new CedictParser();
             CedictEntry ee = null;
             try { ee = parser.ParseEntry(trad + " " + simp + " [" + pyNorm + "] /x/", 0, null); }
             catch { }
-            if (ee == null) errorsPinyin.Add(new HeadwordProblem(true, "Incorrect or invalid Pinyin syllables."));
+            if (ee == null) errorsPinyin.Add(new HeadwordProblem(true, tprov.GetString(lang, "editEntry.hwProblemInvalidPinyin")));
             else
             {
                 if (simp.Length == ee.ChSimpl.Length)
@@ -213,7 +224,7 @@ namespace ZDO.CHSite.Controllers
                         var cnt = uhi.Pinyin.Count(x => x.GetDisplayString(false) == py.GetDisplayString(false));
                         if (cnt == 0)
                         {
-                            msg = "{0} is not a known reading of {1}";
+                            msg = tprov.GetString(lang, "editEntry.hwProblemWrongPinyin");
                             msg = string.Format(msg, py.GetDisplayString(false), simp[i]);
                             errorsPinyin.Add(new HeadwordProblem(false, msg));
                         }
@@ -259,7 +270,7 @@ namespace ZDO.CHSite.Controllers
 
             // Entry HTML
             entry.Status = status;
-            EntryRenderer er = new EntryRenderer(entry, true);
+            EntryRenderer er = new EntryRenderer(entry, true, "mainEntry");
             er.OneLineHanziLimit = 12;
             StringBuilder sb = new StringBuilder();
             er.Render(sb, null);
@@ -268,7 +279,7 @@ namespace ZDO.CHSite.Controllers
             // Entry history
             List<ChangeItem> changes = SqlDict.GetEntryChanges(idVal);
             sb.Clear();
-            HistoryRenderer.RenderEntryChanges(sb, trg, status, changes, lang);
+            HistoryRenderer.RenderEntryChanges(sb, hw, trg, status, changes, lang);
             res.HistoryHtml = sb.ToString();
 
             return new ObjectResult(res);
@@ -301,12 +312,12 @@ namespace ZDO.CHSite.Controllers
             SqlDict.GetEntryById(idVal, out hw, out trg, out status);
             var changes = SqlDict.GetEntryChanges(idVal);
             // Remove first item (most recent change). But first, backprop potential trg and status change
-            // Later: HW
+            if (changes[0].HeadBefore != null) hw = changes[0].HeadBefore;
             if (changes[0].BodyBefore != null) trg = changes[0].BodyBefore;
             if (changes[0].StatusBefore != 99) status = (EntryStatus)changes[0].StatusBefore;
             changes.RemoveAt(0);
             StringBuilder sb = new StringBuilder();
-            HistoryRenderer.RenderPastChanges(sb, entryId, trg, status, changes, lang);
+            HistoryRenderer.RenderPastChanges(sb, entryId, hw, trg, status, changes, lang);
             return new ObjectResult(sb.ToString());
         }
 

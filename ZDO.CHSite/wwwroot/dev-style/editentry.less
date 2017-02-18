@@ -58,6 +58,8 @@
   .headwordFields { display: none; &.visible { display: block; } }
   .errorNote { color: @clrStrongRed; margin: -0.2rem 0 0.5rem 0; display: none; }
   .errorNote.visible { display: block; }
+  .errorNote.hwError span { color: @clrStrongAccent; }
+  .errorNote.hwError span.error { color: @clrStrongRed; }
   .pnlAction {
     .command { padding-left: 1rem; padding-right: 1rem; float: right; margin-left: 0.5rem; }
     .lnkCommand { 

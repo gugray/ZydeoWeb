@@ -35,6 +35,10 @@ a.pageLink:hover, a.pageLink.selected { background-color: @clrLight; }
   &.flashdown { background-color: @clrDefBg; &:hover { background-color: @clrDefBg } }
   .senses.old { background-color: @clrLightRed; width: 100%; }
   .senses.new { background-color: @clrLightGreen; width: 100%; }
+  .hw-trad.old, .hw-simp.old, .hw-pinyin.old { background-color: @clrLightRed; }
+  .hw-trad.new, .hw-simp.new, .hw-pinyin.new { background-color: @clrLightGreen; }
+  .hw-pinyin.old { margin-top: 0.2rem; }
+  .hw-trad.old, .hw-simp.old { margin-bottom: 0.7rem; }
 }
 
 .changeHead {
@@ -93,6 +97,11 @@ a.pageLink:hover, a.pageLink.selected { background-color: @clrLight; }
   }
   .pastItem {
     position: relative; float: left; width: 100%; box-sizing: border-box; margin-bottom: 1.2rem; padding-right: 0.4rem;
+    .entry { font-size: 0.6rem; color: #606060; }
+    .hw-trad.old, .hw-simp.old, .hw-pinyin.old { background-color: @clrLightRed; }
+    .hw-trad.new, .hw-simp.new, .hw-pinyin.new { background-color: @clrLightGreen; }
+    .hw-pinyin.old { margin-top: 0.2rem; }
+    .hw-trad.old, .hw-simp.old { margin-bottom: 0.7rem; }
     .senses { font-size: 0.9rem; color: #606060; width: 100%; }
     .senses.old { background-color: @clrLightRed; }
     .senses.new { background-color: @clrLightGreen; }

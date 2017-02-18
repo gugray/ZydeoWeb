@@ -49,8 +49,8 @@ var zdEditEntry = (function () {
   function onGotData(data, eventWireup) {
     origEntryHtml = data.entryHtml;
     canApprove = data.canApprove;
-    $(".entry").replaceWith(origEntryHtml);
-    $(".entry").addClass("editentry");
+    $(".mainEntry").replaceWith(origEntryHtml);
+    $(".mainEntry").addClass("editentry");
     $(".pastChanges").replaceWith(data.historyHtml);
     simpOrig = data.headSimp;
     tradOrig = data.headTrad;
@@ -167,16 +167,16 @@ var zdEditEntry = (function () {
     var req = zdAuth.ajax("/api/edit/getentrypreview", "GET", data);
     req.done(function (res) {
       if (res.previewHtml) {
-        $(".entry").replaceWith(res.previewHtml);
+        $(".mainEntry").replaceWith(res.previewHtml);
         // Hilite changes
-        if (newSimp != simpOrig) $(".entry .hw-simp").addClass("new");
-        else $(".entry .hw-simp").removeClass("new");
-        if (newTrad != tradOrig) $(".entry .hw-trad").addClass("new");
-        else $(".entry .hw-trad").removeClass("new");
-        if (newPinyin != pinyinOrig) $(".entry .hw-pinyin").addClass("new");
-        else $(".entry .hw-pinyin").removeClass("new");
-        if (newTrg != trgOrig) $(".entry .senses").addClass("new");
-        else $(".entry .senses").removeClass("new");
+        if (newSimp != simpOrig) $(".mainEntry .hw-simp").addClass("new");
+        else $(".mainEntry .hw-simp").removeClass("new");
+        if (newTrad != tradOrig) $(".mainEntry .hw-trad").addClass("new");
+        else $(".mainEntry .hw-trad").removeClass("new");
+        if (newPinyin != pinyinOrig) $(".mainEntry .hw-pinyin").addClass("new");
+        else $(".mainEntry .hw-pinyin").removeClass("new");
+        if (newTrg != trgOrig) $(".mainEntry .senses").addClass("new");
+        else $(".mainEntry .senses").removeClass("new");
         $(".previewUpdateFail").removeClass("visible");
         updateHwErrors(".errBadSimp", res.errorsSimp);
         updateHwErrors(".errBadTrad", res.errorsTrad);
@@ -311,8 +311,8 @@ var zdEditEntry = (function () {
   }
 
   function exitCommandPanel() {
-    $(".entry .senses").removeClass("new");
-    $(".entry").replaceWith(origEntryHtml);
+    $(".mainEntry .senses").removeClass("new");
+    $(".mainEntry").replaceWith(origEntryHtml);
     $(".cmdpanel").removeClass("visible");
     $(".pnlTasks").addClass("visible");
     $(".headwordFields").removeClass("visible");

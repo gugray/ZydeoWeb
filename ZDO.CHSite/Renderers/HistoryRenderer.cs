@@ -53,26 +53,30 @@ namespace ZDO.CHSite.Renderers
             histRenderChange(sb, change, false, lang, parser, "reloaded");
         }
 
-        public static void RenderPastChanges(StringBuilder sb, string entryId, string currTrg, EntryStatus currStatus,
+        public static void RenderPastChanges(StringBuilder sb, string entryId, 
+            string currHead, string currTrg, EntryStatus currStatus,
             List<ChangeItem> changes, string lang)
         {
             sb.Append("<div class='pastChanges' data-entry-id='" + entryId + "'>");
             sb.AppendLine("<div class='pastInner'>");
             CedictParser parser = new CedictParser();
+            string headNow = currHead;
             string trgNow = currTrg;
             EntryStatus statusNow = currStatus;
-            foreach (var ci in changes) renderPastChange(sb, parser, ref trgNow, ref statusNow, ci, lang);
+            foreach (var ci in changes) renderPastChange(sb, parser, ref currHead, ref trgNow, ref statusNow, ci, lang);
             sb.AppendLine("</div></div>"); // <div class='pastChanges'><div class='pastInner'>
         }
 
-        public static void RenderEntryChanges(StringBuilder sb, string currTrg, EntryStatus currStatus,
+        public static void RenderEntryChanges(StringBuilder sb, 
+            string currHead, string currTrg, EntryStatus currStatus,
             List<ChangeItem> changes, string lang)
         {
             sb.AppendLine("<div class='pastChanges'><div class='pastInner'>");
             CedictParser parser = new CedictParser();
+            string headNow = currHead;
             string trgNow = currTrg;
             EntryStatus statusNow = currStatus;
-            foreach (var ci in changes) renderPastChange(sb, parser, ref trgNow, ref statusNow, ci, lang);
+            foreach (var ci in changes) renderPastChange(sb, parser, ref headNow, ref trgNow, ref statusNow, ci, lang);
             sb.AppendLine("</div></div>"); // <div class='pastChanges'><div class='pastInner'>
         }
 
@@ -93,9 +97,9 @@ namespace ZDO.CHSite.Renderers
             return changeMsg;
         }
 
-        private static readonly string dtFmtHu = "{0}-{1:00}-{2:00} {3:00}:{4:00}";
-        private static readonly string dtFmtDe = "{2:00}.{1:00}.{0} {3:00}:{4:00}";
-        private static readonly string dtFmtEn = "{1:00}/{2:00}/{0} {3:00}:{4:00}";
+        //private static readonly string dtFmtHu = "{0}-{1:00}-{2:00} {3:00}:{4:00}";
+        //private static readonly string dtFmtDe = "{2:00}.{1:00}.{0} {3:00}:{4:00}";
+        //private static readonly string dtFmtEn = "{1:00}/{2:00}/{0} {3:00}:{4:00}";
 
         private static string getTimeStr(DateTime dtUtc, string lang)
         {
@@ -121,7 +125,8 @@ namespace ZDO.CHSite.Renderers
             //return dtFmt;
         }
 
-        private static void renderPastChange(StringBuilder sb, CedictParser parser, ref string trgNow, ref EntryStatus statusNow,
+        private static void renderPastChange(StringBuilder sb, CedictParser parser, 
+            ref string headNow, ref string trgNow, ref EntryStatus statusNow,
             ChangeItem ci, string lang)
         {
             sb.AppendLine("<div class='pastItem'>");
@@ -155,14 +160,43 @@ namespace ZDO.CHSite.Renderers
             sb.Append("</span>");
             sb.AppendLine("</div>"); // <div class='changeNote'>
 
+            if (ci.HeadBefore != null)
+            {
+                CedictEntry eCurr = parser.ParseEntry(headNow + " /x/", -1, null);
+                CedictEntry eOld = parser.ParseEntry(ci.HeadBefore + " /x/", -1, null);
+                bool simpChanged = eCurr.ChSimpl != eOld.ChSimpl;
+                bool tradChanged = eCurr.ChTrad != eOld.ChTrad;
+                bool pinyinChanged = CedictWriter.WritePinyin(eCurr) != CedictWriter.WritePinyin(eOld);
+                // Render in parts
+                sb.AppendLine("<div class='entry'>");
+                // Let's not dim identical chars if anything changed in HW
+                EntryRenderer rCurr = new EntryRenderer(eCurr, !simpChanged && !tradChanged);
+                EntryRenderer rOld = new EntryRenderer(eOld, !simpChanged && !tradChanged);
+                rCurr.OneLineHanziLimit = rOld.OneLineHanziLimit = 12;
+                if (simpChanged || tradChanged)
+                {
+                    rCurr.XRenderHanzi(sb, simpChanged ? "new" : "", tradChanged ? "new" : "");
+                    rOld.XRenderHanzi(sb, simpChanged ? "old" : "", tradChanged ? "old" : "");
+                }
+                if (pinyinChanged)
+                {
+                    rCurr.XRenderPinyin(sb, pinyinChanged ? "new" : "");
+                    rOld.XRenderPinyin(sb, "old");
+                }
+                sb.AppendLine("</div>"); // <div class='entry'>
+                // Propagate change
+                headNow = ci.HeadBefore;
+            }
+
             if (ci.BodyBefore != null)
             {
                 CedictEntry entryNew = parser.ParseEntry("的 的 [de5] " + trgNow, -1, null);
                 EntryRenderer er = new EntryRenderer(entryNew, true);
-                er.RenderSenses(sb, "new");
+                er.XRenderSenses(sb, "new");
                 CedictEntry entryOld = parser.ParseEntry("的 的 [de5] " + ci.BodyBefore, -1, null);
                 er = new EntryRenderer(entryOld, true);
-                er.RenderSenses(sb, "old");
+                er.XRenderSenses(sb, "old");
+                // Propagate change
                 trgNow = ci.BodyBefore;
             }
             if (ci.StatusBefore != 99) statusNow = (EntryStatus)ci.StatusBefore;
@@ -271,7 +305,7 @@ namespace ZDO.CHSite.Renderers
             if (ci.ChangeType != ChangeType.BulkImport)
             {
                 // NOT edited
-                if (ci.BodyBefore == null)
+                if (ci.BodyBefore == null && ci.HeadBefore == null)
                 {
                     CedictEntry entry = parser.ParseEntry(ci.EntryHead + " " + ci.EntryBody, 0, null);
                     entry.Status = ci.EntryStatus;
@@ -279,22 +313,38 @@ namespace ZDO.CHSite.Renderers
                     er.OneLineHanziLimit = 12;
                     er.Render(sb, null);
                 }
-                // Entry edited: show "diff"
+                // Entry edited: show "diff" in head and/or body
                 else
                 {
+                    // Current, and comparison base
+                    CedictEntry eCurr = parser.ParseEntry(ci.EntryHead + " " + ci.EntryBody, 0, null);
+                    eCurr.Status = ci.EntryStatus;
+                    string headOld = ci.HeadBefore == null ? ci.EntryHead : ci.HeadBefore;
+                    string bodyOld = ci.BodyBefore == null ? ci.EntryBody : ci.BodyBefore;
+                    CedictEntry eOld = parser.ParseEntry(headOld + " " + bodyOld, 0, null);
+                    bool simpChanged = eCurr.ChSimpl != eOld.ChSimpl;
+                    bool tradChanged = eCurr.ChTrad != eOld.ChTrad;
+                    bool pinyinChanged = CedictWriter.WritePinyin(eCurr) != CedictWriter.WritePinyin(eOld);
+                    bool bodyChanged = ci.BodyBefore != null;
+                    // Render in parts
                     sb.AppendLine("<div class='entry'>");
-                    CedictEntry entry = parser.ParseEntry(ci.EntryHead + " " + ci.EntryBody, 0, null);
-                    entry.Status = ci.EntryStatus;
-                    EntryRenderer er = new EntryRenderer(entry, true);
-                    er.OneLineHanziLimit = 12;
-                    er.RenderInner(sb, "new", null);
-                    entry = parser.ParseEntry(ci.EntryHead + " " + ci.BodyBefore, 0, null);
-                    er = new EntryRenderer(entry, true);
-                    er.RenderSenses(sb, "old");
-                    sb.AppendLine("</div>");
+                    // Let's not dim identical chars if anything changed in HW
+                    EntryRenderer rCurr = new EntryRenderer(eCurr, !simpChanged && !tradChanged);
+                    EntryRenderer rOld = new EntryRenderer(eOld, !simpChanged && !tradChanged);
+                    rCurr.OneLineHanziLimit = rOld.OneLineHanziLimit = 12;
+                    rCurr.XRenderStatus(sb);
+                    rCurr.XRenderHanzi(sb, simpChanged ? "new" : "", tradChanged ? "new" : "");
+                    if (simpChanged || tradChanged)
+                        rOld.XRenderHanzi(sb, simpChanged ? "old" : "", tradChanged ? "old" : "");
+                    rCurr.XRenderPinyin(sb, pinyinChanged ? "new" : "");
+                    if (pinyinChanged)
+                        rOld.XRenderPinyin(sb, "old");
+                    rCurr.XRenderSenses(sb, bodyChanged ? "new" : "");
+                    if (bodyChanged)
+                        rOld.XRenderSenses(sb, "old");
+                    sb.AppendLine("</div>"); // <div class='entry'>
                 }
             }
-            else if (ci.ChangeType == ChangeType.Edit && ci.BodyBefore != null)
             sb.Append("</div>"); // <div class='changeEntry'>
 
             sb.Append("</div>"); // <div class='changeHead'>

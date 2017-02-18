@@ -60,5 +60,16 @@
     "errNotHanzi": "Not a Hanzi, capital letter or digit:",
     "errUnsupported": "Unsupported character:",
     "errNotSimp": "Not simplified Hanzi:"
+  },
+  "editEntry": {
+    "badDataOnSave": "Your change cannot be saved: the entry is invalid. (Is the headword correct?)",
+    "duplicateOnSave": "Your change cannot be saved: an entry with this headword already exists in the dictionary.",
+    "hwProblemNotSimplified": "{0} does not appear to be a simplified character.",
+    "hwProblemNotTraditional": "{0} does not appear to be a traditional character.",
+    "hwProblemSimpTradCounts": "Different number of simplified and traditional characters.",
+    "hwProblemNotTradForSimp": "{0} is not a known traditional variant of {1}.",
+    "hwProblemWrongPinyin": "{0} is not a known reading of {1}.",
+    "hwProblemInvalidPinyin": "Incorrect or invalid Pinyin syllables.",
+    "hwProblemExtraSpacesPinyin": "Extra spaces in Pinyin."
   }
 }
