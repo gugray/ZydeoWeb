@@ -1,20 +1,20 @@
 ﻿<div id="x-mutation">hdd</div>
 <div id="x-lang">de</div>
 <div id="x-rel">/read/details/change-002</div>
-<div id="x-description">Datenreinigung, um die Probleme und Inkonsistenzen der originellen HanDeDict-Datei vor dem Import zu korrigieren.</div>
+<div id="x-description">Datenreinigung, um die Probleme und Inkonsistenzen der ursprünglichen HanDeDict-Datei vor dem Import zu korrigieren.</div>
 <div id="x-keywords">Datenreinigung, Korrekturen, Import, HanDeDict, Zydeo, Chinesisch, Deutsch, Wörterbuch, kostenlos, Open Source</div>
-<div id="x-title">Massenänderung 002: Datenreinigung - HanDeDict @ Zydeo chinesisch-deutsches Wörterbuch</div>
+<div id="x-title">Massenänderung 002: Datenreinigung - HanDeDict @ Zydeo Wörterbuch Chinesisch-Deutsch</div>
 
 <div class="content">
   <h2>Massenänderung 002: Datenreinigung</h2>
   <p>
-    Die ursprüngliche HanDeDict-Datei hatte verschiedene Probleme. Manche von diesen sind marginal, wie z.B. die inkonsistente Verwendung von geraden und typographischen Anführungszeichen. Andere sind störend, wie der gemischter Gebrauch von <span class="inline-code">&lt;&gt;</span> und <span class="inline-code">()</span> als Klammern, oder multiple Leerzeichen. Manche Probleme sind möglicherweise durch Scriptfehler der ursprünglichen HanDeDict-Seite, oder durch Kodierungsfehler in der Wayback Machine verursacht, wie z.B. die Anwesenheit von <span class="inline-code">&amp;gt</span> (ohne Semikolon) in mehreren Einträgen. Es gibt ernsthafte Probleme, die aber leicht zu korrigieren sind. Ein Beispiel sind fehlende Leerzeichen, da diese die Wortgrenzen verändern und dazu führen, dass die Suchfunktion deutsche Wörter, die eigentlich im Wörterbuch sind, nicht findet. Einige Probleme sind ernsthaft und mit automatischen Methoden leider nicht korrigierbar. <span class="inline-code">/</span> kommt in manchen Einträgen als Text vor, was aber nicht von der wahren Funktion von <span class="inline-code">/</span> als Trennzeichen zwischen Bedeutungen zu unterscheiden ist. Schließlich enhtält die Mehrzahl der Einträge in der Originaldatei <i>(u.E.)</i>, was in HanDeDict @ Zydeo ins erweiterte Format gehört und nicht im Anzeigetext ercheinen muss.
+    Die ursprüngliche HanDeDict-Datei wies verschiedene Probleme auf. Manche davon sind marginal, wie z.B. die inkonsistente Verwendung von geraden und typographischen Anführungszeichen. Andere sind störend, wie der gemischter Gebrauch von <span class="inline-code">&lt;&gt;</span> und <span class="inline-code">()</span> als Klammern, oder multiple Leerzeichen. Manche Probleme sind möglicherweise durch Skriptfehler der ursprünglichen HanDeDict-Seite, oder durch Kodierungsfehler in der Wayback Machine verursacht, wie z.B. die Anwesenheit von <span class="inline-code">&amp;gt</span> (ohne Semikolon) in mehreren Einträgen. Es gibt ernsthafte Probleme, die aber leicht zu korrigieren sind. Ein Beispiel sind fehlende Leerzeichen, da diese die Wortgrenzen verändern und dazu führen, dass die Suchfunktion deutsche Wörter, die eigentlich im Wörterbuch sind, nicht findet. Einige Probleme sind ernsthaft und mit automatischen Methoden leider nicht korrigierbar. <span class="inline-code">/</span> kommt in manchen Einträgen als Text vor, was aber nicht von der wahren Funktion von <span class="inline-code">/</span> als Trennzeichen zwischen Bedeutungen zu unterscheiden ist. Schließlich enthält die Mehrzahl der Einträge in der Originaldatei <i>(u.E.)</i>, was in HanDeDict @ Zydeo ins erweiterte Format gehört und nicht im Anzeigetext erscheinen darf.
   </p>
   <p>
-    Vor dem Import wurde ein zweites Script ausgeführt, um möglichst alle maschinell korrigierbare Probleme zu beseitigen. Das Script generiert eine neue Version für alle Einträge, die geändert werden, mit dem Benutzernamen <i>zydeo-robot</i>. Dieser Benutzer ist ein Platzhalter für automatische Datenverarbeitung, damit ähnliche massenhafte Veränderungen in der Änderungsgeschichte leicht von menschlichen Beiträgen zu unterscheiden sind.
+    Vor dem Import wurde ein zweites Skript ausgeführt, um möglichst alle maschinell korrigierbaren Probleme zu beseitigen. Das Skript generiert für jeden geänderten Eintrag eine neue Version mit dem Benutzernamen <i>zydeo-robot</i>. Dieser Benutzer ist ein Platzhalter für automatische Datenverarbeitung, damit ähnliche Massenänderungen in der Änderungsgeschichte leicht von menschlichen Beiträgen zu unterscheiden sind.
   </p>
   <p>
-    Für den technischen Leser ist es am einfachsten, den relevanten Teil des Scripts, der einen einzigen Eintrag verarbeitet, zu lesen:
+    Für den technischen Leser ist es am einfachsten, den relevanten Teil des Skripts, der einen einzigen Eintrag verarbeitet, zu lesen:
   </p>
   <pre><code class="cs">private Regex reLtGt = new Regex(@"&lt;([^&gt;\/]+)&gt;");
 private Regex reAngled = new Regex(@"\[([^\]\/]+)\]");
@@ -63,19 +63,19 @@ private string cleanse(string line)
     return line;
 }
 </code></pre>
-  <h3>Reproduzierung</h3>
+  <h3>Reproduktion</h3>
   <p>
-    <a href="https://github.com/gugray/ZydeoWeb/blob/master/ZD.Tool/Wrk20Cleanse.cs" rel="noreferrer" target="_blank">Wrk20Cleanse.cs</a> im Projekt ZD.Tool ist das Script, das für die Verarbeitung benutzt wurde. Um das Script auszuführen:
+    <a href="https://github.com/gugray/ZydeoWeb/blob/master/ZD.Tool/Wrk20Cleanse.cs" rel="noreferrer" target="_blank">Wrk20Cleanse.cs</a> im Projekt ZD.Tool ist das Skript, das für die Verarbeitung benutzt wurde. So führen Sie das Skript aus:
   </p>
   <ol>
     <li>
-      Kopieren Sie <span class="inline-code">x-10-handedict.txt</span> (den Output des vorausgegangenen Scripts) in einen Unterordner namens <span class="inline-code">_work</span> unter dem Stammverzeichnis der Solution
+      Kopieren Sie <span class="inline-code">x-10-handedict.txt</span> (den Output des vorausgegangenen Skripts) in einen Unterordner namens <span class="inline-code">_work</span> unter dem Stammverzeichnis der Solution
     </li>
     <li>
-      Kompilieren Sie ZD.Tool und führen Sie es aus mit dem Argument <span class="inline-code">--20-cleanse</span>
+      Kompilieren Sie ZD.Tool und führen Sie es mit dem Argument <span class="inline-code">--20-cleanse</span> aus
     </li>
   </ol>
   <p>
-    Output: <a href="/files/x-20-handedict.zip">x-20-handedict.txt</a> ist die Datei, die in die HanDeDict @ Zydeo Webseite importiert wurde.
+    Output: <a href="/files/x-20-handedict.zip">x-20-handedict.txt</a> ist die Datei, die in die Website HanDeDict @ Zydeo importiert wurde.
   </p>
-</div> 
+</div>

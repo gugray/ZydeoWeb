@@ -5,7 +5,7 @@
     "topRead": "Infos",
     "topDownload": "Download",
     "subEditNew": "Neuer Eintrag",
-    "subEditHistory": "Veränderungen",
+    "subEditHistory": "Änderungen",
     "subEditExisting": "Eintrag bearbeiten",
     "subReadFAQ": "FAQ",
     "subReadDetails": "Details",
@@ -16,14 +16,14 @@
     "subReadEtc": "Kleingedrucktes",
     "subDownloadHDD": "HanDeDict herunterladen",
     "subUserList": "Benutzerliste",
-    "subMyProfile": "Mein profil"
+    "subMyProfile": "Mein Profil"
   },
   "misc": {
-    "searchResultTitleHDD": "{0} - deutsche Übersetzung - HanDeDict @ Zydeo chinesisch-Deutsches Wörterbuch",
-    "searchResultTitleTrgHDD": "{0} - chinesische Übersetzung - HanDeDict @ Zydeo chinesisch-Deutsches Wörterbuch",
-    "searchResultTitleCHD": "{0} - ungarische Übersetzung - CHDICT chinesisch-Ungarisches Wörterbuch",
-    "searchResultTitleTrgCHD": "{0} - chinesische Übersetzung - CHDICT chinesisch-Ungarisches Wörterbuch",
-    "cookieNotice": "Diese Webseite verwendet Cookies für einige Funktionen. Indem Sie die Webseite benutzen, stimmen Sie der Nutzung von Cookies zu.",
+    "searchResultTitleHDD": "{0} - Deutsche Übersetzung - HanDeDict @ Zydeo Wörterbuch Chinesisch-Deutsch",
+    "searchResultTitleTrgHDD": "{0} - Chinesische Übersetzung - HanDeDict @ Zydeo Wörterbuch Chinesisch-Deutsch",
+    "searchResultTitleCHD": "{0} - Ungarische Übersetzung - CHDICT Wörterbuch Chinesisch-Ungarisch",
+    "searchResultTitleTrgCHD": "{0} - Chinesische Übersetzung - CHDICT Wörterbuch Chinesisch-Ungarisch",
+    "cookieNotice": "Diese Website verwendet für einige Funktionen Cookies. Indem Sie die Website benutzen, stimmen Sie der Verwendung von Cookies zu.",
     "cookieOK": "OK",
     "cookieLearnMore": "Mehr erfahren",
     "imprint":  "Impressum"
@@ -32,8 +32,8 @@
     "annotationNotice": "Ihre Suchanfrage ist nicht im Wörterbuch vorhanden; der Text wird mit Annotationen wiedergegeben."
   },
   "emails": {
-    "senderNameHDD": "HanDeDict @ Zydeo Webseite",
-    "regConfirm": "Registration bestätigen",
+    "senderNameHDD": "HanDeDict @ Zydeo Website",
+    "regConfirm": "Registrierung bestätigen",
     "mailChangeConfirm": "Neue E-Mail bestätigen",
     "passreset": "Passwort zurücksetzen"
   },
@@ -45,7 +45,7 @@
     "changeBulkImport": "Datenimport",
     "changeApproved": "Verifiziert",
     "changeFlagged": "Markiert",
-    "changeStatusNeutral": "Unmarkiert",
+    "changeStatusNeutral": "Entmarkiert",
     "bulkLink": "Link",
     "bulkNewWords": "{0} neue Wörter",
     "bulkChangedWords": "{0} Wörter verändert"
@@ -56,9 +56,20 @@
     "about": "Über:"
   },
   "newEntry": {
-    "errSpacePunct": "Das Stichwort darf keine Leer- oder Satzzeichen enthalten",
+    "errSpacePunct": "Das Schlagwort darf keine Leer- oder Satzzeichen enthalten",
     "errNotHanzi": "Kein Hanzi, Großbuchstabe oder Ziffer:",
     "errUnsupported": "Schriftzeichen nicht unterstützt:",
     "errNotSimp": "Kein vereinfachtes Schriftzeichen:"
+  },
+  "editEntry": {
+    "badDataOnSave": "Ihre Änderung konnte nicht gespeichert werden: der Eintrag ist ungültig. (Ist das Schlagwort korrekt?)",
+    "duplicateOnSave": "Ihre Änderung konnte nicht gespeichert werden: ein Eintrag mit diesem Schlagwort ist schon im Wörterbuch vorhanden.",
+    "hwProblemNotSimplified": "{0} scheint kein vereinfachtes Schriftzeichen zu sein.",
+    "hwProblemNotTraditional": "{0} scheint kein traditionelles Schriftzeichen zu sein.",
+    "hwProblemSimpTradCounts": "Verschiedene Anzahl vereinfachte und traditionelle Schriftzeichen.",
+    "hwProblemNotTradForSimp": "{0} ist nicht als eine traditionelle Variante von {1} bekannt.",
+    "hwProblemWrongPinyin": "{0} ist nicht als Aussprache von {1} bekannt.",
+    "hwProblemInvalidPinyin": "Inkorrekte oder ungültige Pinyin-Silben.",
+    "hwProblemExtraSpacesPinyin": "Extra Leerzeichen in der Pinyin-umschrift."
   }
 }

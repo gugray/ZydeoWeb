@@ -3,19 +3,19 @@
 <div id="x-rel">/read/details/format-and-guidelines</div>
 <div id="x-description">Datenformat und Struktur des Wörterbuchs, redaktionelle Entscheidungen, Richtlinien und Konventionen.</div>
 <div id="x-keywords">Format, Richtlinien, Konventionen, CC-CEDICT, HanDeDict, Zydeo, Chinesisch, Deutsch, Wörterbuch, kostenlos, Open Source</div>
-<div id="x-title">Format und redaktionelle Richtlinien - HanDeDict @ Zydeo chinesisch-deutsches Wörterbuch</div>
+<div id="x-title">Format und redaktionelle Richtlinien - HanDeDict @ Zydeo Wörterbuch Chinesisch-Deutsch</div>
 
 <div class="content">
   <h2>Format und redaktionelle Richtlinien</h2>
   <p>
-    Diese Webseite bietet Funktionen, um HanDeDict zu durchsuchen, bearbeiten, und in der Geschichte der Veränderungen zu stöbern. Das Wörterbuch selbst ist eine große Textdatei, die Einträge im CC-CEDICT-Format enthält, ergänzt durch Metainformationen für jeden Eintrag, inklusive einer eindeutigen Kennung und der ganzen Änderungsgeschichte des Eintrags. Technisch werden diese Informationen in einer Datenbank gespeichert, aber die Webseite generiert jede Nacht eine aktualisierte Version der Textdatei.
+    Diese Website bietet Funktionen, um HanDeDict zu durchsuchen, zu bearbeiten, und den Änderungsverlauf durchzusehen. Das Wörterbuch selbst ist eine große Textdatei, die Einträge im CC-CEDICT-Format enthält, ergänzt durch Metainformationen für jeden Eintrag, inklusive einer eindeutigen Kennung und der vollständigen Änderungsgeschichte des Eintrags. Technisch werden diese Informationen in einer Datenbank gespeichert. Die Website generiert jedoch jede Nacht eine aktualisierte Version der Textdatei.
   </p>
   <p>
-    Indem Sie über die Webseite HanDeDict durchsuchen oder bearbeiten, bekommen Sie das textbasierte Format nie direkt zu sehen. Viele Entscheidungen aber, die den Aufbau und Inhalt des Wörterbuchs betreffen, folgen direkt aus den Beschränkungen des Formats. Diese Seite ist eine Übersicht von (1) dem zugrunde liegenden CC-CEDICT-Formats; (2) den Erweiterungen, die das Speichern der Änderungsgeschichte ermöglicen; und (3) die redaktionellen Richtlinien und Konventionen, die über das Format hinaus die Gestaltung des Wörterbuchs bestimmen.
+    Wenn Sie HanDeDict über die Website durchsuchen oder bearbeiten, bekommen Sie das textbasierte Format nie direkt zu sehen. Viele Entscheidungen, die den Aufbau und Inhalt des Wörterbuchs betreffen, folgen jedoch direkt aus den Beschränkungen des Formats. Diese Seite gibt einen Überblick über (1) das zugrunde liegende CC-CEDICT-Format; (2) die Erweiterungen, die das Speichern der Änderungsgeschichte ermöglichen; und (3) die redaktionellen Richtlinien und Konventionen, die über das Format hinaus die Gestaltung des Wörterbuchs bestimmen.
   </p>
   <h3>Anatomie eines CC-CEDICT-Eintrags</h3>
   <p>
-    Mit der Ausnahme von Kommentaren, die mit einem <span class="inline-code">#</span>-Zeichen gekennzeichnet sind, steht jede nicht leere Zeile in der Datei für einen einzigen Wörterbucheintrag. Diese Zeilen haben die folgende interne Struktur.
+    Mit Ausnahme von Kommentaren, die mit einem <span class="inline-code">#</span>-Zeichen gekennzeichnet sind, steht jede nicht leere Zeile in der Datei für einen einzigen Wörterbucheintrag. Diese Zeilen haben die folgende interne Struktur:
   </p>
   <div class="pre-wrap">
     <pre><span style="color: #d43737;">檢索</span> <span style="color: #4343ce;">检索</span> <span style="color: #16a616;">[jian3 suo3]</span> /Recherche, Suche (S)/recherchieren, suchen (V)/</pre>
@@ -25,29 +25,29 @@
       Dies ist eine Zeile aus einer einfachen Textdatei; die Farben sind nur zur Verdeutlichung hinzugefügt worden.
     </li>
     <li>
-      Die Zeile beginnt mit dem Schlagwort, das wiederum aus der <span style="color: #d43737;">traditionellen Variante</span>, der <span style="color: #4343ce;">vereinfachten Variante</span> und der <span style="color: #16a616;">Pinyin-Umschrift in eckigen Klammern</span> besteht. Diese Teile sind durch Leerzeichen getrennt.
+      Die Zeile beginnt mit dem Schlagwort, das wiederum aus der <span style="color: #d43737;">traditionellen Variante</span>, der <span style="color: #4343ce;">vereinfachten Variante</span> und der <span style="color: #16a616;">Pinyin-Umschrift in eckigen Klammern</span> besteht. Diese drei Teile sind durch Leerzeichen getrennt.
     </li>
     <li>
-      Ton wird für Pinyin-Silben mit einer Ziffer zwischen 1 und 4 angegeben; 5 steht für den neutralen Ton. Pinyin-Silben werden durch Leerzeichen getrennt.
+      Der Ton wird für Pinyin-Silben mit einer Ziffer zwischen 1 und 4 angegeben; 5 steht für den neutralen Ton. Pinyin-Silben werden durch Leerzeichen getrennt.
     </li>
     <li>
-      Der Rest der Zeile gibt die deutschen Bedeutungen an, getrennt und umgeben von Schrägstrichen.
+      Der Rest der Zeile gibt die deutschen Bedeutungen an, die durch Schrägstriche getrennt und eingerahmt werden.
     </li>
     <li>
       Als eine logische Einschränkung muss jedes Schlagwort die gleiche Anzahl an traditionellen und vereinfachten Schriftzeichen und Pinyin-Silben haben.
     </li>
     <li>
-      Durch 儿 retroflex artikulierte Vokale werden in der Pinyin-Umschrift mit einer alleinstehenden <span class="inline-code">r5</span> angegeben - d.h., sie werden nicht mit der vorausgegangenen Silbe als z.B. <span class="inline-code">wanr2</span> zusammengeschrieben.
+      Durch 儿 retroflex artikulierte Vokale werden in der Pinyin-Umschrift mit einer alleinstehenden Silbe <span class="inline-code">r5</span> angegeben - d.h., sie werden nicht mit der vorausgegangenen Silbe als z.B. <span class="inline-code">wanr2</span> zusammengeschrieben.
     </li>
   </ul>
-  <p>Derselbe Eintrag, wenn er als Suchergebnis angezeigt wird, sieht folgend aus:</p>
+  <p>Wenn er als Suchergebnis angezeigt wird, sieht derselbe Eintrag wie folgt aus:</p>
   <div class="entry toneColorsPleco" style="font-size: 0.7rem;">
     <span class="hw-simp" lang="zh-CN"><span class="tone3 hanim">检</span><span class="tone3 hanim">索</span></span><span class="hw-sep faint">•</span><span class="hw-trad" lang="zh-TW"><span class="tone3 hanim">檢</span><span class="tone3 faint hanim">索</span></span><span class="hw-pinyin">jiǎn suǒ</span><div class="senses"><span class="sense"><span class="sense-nobr"><span class="sense-ix">1</span> Recherche,</span> Suche<span class="sense-meta"> (S)</span></span><span class="sense"><span class="sense-nobr"><span class="sense-ix">2</span> recherchieren,</span> suchen<span class="sense-meta"> (V)</span></span></div>
   </div>
   <p>&nbsp;</p>
   <h3>Erweitertes Format</h3>
   <p>
-    Über die kommentierten Zeilen mit der eindeutigen Kennung des Eintrags hinaus enthält die neue HanDeDict-Datei noch weitere Informationen in kommentierten Zeilein. In seiner ursprünglichen Version auf HanDeDict @ Zydeo sieht der obige Eintrag folgend aus:
+    Neben den kommentierten Zeilen mit der eindeutigen Versionskennung des Eintrags enthält die neue HanDeDict-Datei noch weitere Informationen in kommentierten Zeilen. In seiner ursprünglichen Version auf HanDeDict @ Zydeo sieht der obige Eintrag so aus:
   </p>
   <div class="pre-wrap">
     <pre># ID-a54wi5I
@@ -57,38 +57,38 @@
 檢索 检索 [jian3 suo3] /Recherche, Suche (S)/recherchieren, suchen (V)/</pre>
   </div>
   <p>
-    Erweiterte Einträge werden in der Textdatei durch Leerzeichen getrennt; jeder Abschnitt beginnt mit einer kommentierten Zeile, die die Kennung des Eintrags enthält. Jede Veränderung in der Versionsgeschichte des Eintrags wird mit ein oder zwei Zeilen repräsentiert.
+    Erweiterte Einträge werden in der Textdatei durch Leerzeilen getrennt; jeder Abschnitt beginnt mit einer kommentierten Zeile, die die eindeutige Eintragskennung enthält. Jede Änderung in der Versionsgeschichte des Eintrags wird mit ein oder zwei Zeilen repräsentiert.
   </p>
   <ul>
     <li>
-      Die erste Zeile, die immer anwesend ist, beginnt mit <span class="inline-code">Ver</span> und gibt folgende Details an: den Zeitpunkt der Veränderung; den Benutzer, der den Veränderung eingetragen hat; den Status des Eintrags nach der Veränderung; und, nach dem <span class="inline-code">&gt;</span> Zeichen, das Kommentar, das die Veränderung begleitet.
+      Die erste Zeile, die immer vorhanden ist, beginnt mit <span class="inline-code">Ver</span> und enthält folgende Angaben: den Zeitpunkt der Änderung; den Benutzer, der die Änderung eingetragen hat; den Status des Eintrags nach der Änderung; und schließlich, nach dem Zeichen <span class="inline-code">&gt;</span>, den Kommentar zur Änderung.
     </li>
     <li>
-      Wenn durch die Veränderung das Schlagwort oder die deutschen Bedeutungen geändert worden sind, folgt eine zweite Zeile mit dem Inhalt des Eintrags nach der Veränderung.
+      Wenn durch die Änderung das Schlagwort oder die deutschen Bedeutungen geändert worden sind, folgt eine zweite Zeile mit dem Inhalt des Eintrags nach der Änderung.
     </li>
     <li>
       Jeder Eintrag hat einen der folgenden Status: Neu (<span class="inline-code">Stat-New</span>), Verifiziert (<span class="inline-code">Stat-Verif</span>) oder Markiert (<span class="inline-code">Stat-Flagged</span>).
     </li>
     <li>
-      Es gibt Veränderungen, die eine große Anzahl Einträge betreffen (z.B. automatische Datenreinigung durch Scripts, oder der Import von Einträgen aus einer externen Datei). Um zu vermeiden, dass die Änderungsgeschichte in solchen Fällen von tausenden von verwandten Änderungen überflutet wird, erscheinen solche Veränderungen als eine einzige Massenänderung. Massenänderungen werden implizit durch die dreistellige Nummer vor dem <span class="inline-code">&gt;</span>-Zeichen, das das Kommentar einleitet, definiert. Die Webseite hat eine spezielle Seite für jede Massenveränderung, die weitere Informationen über die Veränderung angibt und wo möglich, auf die relevanten Input- und Output-Dateien sowei das verwendete Script verlinkt. Gewöhnliche, einzeln eingetragene Veränderungen sind daran zu erkennen, dass keine dreistellige Nummer vor dem <span class="inline-code">&gt;</span>-Zeichen steht.
+      Es gibt Änderungen, die eine große Anzahl Einträge betreffen (z.B. automatische Datenreinigung durch Skripts, oder der Import von Einträgen aus einer externen Datei). Um zu vermeiden, dass die Änderungsgeschichte in solchen Fällen von tausenden zusammenhängender Änderungen überflutet wird, werden Änderungen dieser Art als eine einzige Massenänderung angezeigt. Massenänderungen werden implizit durch die dreistellige Nummer vor dem <span class="inline-code">&gt;</span>-Zeichen definiert, das den Kommentar einleitet. Die Website hat eine spezielle Seite für jede Massenänderung. Diese Seite stellt weitere Informationen über die Änderung angibt und verlinkt, wo möglich, auf die relevanten Input- und Output-Dateien sowie auf das verwendete Skript. Gewöhnliche, einzeln eingetragene Änderungen sind daran zu erkennen, dass keine dreistellige Nummer vor dem <span class="inline-code">&gt;</span>-Zeichen steht.
     </li>
   </ul>
   <p>
-    <b>Status der Einträge in der HanDeDict-Originaldatei</b>: Die Mehrzahl der Einträge in der letzten Version der HanDeDict-Datei aus 2011 ist unverifiziert, was durch den Text <i>(u.E.)</i> in den Bedeutungen selbst angezeigt wird. Unverifizierte Einträge haben in HanDeDict @ Zydeo am Anfang den Status "Neu". Die wenigen verizierten Einträge haben den Status "Verifiziert" bekommen.
+    <b>Status der Einträge in der HanDeDict-Originaldatei</b>: Die Mehrzahl der Einträge in der letzten Version der HanDeDict-Datei aus 2011 ist unverifiziert. Dies wird durch die Abkürzung <i>(u.E.)</i> im Eintragstext selbst angezeigt. Unverifizierte Einträge haben in HanDeDict @ Zydeo am Anfang den Status "Neu". Die wenigen verifizierten Einträge haben den Status "Verifiziert" erhalten.
   </p>
   <h3>Konventionen und redaktionelle Richtlinien</h3>
   <p>
-    <b>Tonsandhi</b> wird in den Schlagwörtern nicht angegeben. Im Besonderen, 一 <span class="pinyin">yī</span> and 不 <span class="pinyin">bù</span> haben immer den ersten und vierten Ton, auch wenn sie im gegebenen Eintrag anders ausgesprochen werden. Im gleichen Sinne wird die Veränderung vom 3. zum 2. Ton vor einem 3. Ton nicht angegeben. So behält z.B. in 你好 <span class="pinyin">nǐ hǎo</span> die erste Silbe den 3. Ton. Dies stimmt mit dem Verfahren praktisch aller chinesischen Wörterbücher überein.
+    <b>Tonsandhi</b> wird in den Schlagwörtern nicht angegeben. Insbesondere 一 <span class="pinyin">yī</span> und 不 <span class="pinyin">bù</span> haben immer den ersten und vierten Ton, auch wenn sie im gegebenen Kontext anders ausgesprochen werden. Im gleichen Sinne wird die Änderung vom 3. zum 2. Ton vor einem 3. Ton nicht angegeben. So behält z.B. in 你好 <span class="pinyin">nǐ hǎo</span> die erste Silbe den 3. Ton. Dies entspricht der Vorgehensweise praktisch aller chinesischen Wörterbücher.
   </p>
   <p>
-    Lexikalisierte Veränderungen zum neutralen Ton werden hingegen wohl explizit angezeigt, so lautet die Pinyin-Umschrift von 明白 <span class="pinyin">míng bai</span> und nicht <span class="pinyin">míng bái</span>.
+    Lexikalisierte Änderungen zum neutralen Ton werden hingegen explizit angezeigt. So lautet die Pinyin-Umschrift von 明白 <span class="pinyin">míng bai</span> und nicht <span class="pinyin">míng bái</span>.
   </p>
   <p>
-    <b>Klammern</b> weisen immer auf Metainformationen hin: was in Klammern steht, ist nicht wörtlich als ein deutsches Äquivalent des Schlagworts zu verstehen.
+    <b>Klammern</b> weisen immer auf Metainformationen hin: was in Klammern steht, ist also nicht als deutsche Entsprechung des chinesischen Schlagworts zu verstehen.
   </p>
   <ul>
     <li>
-      Text, der in Klammern steht, wird durch die Suchfunktion nicht wiedergegeben. Dies ist der wichtigste Aspekt für die Bearbeitung des Wörterbuchs: die grundsätzliche Funktion von Klammern ist genau, Teile des Texts aus der Suche auszuschließen.
+      Text, der in Klammern steht, kann nicht über die Suchfunktion gefunden werden. Dies ist das Wichtigste, woran Sie beim Bearbeiten des Wörterbuchs denken sollten: Klammern haben grundsätzlich die Funktion, den eingeklammerten Text aus der Suche auszuschließen.
     </li>
     <li>
       Um anzudeuten, dass der Text in Klammern nicht direkt als Übersetzung zu verstehen ist, wird er in den Suchergebnissen in Kursivschrift wiedergegeben.
@@ -97,42 +97,42 @@
       Text in Klammern darf nur am Anfang und am Ende von Bedeutungen stehen, nicht in der Mitte.
     </li>
     <li>
-      Es ist besonders wichtig, Konstruktionen wie die folgende zu vermeiden: <span class="pinyin">Befragte(r), Interviewte(r)</span>. Text, der so formuliert ist, kann nicht korrekt indiziert werden, was dazu führt, dass die Suchfunktion relevante Einträge nicht findet. Es gibt noch viele solche Beispiele im Wörterbuch; diese zu korrigieren ist eine redaktionelle Zielsetzung.
+      Vermeiden Sie insbesondere Konstruktionen wie die folgende: <span class="pinyin">Befragte(r), Interviewte(r)</span>. Text, der so formuliert ist, kann nicht korrekt indiziert werden, was dazu führt, dass die Suchfunktion relevante Einträge nicht findet. Es gibt noch viele solche Beispiele im Wörterbuch. Ein wichtiges Ziel beim Bearbeiten besteht darin, diese zu korrigieren.
     </li>
     <li>
-      Die überlieferte HanDeDict-Datei gibt die Wortart in Klammern an, wobei es unklar ist, woher diese Informationen stammen und genau was sie bedeuten. (Beziehen sie sich auf das Schlagwort oder auf das deutsche Äquivalent? Durch genau welche automatische Methode sind sie generiert worden, und wie verlässlich sind sie?) Trotz dieser Zweifel bleiben die ursprünglichen Wortart-Angaben erhalten. Es gibt aber keine Erwartung, die alten Wortart-Angaben zu behalten, wenn Sie Einträge bearbeiten, und in neuen Einträgen sind sie auch nicht erforderlich.
+      Die überlieferte HanDeDict-Datei gibt die Wortart in Klammern an, wobei es unklar ist, woher diese Informationen stammen und genau was sie bedeuten. (Beziehen sie sich auf das Schlagwort oder auf die deutsche Entsprechung? Durch genau welche automatische Methode sind sie generiert worden, und wie verlässlich sind sie?) Trotz dieser Zweifel bleiben die ursprünglichen Wortart-Angaben erhalten. Beim Bearbeiten von Einträgen wird jedoch nicht erwartet, dass Sie die alten Wortart-Angaben beibehalten müssen, und in neuen Einträgen sind sie auch nicht erforderlich.
     </li>
     <li>
-      Die überlieferte HanDeDict-Datei enthält eine große Anzahl von Bezeichnungen für Domäne, Stilebene usw., es gibt aber keine Beschreibung der Richtlinien oder Konventionen, wie die Bezeichnungen verwendet wurden. Vorerst gibt es auch auf HanDeDict @ Zydeo keine redaktionellen Richtlinien für die Verwendung von Bezeichnungen.
+      Die überlieferte HanDeDict-Datei enthält eine große Anzahl von Bezeichnungen für Domäne, Stilebene usw. Es liegen jedoch keine Richtlinien oder Konventionen vor, die erklären, wie die Bezeichnungen verwendet wurden. Vorerst gibt es auch auf HanDeDict @ Zydeo keine redaktionellen Richtlinien für die Verwendung von Bezeichnungen.
     </li>
     <li>
-      Wo es nicht möglich ist, ein deutsches Äquivalent zu finden, können Sie die gesamte Paraphrase oder Erklärung in Klammern eintragen. Dies ist besonders nützlich bei Funktionswörtern, die keine "Übersetzung" in einer anderen Sprache haben - man denke z.B. an Partikel wie 的.
+      Wo es nicht möglich ist, eine deutsche Entsprechung zu finden, können Sie die gesamte Paraphrase oder Erklärung in Klammern eintragen. Dies ist besonders nützlich bei Funktionswörtern, die keine "Übersetzung" in einer anderen Sprache haben - man denke z.B. an Partikel wie 的.
     </li>
   </ul>
   <p>
-    <b>Was ist ein Wort?</b> HanDeDict enthält viele Einträge, die genau genommen keine Wörter sind, u.a. Chengyu (Sprichwörter), Eigennamen, feste Ausdrücke oder einfach häufige Kollokationen. Bei der Bearbeitung von HanDeDict wollen wir nicht eintscheiden, ob etwas ein Wort ist oder nicht. Wenn Sie der Meinung sind, dass etwas an sich besteht und für jemanden, der versucht, einen chinesischen Text zu verstehen, hilfreich sein wird, so gehört es als Eintrag in HanDeDict. Andererseits sollten die folgenden Typen nicht ins Wörterbuch eingetragen werden:
+    <b>Was ist ein Wort?</b> HanDeDict enthält viele Einträge, die genau genommen keine Wörter sind, u.a. Chengyu (Sprichwörter), Eigennamen, feste Ausdrücke oder einfach häufige Kollokationen. Bei der Bearbeitung von HanDeDict kommt es nicht darauf, ob etwas ein Wort ist oder nicht. Wenn Sie der Meinung sind, dass etwas eigenständig ist und für jemanden hilfreich sein könnte, der versucht, einen chinesischen Text zu verstehen, so gehört es als Eintrag in HanDeDict. Folgendes sollte jedoch nicht ins Wörterbuch eingetragen werden:
   </p>
   <ul>
     <li>
-      Ausdrücke, deren Bedeutung aus den Teilen transparent abgeleitet werden kann. Triviale Wortverbindungen oder Sätze.
+      Ausdrücke, deren Bedeutung aus den Teilen vollständig und transparent abgeleitet werden kann. Triviale Wortverbindungen oder Sätze.
     </li>
     <li>
       Durchsichtig modifizierte Wörter. 蓝色 <span class="pinyin">lán sè</span> steht für die blaue Farbe; es ist unnötig, 蓝色的 <span class="pinyin">lán sè de</span> ins Wörterbuch einzutragen, als ob es ein eigenständiges Adjektiv wäre.
     </li>
   </ul>
   <p>
-    <b>Pinyin-Wörter</b>. In HanDeDict dient Pinyin ausschließlich dem Zweck, die Aussprache der einzelnen Silben im Schlagwort anzudeuten. Wortgrenzen werden also nicht beobachtet: alle Silben sind mit Leerzeichen getrennt. Hauptgrund dafür ist, dass die überlieferte HanDeDict-Datei keine Informationen über Wortgrenzen enthält. Da das Wörterbuch nicht nur Wörter, sondern auch sehr viele längere Ausdrücke enthält, wäre es eine riesige Aufgabe, Wortgrenzen händisch einzutragen, wobei der Wert für die Benutzer des Wörterbuchs relativ gering wäre.
+    <b>Pinyin-Wörter</b>. In HanDeDict dient Pinyin ausschließlich dem Zweck, die Aussprache der einzelnen Silben im Schlagwort anzudeuten. Wortgrenzen werden also nicht eingehalten: alle Silben sind mit Leerzeichen getrennt. Hauptgrund dafür ist, dass die überlieferte HanDeDict-Datei keine Informationen über Wortgrenzen enthält. Da das Wörterbuch nicht nur Wörter, sondern auch sehr viele längere Ausdrücke enthält, wäre es eine riesige Aufgabe, Wortgrenzen händisch einzutragen, wobei der Wert für die Benutzer des Wörterbuchs relativ gering wäre.
   </p>
   <p>
     <b>Orthographische und phonetische Varianten</b>. Manche Schlagwörter haben alternative Schreibweisen mit unterschiedlichen Schriftzeichen, überwiegend was die traditionellen Schriftzeichen betrifft. In anderen Fällen gibt es alternative Aussprachen (hauptsächlich Tonschwankungen, die häufig mit regionaler Variation zusammenhängen). Das aktuelle Format von HanDeDict kann diese Informationen nicht elegant erfassen. Die einzige Möglichkeit ist, für jede Variante einen neuen Eintrag zu erstellen. Dieses Problem wird in der Zukunft möglicherweise durch eine Erweiterung des Formats gelöst.
   </p>
   <p>
-    <b>Deutsche Rechtschreibung</b>. Die neue Rechtschreibung, wie sie in Deutschland verwendet wird, ist bevorzugt. Konsistenz in dieser Hinsicht ist aber nicht lebenswichtig, da die Suchfunktion die wichtigsten Unterschiede kompensiert, damit beim Durchsuchen unabhängig von der Schreibweise alle relevanten Wörter gefunden werden.
+    <b>Deutsche Rechtschreibung</b>. Bevorzugt wird die neue Rechtschreibung, wie sie in Deutschland verwendet wird. Sie ist jedoch nicht obligatorisch. Die Suchfunktion berücksichtigt die wichtigsten Unterschiede, damit beim Durchsuchen unabhängig von der Schreibweise alle relevanten Wörter gefunden werden.
   </p>
   <p>
-    <b>Bedeutungen und Alternativen</b>. HanDeDict hat keine strengen Vorschriften, wie verschiedene Bedeutungen des Schlagworts in den Einträgen zu unterscheiden sind. Alternativen für dieselbe Bedeutung werden häufig innerhalb der Bedeutung aufgezählt, getrennt entweder durch Kommas oder Strichpunkte. In anderen Einträgen erscheinen alternative Übersetzungen als verschiedene Bedeutungen. Beide Methoden sind akzeptabel. In vielen Fällen wäre es überhaupt schwer zu entscheiden, wo die Grenze zwischen unterschiedlichen Bedeutungen und Synonymen für dieselbe Bedeutung liegt.
+    <b>Bedeutungen und Alternativen</b>. HanDeDict hat keine strengen Vorschriften, wie verschiedene Bedeutungen des Schlagworts in den Einträgen zu unterscheiden sind. Alternativen für dieselbe Bedeutung werden häufig innerhalb der Bedeutung aufgezählt, getrennt entweder durch Kommas oder Strichpunkte. In anderen Einträgen erscheinen alternative Übersetzungen als verschiedene Bedeutungen. Beide Methoden sind akzeptabel. In vielen Fällen ist schwer zu entscheiden, wo die Grenze zwischen unterschiedlichen Bedeutungen und Synonymen für dieselbe Bedeutung liegt.
   </p>
   <p>
-    Wenn Sie einen Eintrag bearbeiten, denken Sie an den Benutzer des Wörterbuchs, und versuchen Sie, eine Formulierung zu finden, die dem Benutzer hilft, eine Übersicht zu bekommen über die Bedeutungen, den sprachlichen Register und die Verwendung des chinesischen Wortes.
+    Wenn Sie einen Eintrag bearbeiten, denken Sie an den Benutzer des Wörterbuchs, und versuchen Sie, eine Formulierung zu finden, die es dem Benutzer erleichtert, die Bedeutungen, das sprachliche Register und die Verwendung des chinesischen Wortes zu erfassen.
   </p>
-</div> 
+</div>
