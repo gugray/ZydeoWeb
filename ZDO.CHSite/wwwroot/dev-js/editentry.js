@@ -120,10 +120,12 @@ var zdEditEntry = (function () {
       if ($(this).hasClass("cmdEdit")) {
         $(".actionTitle.edit").addClass("visible");
         $("#txtEditTrg").addClass("visible");
+        $(".cmdEditHead").removeClass("hidden");
         $("#txtEditTrg").focus();
       }
       // NOT edit entry :)
       else {
+        $(".cmdEditHead").addClass("hidden");
         $("#txtEditCmt").focus();
         // Comment
         if ($(this).hasClass("cmdComment")) $(".actionTitle.comment").addClass("visible");
