@@ -30,8 +30,9 @@ private string cleanse(string line)
     line = line.Replace('”', '"'); // Curly quote
     // Remove "(u.E.)" from entry itself. We put this info into the Status meta field.
     line = line.Replace("(u.E.)", "");
-    // Fix &amp;gt in place of &gt;
+    // Fix incorrect entities
     line = line.Replace("&amp;gt", "&gt;");
+    line = line.Replace("&amp;quot", "\"");
     // &lt;something&gt; -&gt; (something)
     line = reLtGt.Replace(line, "($1)");
     // Angle [brackets] inside body

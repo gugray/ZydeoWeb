@@ -63,8 +63,9 @@ namespace ZD.Tool
             line = line.Replace('”', '"'); // Curly quote
             // Remove "(u.E.)" from entry itself. We put this info into the Status meta field.
             line = line.Replace("(u.E.)", "");
-            // Fix &gt in place of >
+            // Fix incorrect entities
             line = line.Replace("&gt", ">");
+            line = line.Replace("&quot", "\"");
             // <something> -> (something)
             line = reLtGt.Replace(line, "($1)");
 
