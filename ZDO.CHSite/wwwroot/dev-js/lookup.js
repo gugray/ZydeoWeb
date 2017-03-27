@@ -22,6 +22,8 @@ var zdLookup = (function () {
   var prefixSuppressTrigger = false;
   // True if IME composition is in progress in the input field
   var isComposing = false;
+  // Handwriting recognition data downloaded
+  var charDataLoaded = false;
 
   zdPage.globalInit(globalInit);
 
@@ -35,14 +37,14 @@ var zdLookup = (function () {
     // Register search params provider
     zdPage.setSearchParamsProvider(getSearchParams);
 
-    // If session storage says we've already loaded strokes, append script right now
-    // This will happen from browser cache, i.e., page load doesn't suffer
-    if (sessionStorage.getItem("charDataLoaded")) {
-      var elmStrokes = document.createElement('script');
-      document.getElementsByTagName("head")[0].appendChild(elmStrokes);
-      elmStrokes.setAttribute("type", "text/javascript");
-      elmStrokes.setAttribute("src", "/prod-js/xcharacterdata.js");
-    }
+    //// If session storage says we've already loaded strokes, append script right now
+    //// This will happen from browser cache, i.e., page load doesn't suffer
+    //if (sessionStorage.getItem("charDataLoaded")) {
+    //  var elmStrokes = document.createElement('script');
+    //  document.getElementsByTagName("head")[0].appendChild(elmStrokes);
+    //  elmStrokes.setAttribute("type", "text/javascript");
+    //  elmStrokes.setAttribute("src", "/prod-js/xcharacterdata.js");
+    //}
     // Search field hint. Depends on mutation.
     if ($("body").hasClass("hdd")) $(".txtSearch").attr("placeholder", zdPage.ui("search-manual", "hint-hdd"));
     else $(".txtSearch").attr("placeholder", zdPage.ui("search-manual", "hint-chd"));
@@ -353,20 +355,13 @@ var zdLookup = (function () {
   function showStrokeInput(event) {
     var hwEnabled = false;
     // Firsty first: load the stroke data if missing
-    if (typeof zdCharData === 'undefined') {
-      // Add element, and also event handler for completion
-      var elmStrokes = document.createElement('script');
-      document.getElementsByTagName("head")[0].appendChild(elmStrokes);
+    if (!charDataLoaded) {
       var funEnabler = function () {
         zdHandwriting.setEnabled(true);
         sessionStorage.setItem("charDataLoaded", true);
+        charDataLoaded = true;
       }
-      elmStrokes.onload = function () { funEnabler(); };
-      elmStrokes.onreadystatechange = function () {
-        if (this.readyState == 'complete') funEnabler();
-      }
-      elmStrokes.setAttribute("type", "text/javascript");
-      elmStrokes.setAttribute("src", "/prod-js/xcharacterdata.js");
+      HanziLookup.init("mmah", "/files/mmah.json", funEnabler);
     }
     // If stroke data is alreayd loaded, explicitly call setEnabled - this makes sure character matcher is initialized
     else hwEnabled = true;

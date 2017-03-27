@@ -101,11 +101,17 @@ var zdHandwriting = (function () {
     // Character lookup
     var matches = matchAndShow();
     // Log interaction
-    uxLog.drawingActions.push({
+    var loggedAction = {
       action: "stroke",
-      points: rawStrokes[rawStrokes.length - 1],
+      points: [], //rawStrokes[rawStrokes.length - 1],
       results: matches
-    });
+    }
+    for (var i = 0; i != rawStrokes[rawStrokes.length - 1].length; ++i) {
+      var pt = rawStrokes[rawStrokes.length - 1][i];
+      var ptRound = [Math.round(pt[0]), Math.round(pt[1])];
+      loggedAction.points.push(ptRound);
+    }
+    uxLog.drawingActions.push(loggedAction);
   }
 
   // Redraws raw strokes on the canvas.
@@ -154,27 +160,33 @@ var zdHandwriting = (function () {
   }
 
   function matchAndShow() {
-    var matches = zdCharMatcher.match(rawStrokes, 8);
-    $("#" + prms.suggestionsId).html('');
-    for (var i = 0; ((i < 8) && matches[i]) ; i++) {
-      var sug = document.createElement('span');
-      $(sug).append(matches[i]).attr('class', prms.suggestionClass).data("matchix", i);
-      $(sug).click(function () {
-        // Complete and submit interaction log
-        uxLog.pickedInSession = true;
-        uxLogSubmit($(this).text(), $(this).data("matchix"));
-        // Insert user's pick into search field
-        if (appendNotOverwrite)
-          $("." + prms.insertionTargedClass).val($("." + prms.insertionTargedClass).val() + $(this).html());
-        else
-          $("." + prms.insertionTargedClass).val($(this).html());
-        appendNotOverwrite = true;
-        clearCanvas();
-        $("#" + prms.suggestionsId).html('');
-      });
-      $("#" + prms.suggestionsId).append(sug);
-    }
-    return matches;
+    //var matches = zdCharMatcher.match(rawStrokes, 8);
+    var analyzedChar = new HanziLookup.AnalyzedCharacter(rawStrokes);
+    var matcherMMAH = new HanziLookup.Matcher("mmah");
+    matcherMMAH.match(analyzedChar, 8, function (scoredMatches) {
+      var matches = [];
+      for (var i = 0; i != scoredMatches.length; ++i) matches.push(scoredMatches[i].character);
+      $("#" + prms.suggestionsId).html('');
+      for (var i = 0; ((i < 8) && matches[i]) ; i++) {
+        var sug = document.createElement('span');
+        $(sug).append(matches[i]).attr('class', prms.suggestionClass).data("matchix", i);
+        $(sug).click(function () {
+          // Complete and submit interaction log
+          uxLog.pickedInSession = true;
+          uxLogSubmit($(this).text(), $(this).data("matchix"));
+          // Insert user's pick into search field
+          if (appendNotOverwrite)
+            $("." + prms.insertionTargedClass).val($("." + prms.insertionTargedClass).val() + $(this).html());
+          else
+            $("." + prms.insertionTargedClass).val($(this).html());
+          appendNotOverwrite = true;
+          clearCanvas();
+          $("#" + prms.suggestionsId).html('');
+        });
+        $("#" + prms.suggestionsId).append(sug);
+      }
+      return matches;
+    });
   }
 
   function clearCanvas() {
@@ -284,7 +296,7 @@ var zdHandwriting = (function () {
       else {
         $("#stroke-input-canvas").removeClass("loading");
         $("#strokeDataLoading").css("display", "none");
-        zdCharMatcher.init(zdCharData)
+        //zdCharMatcher.init(zdCharData)
       }
     }
 
