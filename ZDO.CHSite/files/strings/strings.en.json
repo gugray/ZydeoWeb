@@ -11,10 +11,12 @@
     "subReadDetails": "Details",
     "subReadAbout": "About",
     "subReadSearchTipsHDD": "Search tips",
+    "subReadSearchTipsCHD": "Search tips",
     "subReadVersionHistory": "Version history",
     "subReadArticles": "Articles",
     "subReadEtc": "Small print",
     "subDownloadHDD": "Download HanDeDict",
+    "subDownloadCHD": "Download CHDICT",
     "subUserList": "Users",
     "subMyProfile": "My profile"
   },

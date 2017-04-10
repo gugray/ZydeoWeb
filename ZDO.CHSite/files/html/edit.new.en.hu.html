@@ -1,0 +1,104 @@
+﻿<div id="x-lang">hu</div>
+<div id="x-rel">?/newentry</div>
+<div id="x-nositemap"></div>
+<div id="x-title-hdd">Új szócikk - HanDeDict @ Zydeo kínai-német szótár</div>
+<div id="x-title-chd">Új szócikk - CHDICT kínai-magyar szótár</div>
+
+<div class="content" id="newEntry">
+  <div class="formBlock active" id="blockSimp">
+    <div class="formBlockLabel">Egyszerűsített</div>
+    <div class="formBlockFrame">
+      <div class="inputPadder">
+        <input id="newEntrySimp" class="zho" maxlength="16" readonly />
+        <div class="formButtonRight accept" id="acceptSimp"><i class="fa fa-check"></i></div>
+        <div class="formButtonRight edit" id="editSimp"><i class="fa fa-pencil"></i></div>
+      </div>
+    </div>
+    <div class="formNote" id="noteSimp">
+      A folytatáshoz kattints a zöld <i>Jóváhagyás</i> ikonra, vagy üss Entert.
+    </div>
+    <div class="formErrors" id="errorsSimp">
+      A bevitt adatok hibásak. Kérlek, korrigáld a problémákat, majd a folytatáshoz kattints ismét a zöld <i>Jóváhagyás</i> ikonra.
+      <ul id="errorListSimp"></ul>
+    </div>
+  </div>
+  <div class="formBlock future" id="blockTrad">
+    <div class="formBlockLabel">Hagyományos</div>
+    <div class="formBlockFrame">
+      <div class="inputPadder">
+        <div id="newEntryTradCtrl" class="inputCtrl zho">&nbsp;</div>
+        <div class="formButtonRight accept" id="acceptTrad"><i class="fa fa-check"></i></div>
+        <div class="formButtonRight edit" id="editTrad"><i class="fa fa-pencil"></i></div>
+      </div>
+      <div class="formNote">
+        Ha a kívánt hagyományos írásjegy nem az oszlop tetején áll, egy lentebbi elemre kattintva választhatsz másikat. Amikor kész vagy, kattints a zöld <i>Jóváhagyás</i> ikonra a folytatáshoz.
+      </div>
+    </div>
+  </div>
+  <div class="formBlock future" id="blockPinyin">
+    <div class="formBlockLabel">Pinyin</div>
+    <div class="formBlockFrame">
+      <div class="inputPadder">
+        <div id="newEntryPinyinCtrl" class="inputCtrl">&nbsp;</div>
+        <div class="formButtonRight accept" id="acceptPinyin"><i class="fa fa-check"></i></div>
+        <div class="formButtonRight edit" id="editPinyin"><i class="fa fa-pencil"></i></div>
+      </div>
+      <div class="formNote" id="notePinyin">
+        Ellenőrizd a szótagok pinyin-átiratát. Amikor kész vagy, kattints a zöld <i>Jóváhagyás</i> ikonra a folytatáshoz.
+      </div>
+      <div class="formErrors" id="errorsPinyin">
+        Duplikátum: ez a címszó már szerepel a szótárban (azonos egyszerűsített és hagyományos írásjegyek megegyező pinyin-átirattal).
+      </div>
+    </div>
+  </div>
+  <div class="formBlock future hidden" id="blockExisting">
+    <div class="formBlockLabel">Létező szócikk</div>
+    <div class="formBlockFrame">
+      <div class="inputPadder">
+        <div id="existingEntryRender"></div>
+        <div class="formNote" id="noteExisting">
+          A létező szócikk szerkesztéséhez <a href="" class="ajax" id="lnkEditExisting">kattints ide</a>. Ha új szócikket szeretnél létrehozni eltérő címszóval, módosítsd az előző mezőkben bevitt adatokat.
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="formBlock future" id="blockTrg">
+    <div class="formBlockLabel" id="lblTargetBlock">Szócikk törzse</div>
+    <div class="formBlockFrame">
+      <div class="inputPadder">
+        <textarea id="newEntryTrg" maxlength="1024" readonly></textarea>
+        <div class="formButtonRight accept" id="acceptTrg"><i class="fa fa-check"></i></div>
+        <div class="formButtonRight edit" id="editTrg"><i class="fa fa-pencil"></i></div>
+      </div>
+      <div class="formNote" id="noteTrg">
+        Add meg a címszó megfelelőit (soronként egy jelentést). Amikor kész vagy, kattints a zöld <i>Jóváhagyás</i> ikonra.
+      </div>
+      <div class="formErrors" id="errorsTrg">
+        A bevitt adatok hibásak. Kérlek, korrigáld a problémákat, majd a folytatáshoz kattints ismét a zöld <i>Jóváhagyás</i> ikonra.
+        <ul id="errorListTrg"></ul>
+      </div>
+    </div>
+  </div>
+  <div class="formBlock future hidden" id="blockReview">
+    <div class="formBlockLabel">Előnézet</div>
+    <div class="formBlockFrame">
+      <div class="inputPadder">
+        <div id="newEntryRender"></div>
+        <textarea id="newEntryNote" maxlength="1024" placeholder="Source, comment, reference..." readonly />
+        <div class="formErrors" id="errorsReview">
+          Kérlek, írj be egy kísérő megjegyzést az új szócikkhez. Itt hivatkozhatsz egy online vagy nyomtatott forrásra, leírhatod, hol találkoztál a szóval, stb.
+        </div>
+        <div class="formSubmit" id="newEntrySubmit">Mentés</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--
+<div class="formBlock future hidden" id="blockRefs">
+  <div class="formBlockLabel">Sources</div>
+  <div class="formBlockFrame">
+    <div id="newEntryRefEntries"></div>
+  </div>
+</div>
+-->

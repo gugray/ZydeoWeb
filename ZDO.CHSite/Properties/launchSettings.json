@@ -25,6 +25,16 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
+    "Dev-CHD": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "launchUrl": "http://localhost:5004/en",
+      "environmentVariables": {
+        "ZDO_PORT": "5004",
+        "MUTATION": "CHD",
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
     "Prod-HDD": {
       "commandName": "Project",
       "launchBrowser": true,

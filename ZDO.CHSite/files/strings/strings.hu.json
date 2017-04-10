@@ -6,11 +6,72 @@
     "topDownload": "Letölt",
     "subEditNew": "Új szócikk",
     "subEditHistory": "Változások",
-    "subEditExisting": "Új szócikk",
+    "subEditExisting": "Szócikk szerkesztése",
+    "subReadFAQ": "GYIK",
+    "subReadDetails": "Részletek",
     "subReadAbout": "A szótárról",
-    "subAboutHDD": "--",
-    "subReadArticles": "Írások",
+    "subReadSearchTipsHDD": "Keresési tippek",
+    "subReadSearchTipsCHD": "Keresési tippek",
+    "subReadVersionHistory": "Verziótörténet",
+    "subReadArticles": "Cikkek",
     "subReadEtc": "Apróbetűs",
-    "subDownload": "A szótár letöltése"
+    "subDownloadHDD": "A HanDeDict letöltése",
+    "subDownloadCHD": "A CHDICT letöltése",
+    "subUserList": "Felhasználók",
+    "subMyProfile": "Saját profil"
+  },
+  "misc": {
+    "searchResultTitleHDD": "{0} - német fordítás - HanDeDict @ Zydeo kínai-német szótár",
+    "searchResultTitleTrgHDD": "{0} - kínai fordítás - HanDeDict @ Zydeo kínai-német szótár",
+    "searchResultTitleCHD": "{0} - magyar fordítás - CHDICT kínai-magyar szótár",
+    "searchResultTitleTrgCHD": "{0} - kínai fordítás - CHDICT kínai-magyar szótár",
+    "cookieNotice": "Az oldal egyes funkciókhoz cookie-kat (sütiket) használ. A böngészés folytatásával elfogadod a sütik használatát.",
+    "cookieOK": "OK",
+    "cookieLearnMore": "További információk",
+    "imprint":  "Impresszum"
+  },
+  "search": {
+    "annotationNotice": "A keresett kifejezés nem található meg egyben a szótárban. Alább a szövegben felismert különálló szavakat láthatod."
+  },
+  "emails": {
+    "senderNameHDD": "HanDeDict @ Zydeo weboldal",
+    "regConfirm": "Regisztráció megerősítése",
+    "mailChangeConfirm": "Új e-mail cím megerősítése",
+    "passreset": "Jelszó helyreállítása"
+  },
+  "history": {
+    "lblPage": "Oldal",
+    "changeNewEntry": "Új szócikk",
+    "changeEdited": "Szerkesztve",
+    "changeCommented": "Megjegyzés",
+    "changeBulkImport": "Tömeges import",
+    "changeApproved": "Jóváhagyva",
+    "changeFlagged": "Megjelölve",
+    "changeStatusNeutral": "Jelölés törölve",
+    "bulkLink": "Link",
+    "bulkNewWords": "{0} új szó",
+    "bulkChangedWords": "{0} szó módosult"
+  },
+  "userList": {
+    "registered": "Regisztráció:",
+    "location": "Hely:",
+    "about": "Rólam:"
+  },
+  "newEntry": {
+    "errSpacePunct": "A címszó nem tartalmazhat szóközöket vagy írásjeleket",
+    "errNotHanzi": "Nem írásjegy, nagybetű vagy szám:",
+    "errUnsupported": "Nem támogatott írásjegy:",
+    "errNotSimp": "Nem egyszerűsített írásjegy:"
+  },
+  "editEntry": {
+    "badDataOnSave": "A változtatásokat nem lehet eltárolni, mert a szócikk hibákat tartalmaz. (Érvényes a címszó?)",
+    "duplicateOnSave": "A változtatásokat nem lehet eltárolni, mert ez a címszó már megtalálható külön szócikként a szótárban.",
+    "hwProblemNotSimplified": "{0}: nem egyszerűsített írásjegy",
+    "hwProblemNotTraditional": "{0}: nem hagyományos írásjegy",
+    "hwProblemSimpTradCounts": "Eltérő számú egyszerűsített és hagyományos írásjegy.",
+    "hwProblemNotTradForSimp": "{0}: nem a(z) {1} karakter hagyományos megfelelője.",
+    "hwProblemWrongPinyin": "{0}: nem a(z) {1} karakter ismert olvasata.",
+    "hwProblemInvalidPinyin": "Hibás vagy érvénytelen pinyin-szótagok.",
+    "hwProblemExtraSpacesPinyin": "A pinyin-átirat fölösleges szóközöket tartalmaz."
   }
 }
