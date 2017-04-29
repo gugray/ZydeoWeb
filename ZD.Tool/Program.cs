@@ -29,6 +29,15 @@ namespace ZD.Tool
             Console.WriteLine("  Converts binary file to byte array");
             Console.WriteLine("  Input name fixed: medians.bin");
             Console.WriteLine("  Outputs chardata.js");
+            Console.WriteLine("--ch-prepare");
+            Console.WriteLine("  Converts raw CHDICT file into enriched format.");
+            Console.WriteLine("  Input name fixed: chdict.u8");
+            Console.WriteLine("--moedict-heads");
+            Console.WriteLine("  Extracts and fixes headwords from MOEDICT SQLite export.");
+            Console.WriteLine("  Input name fixed: moedict-entries.txt");
+            Console.WriteLine("--moedict-fake");
+            Console.WriteLine("  Fakes a CEDICT-style dictionary from MOEDICT headwords.");
+            Console.WriteLine("  Input name fixed: moedict-heas-simp.txt and moedict-heads-trad.txt");
             Console.WriteLine();
         }
 
@@ -39,6 +48,9 @@ namespace ZD.Tool
             if (args[0] == "--20-cleanse") return args[0];
             if (args[0] == "--compile-hwinfo") return args[0];
             if (args[0] == "--tobytes") return args[0];
+            if (args[0] == "--ch-prepare") return args[0];
+            if (args[0] == "--moedict-heads") return args[0];
+            if (args[0] == "--moedict-fake") return args[0];
             return null;
         }
 
@@ -51,6 +63,9 @@ namespace ZD.Tool
                 if (opt as string == "--20-cleanse") return new Wrk20Cleanse();
                 if (opt as string == "--compile-hwinfo") return new WrkUnihanzi();
                 if (opt as string == "--tobytes") return new WrkToBytes();
+                if (opt as string == "--ch-prepare") return new WrkChPrepare();
+                if (opt as string == "--moedict-heads") return new WrkMoeEntries();
+                if (opt as string == "--moedict-fake") return new WrkMoeFake();
             }
             throw new Exception(opt.GetType().ToString() + " is not recognized as an options type.");
         }

@@ -29,6 +29,10 @@ namespace ZD.LangUtils
             string line;
             while ((line = sr.ReadLine()) != null)
             {
+                // DBG
+                // TO-DO: remove; deal with markers
+                line = line.Replace("|", "");
+
                 // Still looking for block stating ID
                 if (id == -1)
                 {
