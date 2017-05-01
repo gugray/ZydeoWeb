@@ -111,6 +111,7 @@ namespace ZDO.CHSite.Renderers
             int senseIx = 0;
             for (int i = 0; i != entry.SenseCount; ++i)
             {
+                if (i != 0) sb.Append(' ');
                 renderSense(sb, entry.GetSenseAt(i), ref senseIx, null);
             }
             sb.AppendLine("</div>");
@@ -206,7 +207,10 @@ namespace ZDO.CHSite.Renderers
             sb.Append("<div class='senses'>"); // <div class="senses">
             int senseIx = 0;
             for (int i = 0; i != entry.SenseCount; ++i)
+            {
+                if (i != 0) sb.Append(' ');
                 renderSense(sb, entry.GetSenseAt(i), ref senseIx, null);
+            }
             sb.Append("</div>"); // <div class="senses">
 
             sb.Append("</div>"); // <div class="entry">
@@ -285,6 +289,7 @@ namespace ZDO.CHSite.Renderers
             {
                 CedictTargetHighlight thl = null;
                 if (senseHLs.ContainsKey(i)) thl = senseHLs[i];
+                if (i != 0) sb.Append(' ');
                 renderSense(sb, entry.GetSenseAt(i), ref senseIx, thl);
             }
             sb.Append("</div>"); // <div class="senses">
