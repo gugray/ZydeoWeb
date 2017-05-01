@@ -33,6 +33,11 @@ namespace ZD.Tool
                 while ((line = sr.ReadLine()) != null)
                 {
                     if (line.StartsWith("#")) continue;
+
+                    int ix1 = line.IndexOf(" [");
+                    int ix2 = line.IndexOf("] /");
+                    line = line.Substring(0, ix1) + " [" + line.Substring(ix1 + 2, ix2 - ix1).ToLower() + line.Substring(ix2 + 2);
+
                     CedictEntry entry = parser.ParseEntry(line, 0, null);
                     if (entry == null) continue;
                     if (entry.ChSimpl.Length > 16) continue;
@@ -47,7 +52,7 @@ namespace ZD.Tool
                     sb.AppendLine("# ID-" + strId);
                     // First version metainfo
                     string statStr = "Stat-New";
-                    sb.AppendLine("# Ver 2017-05-02T22:41:05Z gabor " + statStr + " 001>Első változat");
+                    sb.AppendLine("# Ver 2017-05-02T22:41:05Z gabor " + statStr + " 001>CHDICT törzsanyag");
                     // The entry itself
                     sb.AppendLine(CedictWriter.Write(entry));
 

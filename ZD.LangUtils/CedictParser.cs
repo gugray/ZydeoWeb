@@ -147,7 +147,7 @@ namespace ZD.LangUtils
             if (hasEmptySense)
             {
                 string msg = "Line {0}: Warning: Empty sense in entry: {1}";
-                msg = string.Format(msg, lineNum, strBody);
+                msg = string.Format(msg, lineNum, strHead + " " + strBody);
                 if (logStream != null) logStream.WriteLine(msg);
             }
             // In each sense, replace \ with /
