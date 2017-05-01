@@ -76,7 +76,7 @@ namespace ZDO.CHSite
         public void ImportDict(string dictPath, string workingFolder)
         {
             Startup.InitDB(config, null, false);
-            SqlDict dict = new SqlDict(null);
+            SqlDict dict = new SqlDict(null, mut);
             List<EntryVersion> vers = new List<EntryVersion>();
 
             using (FileStream fs = new FileStream(dictPath, FileMode.Open, FileAccess.Read))

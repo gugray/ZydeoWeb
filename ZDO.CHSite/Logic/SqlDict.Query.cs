@@ -183,11 +183,34 @@ namespace ZDO.CHSite.Logic
                     bool ok = false;
                     Token rtok = rtoks[i + j];
                     Token qtok = qtoks[j];
-                    if (rtok.Norm == qtok.Norm) ok = true;
+                    if (rtok.Norm == qtok.Norm)
+                    {
+                        // Stopwords: only OK if retrieved sense is a single token
+                        //ok = (!trgStopWords.Contains(rtok.Norm) || rtoks.Count == 1);
+                        ok = true;
+                    }
+                    // First query word: can be second half of word in retrieved sense
                     if (j == 0 && rtok.SplitPosNorm != 0)
-                        if (rtok.Norm.Substring(rtok.SplitPosNorm) == qtok.Norm) { ok = true; startSplit = true; }
+                    {
+                        string rTwo = rtok.Norm.Substring(rtok.SplitPosNorm);
+                        if (rTwo == qtok.Norm)
+                        {
+                            // Stopwords: only if query is min 2 tokens, or result is one token only
+                            if (!trgStopWords.Contains(rTwo) || qtoks.Count > 1)
+                                ok = true; startSplit = true;
+                        }
+                    }
+                    // Last query word: can be first half of word in retrieved sense
                     if (j == qtoks.Count - 1 && rtok.SplitPosNorm != 0)
-                        if (rtok.Norm.Substring(0, rtok.SplitPosNorm) == qtok.Norm) { ok = true; endSplit = true; }
+                    {
+                        string rOne = rtok.Norm.Substring(0, rtok.SplitPosNorm);
+                        if (rOne == qtok.Norm)
+                        {
+                            // Stopwords: only if query is min 2 tokens, or result is one token only
+                            if (!trgStopWords.Contains(rOne) || qtoks.Count > 1)
+                                ok = true; endSplit = true;
+                        }
+                    }
                     if (!ok) break;
                 }
                 if (j != qtoks.Count) continue;

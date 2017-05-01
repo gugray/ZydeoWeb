@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
+using System.Reflection;
+using System.IO;
 using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
 
@@ -28,6 +26,11 @@ namespace ZDO.CHSite.Logic
         /// </summary>
         private readonly Index index;
 
+        /// <summary>
+        /// Target stopwords (not indexed as prefixes/postfixes, only found in full).
+        /// </summary>
+        private readonly HashSet<string> trgStopWords = new HashSet<string>();
+
         private static readonly int ScoreNew = 4;
         private static readonly int ScoreEdit = 2;
         private static readonly int ScoreOther = 1;
@@ -35,13 +38,30 @@ namespace ZDO.CHSite.Logic
         /// <summary>
         /// Ctor: init app-wide singleton.
         /// </summary>
-        public SqlDict(ILoggerFactory lf)
+        public SqlDict(ILoggerFactory lf, Mutation mut)
         {
             if (lf != null) logger = lf.CreateLogger(GetType().FullName);
             else logger = new DummyLogger();
             logger.LogInformation("SQL dictionary initializing...");
+
+            if (mut == Mutation.CHD)
+            {
+                Assembly a = typeof(SqlDict).GetTypeInfo().Assembly;
+                string fileName = "ZDO.CHSite.files.other.chd-trg-stops.txt";
+                using (Stream s = a.GetManifestResourceStream(fileName))
+                using (StreamReader sr = new StreamReader(s))
+                {
+                    string line;
+                    while ((line = sr.ReadLine()) != null)
+                    {
+                        if (line != "") trgStopWords.Add(line);
+                    }
+                }
+            }
+
             pinyin = new Pinyin();
-            index = new Index(logger, pinyin);
+            index = new Index(logger, pinyin, trgStopWords);
+
             logger.LogInformation("SQL dictionary initialized.");
         }
 
@@ -64,6 +84,11 @@ namespace ZDO.CHSite.Logic
         public ImportBuilder GetBulkBuilder(string workingFolder, HashSet<string> users, Dictionary<int, ImportBuilder.BulkChangeInfo> bulks)
         {
             return new ImportBuilder(index, workingFolder, users, bulks);
+        }
+
+        public bool IsTrgStop(string word)
+        {
+            return trgStopWords.Contains(word);
         }
 
         public class HeadAndTrg

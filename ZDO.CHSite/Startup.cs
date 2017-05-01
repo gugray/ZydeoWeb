@@ -102,7 +102,7 @@ namespace ZDO.CHSite
                 env.IsDevelopment(), mut, config["baseUrl"]);
             services.AddSingleton(pageProvider);
             services.AddSingleton(new LangRepo(config["uniHanziFileName"]));
-            services.AddSingleton(new SqlDict(loggerFactory));
+            services.AddSingleton(new SqlDict(loggerFactory, mut));
             Emailer emailer = new Emailer(config);
             services.AddSingleton(emailer);
             // These below have a shutdown action, so we store them in a member too.

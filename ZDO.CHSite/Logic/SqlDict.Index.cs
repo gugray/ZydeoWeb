@@ -220,6 +220,11 @@ namespace ZDO.CHSite.Logic
             private readonly Pinyin pinyin;
 
             /// <summary>
+            /// Target-language stop words.
+            /// </summary>
+            private readonly HashSet<string> trgStopWords;
+
+            /// <summary>
             /// RW lock protecting index. Caller must acquire before invoking any function on index.
             /// </summary>
             public readonly ReaderWriterLockSlim Lock = new ReaderWriterLockSlim();
@@ -227,9 +232,10 @@ namespace ZDO.CHSite.Logic
             /// <summary>
             /// Ctor: load (construct) index from DB.
             /// </summary>
-            public Index(ILogger logger, Pinyin pinyin)
+            public Index(ILogger logger, Pinyin pinyin, HashSet<string> trgStopWords)
             {
                 this.pinyin = pinyin;
+                this.trgStopWords = trgStopWords;
                 try
                 {
                     Reload();
@@ -608,12 +614,12 @@ namespace ZDO.CHSite.Logic
                     {
                         string nOne = tok.Norm.Substring(0, tok.SplitPosNorm);
                         string nTwo = tok.Norm.Substring(tok.SplitPosNorm);
-                        if (!norms.Contains(nOne))
+                        if (!trgStopWords.Contains(nOne) && !norms.Contains(nOne))
                         {
                             append(nOne, trgToIndex, entryId, senseIx);
                             norms.Add(nOne);
                         }
-                        if (!norms.Contains(nTwo))
+                        if (!trgStopWords.Contains(nTwo) && !norms.Contains(nTwo))
                         {
                             append(nTwo, trgToIndex, entryId, senseIx);
                             norms.Add(nTwo);
@@ -643,8 +649,8 @@ namespace ZDO.CHSite.Logic
                     {
                         string nOne = tok.Norm.Substring(0, tok.SplitPosNorm);
                         string nTwo = tok.Norm.Substring(tok.SplitPosNorm);
-                        trgToUnindex.Add(nOne);
-                        trgToUnindex.Add(nTwo);
+                        if (!trgStopWords.Contains(nOne)) trgToUnindex.Add(nOne);
+                        if (!trgStopWords.Contains(nTwo)) trgToUnindex.Add(nTwo);
                     }
                     // Prefix hints: no pipe
                     if (tok.SplitPosSurf == 0)
