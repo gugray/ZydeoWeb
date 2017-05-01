@@ -578,13 +578,47 @@ namespace ZDO.CHSite.Logic
                 foreach (var tok in toks)
                 {
                     if (tok.Norm == Token.Num || tok.Norm == Token.Zho) continue;
-                    // Prefix hints
-                    if (!prefixDiffs.ContainsKey(tok.Surf)) prefixDiffs[tok.Surf] = 1;
-                    else ++prefixDiffs[tok.Surf];
-                    // Indexing
-                    if (norms.Contains(tok.Norm)) continue;
-                    append(tok.Norm, trgToIndex, entryId, senseIx);
-                    norms.Add(tok.Norm);
+                    // Prefix hints: no pipe
+                    if (tok.SplitPosSurf == 0)
+                    {
+                        if (!prefixDiffs.ContainsKey(tok.Surf)) prefixDiffs[tok.Surf] = 1;
+                        else ++prefixDiffs[tok.Surf];
+                    }
+                    // Prefix hints: pipe in surface form
+                    else
+                    {
+                        string sFull = tok.Surf.Replace("|", "");
+                        string sOne = tok.Surf.Substring(0, tok.SplitPosSurf);
+                        string sTwo = tok.Surf.Substring(tok.SplitPosSurf + 1);
+                        if (!prefixDiffs.ContainsKey(sFull)) prefixDiffs[sFull] = 1;
+                        else ++prefixDiffs[sFull];
+                        if (!prefixDiffs.ContainsKey(sOne)) prefixDiffs[sOne] = 1;
+                        else ++prefixDiffs[sOne];
+                        if (!prefixDiffs.ContainsKey(sTwo)) prefixDiffs[sTwo] = 1;
+                        else ++prefixDiffs[sTwo];
+                    }
+                    // Indexing: full normal form
+                    if (!norms.Contains(tok.Norm))
+                    {
+                        append(tok.Norm, trgToIndex, entryId, senseIx);
+                        norms.Add(tok.Norm);
+                    }
+                    // Indexing: pipe: deal with parts
+                    if (tok.SplitPosNorm != 0)
+                    {
+                        string nOne = tok.Norm.Substring(0, tok.SplitPosNorm);
+                        string nTwo = tok.Norm.Substring(tok.SplitPosNorm);
+                        if (!norms.Contains(nOne))
+                        {
+                            append(nOne, trgToIndex, entryId, senseIx);
+                            norms.Add(nOne);
+                        }
+                        if (!norms.Contains(nTwo))
+                        {
+                            append(nTwo, trgToIndex, entryId, senseIx);
+                            norms.Add(nTwo);
+                        }
+                    }
                 }
             }
 
@@ -602,9 +636,35 @@ namespace ZDO.CHSite.Logic
                 foreach (Token tok in toks)
                 {
                     if (tok.Norm == Token.Num || tok.Norm == Token.Zho) continue;
+                    // Full normal form
                     trgToUnindex.Add(tok.Norm);
-                    if (!prefixDiffs.ContainsKey(tok.Surf)) prefixDiffs[tok.Surf] = -1;
-                    else --prefixDiffs[tok.Surf];
+                    // Piped parts
+                    if (tok.SplitPosNorm != 0)
+                    {
+                        string nOne = tok.Norm.Substring(0, tok.SplitPosNorm);
+                        string nTwo = tok.Norm.Substring(tok.SplitPosNorm);
+                        trgToUnindex.Add(nOne);
+                        trgToUnindex.Add(nTwo);
+                    }
+                    // Prefix hints: no pipe
+                    if (tok.SplitPosSurf == 0)
+                    {
+                        if (!prefixDiffs.ContainsKey(tok.Surf)) prefixDiffs[tok.Surf] = -1;
+                        else --prefixDiffs[tok.Surf];
+                    }
+                    // Prefix hints: pipe in surface form
+                    else
+                    {
+                        string sFull = tok.Surf.Replace("|", "");
+                        string sOne = tok.Surf.Substring(0, tok.SplitPosSurf);
+                        string sTwo = tok.Surf.Substring(tok.SplitPosSurf + 1);
+                        if (!prefixDiffs.ContainsKey(sFull)) prefixDiffs[sFull] = -1;
+                        else --prefixDiffs[sFull];
+                        if (!prefixDiffs.ContainsKey(sOne)) prefixDiffs[sOne] = -1;
+                        else --prefixDiffs[sOne];
+                        if (!prefixDiffs.ContainsKey(sTwo)) prefixDiffs[sTwo] = -1;
+                        else --prefixDiffs[sTwo];
+                    }
                 }
                 HashSet<int> tonedSyllSet = new HashSet<int>();
                 foreach (var syll in sylls)

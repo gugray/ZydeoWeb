@@ -294,7 +294,7 @@ namespace ZDO.CHSite.Controllers
             {
                 // Render results
                 StringBuilder sb = new StringBuilder();
-                ResultsRenderer rr = new ResultsRenderer(lr, uiScript, uiTones);
+                ResultsRenderer rr = new ResultsRenderer(lang, lr, uiScript, uiTones);
                 rr.Render(sb, lang);
                 // Title
                 string title;

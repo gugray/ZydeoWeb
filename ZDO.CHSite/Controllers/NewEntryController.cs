@@ -218,7 +218,7 @@ namespace ZDO.CHSite.Controllers
             return new ObjectResult(res);
         }
 
-        public IActionResult VerifyHead([FromQuery] string simp, [FromQuery] string trad, [FromQuery] string pinyin)
+        public IActionResult VerifyHead([FromQuery] string lang, [FromQuery] string simp, [FromQuery] string trad, [FromQuery] string pinyin)
         {
             if (simp == null) return StatusCode(400, "Missing 'simp' parameter.");
             if (trad == null) return StatusCode(400, "Missing 'trad' parameter.");
@@ -250,7 +250,7 @@ namespace ZDO.CHSite.Controllers
             {
                 res.Duplicate = true;
                 res.ExistingEntryId = EntryId.IdToString(existingEntry.StableId);
-                EntryRenderer er = new EntryRenderer(existingEntry, true);
+                EntryRenderer er = new EntryRenderer(lang, existingEntry, true);
                 er.Render(sb, null);
                 res.ExistingEntry = sb.ToString();
                 return new ObjectResult(res);
@@ -265,14 +265,14 @@ namespace ZDO.CHSite.Controllers
             sb.Append("<div id='newEntryRefCED'>");
             foreach (CedictEntry entry in ced)
             {
-                EntryRenderer er = new EntryRenderer(entry, trad, pyList);
+                EntryRenderer er = new EntryRenderer(lang, entry, trad, pyList);
                 er.Render(sb, null);
             }
             sb.Append("</div>");
             sb.Append("<div id='newEntryRefHDD'>");
             foreach (CedictEntry entry in hdd)
             {
-                EntryRenderer er = new EntryRenderer(entry, trad, pyList);
+                EntryRenderer er = new EntryRenderer(lang, entry, trad, pyList);
                 er.Render(sb, null);
             }
             sb.Append("</div>");
@@ -282,7 +282,7 @@ namespace ZDO.CHSite.Controllers
             return new ObjectResult(res);
         }
 
-        public IActionResult VerifyFull([FromQuery] string simp, [FromQuery] string trad,
+        public IActionResult VerifyFull([FromQuery] string lang, [FromQuery] string simp, [FromQuery] string trad,
             [FromQuery] string pinyin, [FromQuery] string trg)
         {
             // Mucho TO-DO in this action:
@@ -299,7 +299,7 @@ namespace ZDO.CHSite.Controllers
 
             CedictEntry entry = Utils.BuildEntry(simp, trad, pinyin, trg);
             StringBuilder sb = new StringBuilder();
-            EntryRenderer er = new EntryRenderer(entry, true);
+            EntryRenderer er = new EntryRenderer(lang, entry, true);
             er.Render(sb, null);
             res.Preview = sb.ToString();
 

@@ -140,7 +140,7 @@ namespace ZDO.CHSite.Controllers
                 CedictEntry entry = parser.ParseEntry(hw + " " + trgTxt, 0, null);
                 if (entry != null)
                 {
-                    EntryRenderer er = new EntryRenderer(entry, true, "mainEntry");
+                    EntryRenderer er = new EntryRenderer(lang, entry, true, "mainEntry");
                     er.OneLineHanziLimit = 12;
                     StringBuilder sb = new StringBuilder();
                     er.Render(sb, null);
@@ -270,7 +270,7 @@ namespace ZDO.CHSite.Controllers
 
             // Entry HTML
             entry.Status = status;
-            EntryRenderer er = new EntryRenderer(entry, true, "mainEntry");
+            EntryRenderer er = new EntryRenderer(lang, entry, true, "mainEntry");
             er.OneLineHanziLimit = 12;
             StringBuilder sb = new StringBuilder();
             er.Render(sb, null);

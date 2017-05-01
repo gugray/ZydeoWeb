@@ -170,8 +170,8 @@ namespace ZDO.CHSite.Renderers
                 // Render in parts
                 sb.AppendLine("<div class='entry'>");
                 // Let's not dim identical chars if anything changed in HW
-                EntryRenderer rCurr = new EntryRenderer(eCurr, !simpChanged && !tradChanged);
-                EntryRenderer rOld = new EntryRenderer(eOld, !simpChanged && !tradChanged);
+                EntryRenderer rCurr = new EntryRenderer(lang, eCurr, !simpChanged && !tradChanged);
+                EntryRenderer rOld = new EntryRenderer(lang, eOld, !simpChanged && !tradChanged);
                 rCurr.OneLineHanziLimit = rOld.OneLineHanziLimit = 12;
                 if (simpChanged || tradChanged)
                 {
@@ -191,10 +191,10 @@ namespace ZDO.CHSite.Renderers
             if (ci.BodyBefore != null)
             {
                 CedictEntry entryNew = parser.ParseEntry("的 的 [de5] " + trgNow, -1, null);
-                EntryRenderer er = new EntryRenderer(entryNew, true);
+                EntryRenderer er = new EntryRenderer(lang, entryNew, true);
                 er.XRenderSenses(sb, "new");
                 CedictEntry entryOld = parser.ParseEntry("的 的 [de5] " + ci.BodyBefore, -1, null);
-                er = new EntryRenderer(entryOld, true);
+                er = new EntryRenderer(lang, entryOld, true);
                 er.XRenderSenses(sb, "old");
                 // Propagate change
                 trgNow = ci.BodyBefore;
@@ -309,7 +309,7 @@ namespace ZDO.CHSite.Renderers
                 {
                     CedictEntry entry = parser.ParseEntry(ci.EntryHead + " " + ci.EntryBody, 0, null);
                     entry.Status = ci.EntryStatus;
-                    EntryRenderer er = new EntryRenderer(entry, true);
+                    EntryRenderer er = new EntryRenderer(lang, entry, true);
                     er.OneLineHanziLimit = 12;
                     er.Render(sb, null);
                 }
@@ -329,8 +329,8 @@ namespace ZDO.CHSite.Renderers
                     // Render in parts
                     sb.AppendLine("<div class='entry'>");
                     // Let's not dim identical chars if anything changed in HW
-                    EntryRenderer rCurr = new EntryRenderer(eCurr, !simpChanged && !tradChanged);
-                    EntryRenderer rOld = new EntryRenderer(eOld, !simpChanged && !tradChanged);
+                    EntryRenderer rCurr = new EntryRenderer(lang, eCurr, !simpChanged && !tradChanged);
+                    EntryRenderer rOld = new EntryRenderer(lang, eOld, !simpChanged && !tradChanged);
                     rCurr.OneLineHanziLimit = rOld.OneLineHanziLimit = 12;
                     rCurr.XRenderStatus(sb);
                     rCurr.XRenderHanzi(sb, simpChanged ? "new" : "", tradChanged ? "new" : "");

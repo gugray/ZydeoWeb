@@ -175,16 +175,28 @@ namespace ZDO.CHSite.Logic
             for (int i = 0; i != rtoks.Count; ++i)
             {
                 int j = 0;
+                bool startSplit = false;
+                bool endSplit = false;
                 for (; j != qtoks.Count; ++j)
                 {
                     if (i + j >= rtoks.Count) break;
-                    if (rtoks[i + j].Norm != qtoks[j].Norm) break;
+                    bool ok = false;
+                    Token rtok = rtoks[i + j];
+                    Token qtok = qtoks[j];
+                    if (rtok.Norm == qtok.Norm) ok = true;
+                    if (j == 0 && rtok.SplitPosNorm != 0)
+                        if (rtok.Norm.Substring(rtok.SplitPosNorm) == qtok.Norm) { ok = true; startSplit = true; }
+                    if (j == qtoks.Count - 1 && rtok.SplitPosNorm != 0)
+                        if (rtok.Norm.Substring(0, rtok.SplitPosNorm) == qtok.Norm) { ok = true; endSplit = true; }
+                    if (!ok) break;
                 }
                 if (j != qtoks.Count) continue;
                 // We got a match starting at i!
                 CedictTargetHighlight[] hlarr = new CedictTargetHighlight[1];
                 int start = rtoks[i].Start;
+                if (startSplit) start += rtoks[i].SplitPosSurf;
                 int end = rtoks[i + j - 1].Start + rtoks[i + j - 1].Surf.Length;
+                if (endSplit) end -= (rtoks[i + j - 1].Surf.Length - rtoks[i + j - 1].SplitPosSurf);
                 hlarr[0] = new CedictTargetHighlight(senseIx, start, end - start);
                 ReadOnlyCollection<CedictTargetHighlight> hlcoll = new ReadOnlyCollection<CedictTargetHighlight>(hlarr);
                 CedictResult cr = new CedictResult(entry, hlcoll);

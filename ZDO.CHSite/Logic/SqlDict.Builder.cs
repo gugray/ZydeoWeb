@@ -245,6 +245,9 @@ namespace ZDO.CHSite.Logic
                 for (int i = 0; i != entry.SenseCount; ++i)
                 {
                     CedictSense sense = entry.GetSenseAt(i);
+                    // Hard-wired special senses that don't get indexed (hack around CEDICT structure)
+                    // Must match with indexSenses
+                    if (sense.Equiv.StartsWith("SZ:")) continue; // Measure words in CHDICT
                     List<Token> toks = tokenizer.Tokenize(sense.Equiv);
                     allToks.AddRange(toks);
                 }
@@ -279,6 +282,9 @@ namespace ZDO.CHSite.Logic
                 for (int i = 0;  i != entry.SenseCount; ++i)
                 {
                     CedictSense sense = entry.GetSenseAt(i);
+                    // Hard-wired special senses that don't get indexed (hack around CEDICT structure)
+                    // Must match with unindexEntry
+                    if (sense.Equiv.StartsWith("SZ:")) continue; // Measure words in CHDICT
                     List<Token> toks = tokenizer.Tokenize(sense.Equiv);
                     index.FileToIndex(entryId, (byte)i, toks);
                 }

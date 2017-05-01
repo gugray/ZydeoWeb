@@ -28,7 +28,7 @@
     "cookieNotice": "Az oldal egyes funkciókhoz cookie-kat (sütiket) használ. A böngészés folytatásával elfogadod a sütik használatát.",
     "cookieOK": "OK",
     "cookieLearnMore": "További információk",
-    "imprint":  "Impresszum"
+    "imprint": "Impresszum"
   },
   "search": {
     "annotationNotice": "A keresett kifejezés nem található meg egyben a szótárban. Alább a szövegben felismert különálló szavakat láthatod."
@@ -73,5 +73,8 @@
     "hwProblemWrongPinyin": "{0}: nem a(z) {1} karakter ismert olvasata.",
     "hwProblemInvalidPinyin": "Hibás vagy érvénytelen pinyin-szótagok.",
     "hwProblemExtraSpacesPinyin": "A pinyin-átirat fölösleges szóközöket tartalmaz."
+  },
+  "displayEntry": {
+    "classifier": "Számlálószó:"
   }
 }

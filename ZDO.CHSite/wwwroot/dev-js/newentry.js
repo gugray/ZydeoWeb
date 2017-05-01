@@ -163,6 +163,7 @@ var zdNewEntry = (function () {
   function onTrgAccept(evt) {
     if ($("#acceptTrg").hasClass("disabled")) return;
     var req = zdAuth.ajax("/api/newentry/verifyfull", "GET", {
+      lang: zdPage.getLang(),
       simp: $("#newEntrySimp").val(),
       trad: getTrad(),
       pinyin: getPinyin(),
@@ -205,6 +206,7 @@ var zdNewEntry = (function () {
   function onPinyinAccept(evt) {
     if ($("#acceptPinyin").hasClass("disabled")) return;
     var req = zdAuth.ajax("/api/newentry/verifyhead", "GET", {
+      lang: zdPage.getLang(),
       simp: $("#newEntrySimp").val(),
       trad: getTrad(),
       pinyin: getPinyin()
