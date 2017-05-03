@@ -5,6 +5,7 @@
 var zdNewEntry = (function () {
   "use strict";
 
+  var simpBefore;
   var reqId = 0;
 
   $(document).ready(function () {
@@ -43,6 +44,8 @@ var zdNewEntry = (function () {
 
     $("#newEntrySimp").prop("readonly", false);
     $("#newEntrySimp").focus();
+
+    simpBefore = $("#newEntrySimp").val();
   }
 
   function setActive(block) {
@@ -284,6 +287,8 @@ var zdNewEntry = (function () {
   // Event handler: IME composition ends in simplified field.
   function onSimpCompEnd(evt) {
     simpComposing = false;
+    // This is needed here too b/c in Chrome and IE, event comes *after* change :(((( WTF
+    handleSimpChanged();
   }
 
   function onSimpKeyUp(evt) {
@@ -297,7 +302,13 @@ var zdNewEntry = (function () {
   // Handles change of simplified field. Invokes server to retrieve data for subsequent HW fields.
   function onSimpChanged(evt) {
     if (simpComposing) return;
+    handleSimpChanged();
+  }
+
+  function handleSimpChanged() {
     var simp = $("#newEntrySimp").val();
+    if (simp == simpBefore) return;
+    simpBefore = simp;
     if (simp.length == 0) return;
     ++reqId;
     var id = reqId;
