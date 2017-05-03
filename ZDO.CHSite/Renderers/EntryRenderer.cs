@@ -111,8 +111,14 @@ namespace ZDO.CHSite.Renderers
             int senseIx = 0;
             for (int i = 0; i != entry.SenseCount; ++i)
             {
-                if (i != 0) sb.Append(' ');
-                renderSense(sb, entry.GetSenseAt(i), ref senseIx, null);
+                var sense = entry.GetSenseAt(i);
+                if (isSpecialSense(sense)) { if (i != 0) sb.Append("<br/>"); }
+                else if (i != 0)
+                {
+                    if (isSpecialSense(entry.GetSenseAt(i - 1))) sb.Append("<br/>");
+                    else sb.Append(' ');
+                }
+                renderSense(sb, sense, ref senseIx, null);
             }
             sb.AppendLine("</div>");
         }
@@ -208,8 +214,14 @@ namespace ZDO.CHSite.Renderers
             int senseIx = 0;
             for (int i = 0; i != entry.SenseCount; ++i)
             {
-                if (i != 0) sb.Append(' ');
-                renderSense(sb, entry.GetSenseAt(i), ref senseIx, null);
+                var sense = entry.GetSenseAt(i);
+                if (isSpecialSense(sense)) { if (i != 0) sb.Append("<br/>"); }
+                else if (i != 0)
+                {
+                    if (isSpecialSense(entry.GetSenseAt(i - 1))) sb.Append("<br/>");
+                    else sb.Append(' ');
+                }
+                renderSense(sb, sense, ref senseIx, null);
             }
             sb.Append("</div>"); // <div class="senses">
 
@@ -289,8 +301,14 @@ namespace ZDO.CHSite.Renderers
             {
                 CedictTargetHighlight thl = null;
                 if (senseHLs.ContainsKey(i)) thl = senseHLs[i];
-                if (i != 0) sb.Append(' ');
-                renderSense(sb, entry.GetSenseAt(i), ref senseIx, thl);
+                var sense = entry.GetSenseAt(i);
+                if (isSpecialSense(sense)) { if (i != 0) sb.Append("<br/>"); }
+                else if (i != 0)
+                {
+                    if (isSpecialSense(entry.GetSenseAt(i - 1))) sb.Append("<br/>");
+                    else sb.Append(' ');
+                }
+                renderSense(sb, sense, ref senseIx, thl);
             }
             sb.Append("</div>"); // <div class="senses">
 
@@ -357,6 +375,12 @@ namespace ZDO.CHSite.Renderers
             return res;
         }
 
+        private bool isSpecialSense(CedictSense sense)
+        {
+            if (sense.Equiv.StartsWith("SZ:")) return true;
+            return false;
+        }
+
         private void renderSense(StringBuilder sb, CedictSense sense, ref int ix, CedictTargetHighlight hl)
         {
             bool needToSplit = true;
@@ -365,8 +389,7 @@ namespace ZDO.CHSite.Renderers
             string note = sense.Note;
 
             // Special hacks around CEDICT flat structure
-            bool specialSense = false;
-            if (equiv.StartsWith("SZ:")) specialSense = true;
+            bool specialSense = isSpecialSense(sense);
 
             sb.Append("<span class='sense'>"); // <span class="sense">
             if (!specialSense)
@@ -431,7 +454,6 @@ namespace ZDO.CHSite.Renderers
 
         private void renderSpecialSense(StringBuilder sb, string equiv)
         {
-            sb.Append("<br/>");
             sb.Append("<span class='sense-meta'>");
             sb.Append(HtmlEncoder.Default.Encode(TextProvider.Instance.GetString(lang, "displayEntry.classifier")));
             sb.Append(' ');
@@ -458,12 +480,22 @@ namespace ZDO.CHSite.Renderers
                 }
                 if (ch1 == '\0' || pinyin == null) continue;
                 if (!first) sb.Append("; ");
+                // We have simp + trad
                 if (ch2 != '\0')
                 {
-                    sb.Append(HtmlEncoder.Default.Encode(ch2.ToString()));
-                    sb.Append("·");
+                    if (script == UiScript.Simp)
+                        sb.Append(HtmlEncoder.Default.Encode(ch2.ToString()));
+                    else if (script == UiScript.Trad)
+                        sb.Append(HtmlEncoder.Default.Encode(ch1.ToString()));
+                    else
+                    {
+                        sb.Append(HtmlEncoder.Default.Encode(ch2.ToString()));
+                        sb.Append("·");
+                        sb.Append(HtmlEncoder.Default.Encode(ch1.ToString()));
+                    }
                 }
-                sb.Append(HtmlEncoder.Default.Encode(ch1.ToString()));
+                // Simp=Trad
+                else sb.Append(HtmlEncoder.Default.Encode(ch1.ToString()));
                 sb.Append("·");
                 PinyinSyllable psl = null;
                 try
@@ -478,7 +510,6 @@ namespace ZDO.CHSite.Renderers
                 else sb.Append(HtmlEncoder.Default.Encode(pinyin));
                 first = false;
             }
-            sb.Append("<br/>");
         }
 
         private class TextConsumer
