@@ -48,6 +48,10 @@ namespace ZDO.CHSite.Logic
             /// Split position in <see cref="Norm"/>: start index of second half.
             /// </summary>
             public readonly ushort SplitPosNorm;
+            /// <summary>
+            /// Index within current sub-sense (parts separated by ';')
+            /// </summary>
+            public readonly ushort SubSeq;
 
             /// <summary>
             /// Ctor: init immutable instance, no split position.
@@ -58,15 +62,18 @@ namespace ZDO.CHSite.Logic
                 Norm = norm;
                 Start = start;
                 SplitPosSurf = SplitPosNorm = 0;
+                SubSeq = 0;
             }
             /// <summary>
             /// Ctor: init immutable instance, with split position.
             /// </summary>
-            public Token(string surf, string norm, ushort start, ushort splitPosSurf, ushort splitPosNorm)
+            public Token(string surf, string norm, ushort start, 
+                ushort splitPosSurf, ushort splitPosNorm, ushort subSeq)
             {
                 Surf = surf;
                 Norm = norm;
                 Start = start;
+                SubSeq = subSeq;
                 SplitPosSurf = splitPosSurf;
                 SplitPosNorm = splitPosNorm;
                 if (SplitPosSurf != 0 && SplitPosSurf == Surf.Length - 1)
@@ -106,6 +113,7 @@ namespace ZDO.CHSite.Logic
                 int i;
                 bool inHanzi = false;
                 ushort splitPos = 0;
+                ushort subSeq = 0;
                 for (i = 0; i != text.Length; ++i)
                 {
                     char c = text[i];
@@ -114,8 +122,10 @@ namespace ZDO.CHSite.Logic
                     {
                         if (curr.Length != 0)
                         {
-                            res.Add(makeToken(curr, i, splitPos));
+                            res.Add(makeToken(curr, i, splitPos, subSeq));
                             curr.Clear(); splitPos = 0;
+                            if (c == ';') subSeq = 0;
+                            else ++subSeq;
                         }
                     }
                     // Character is Hanzi: wrap up previous alfa token, or append to Hanzi embedding
@@ -126,8 +136,9 @@ namespace ZDO.CHSite.Logic
                         {
                             if (curr.Length != 0)
                             {
-                                res.Add(makeToken(curr, i, splitPos));
+                                res.Add(makeToken(curr, i, splitPos, subSeq));
                                 curr.Clear(); splitPos = 0;
+                                ++subSeq;
                             }
                             curr.Append(c);
                             inHanzi = true;
@@ -145,8 +156,9 @@ namespace ZDO.CHSite.Logic
                         {
                             if (curr.Length != 0)
                             {
-                                res.Add(makeToken(curr, i, splitPos));
+                                res.Add(makeToken(curr, i, splitPos, subSeq));
                                 curr.Clear(); splitPos = 0;
+                                ++subSeq;
                             }
                             curr.Append(c);
                             inHanzi = false;
@@ -154,7 +166,7 @@ namespace ZDO.CHSite.Logic
                     }
                 }
                 // Last token
-                if (curr.Length != 0) res.Add(makeToken(curr, i, splitPos));
+                if (curr.Length != 0) res.Add(makeToken(curr, i, splitPos, subSeq));
                 // Done.
                 return res;
             }
@@ -162,7 +174,7 @@ namespace ZDO.CHSite.Logic
             /// <summary>
             /// Makes one token from finished surface form; creates normalized form.
             /// </summary>
-            private Token makeToken(StringBuilder curr, int endPos, ushort splitPos)
+            private Token makeToken(StringBuilder curr, int endPos, ushort splitPos, ushort subSeq)
             {
                 // Surface form as is
                 string surf = curr.ToString();
@@ -192,7 +204,7 @@ namespace ZDO.CHSite.Logic
                     splitPos = splitPosNorm = 0;
                 }
                 // Ze token
-                return new Token(surf, norm, (ushort)(endPos - surf.Length), splitPos, splitPosNorm);
+                return new Token(surf, norm, (ushort)(endPos - surf.Length), splitPos, splitPosNorm, subSeq);
             }
 
             /// <summary>

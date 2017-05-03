@@ -24,5 +24,3 @@ nagy
 egy
 jó
 fog
-ember
-hagy

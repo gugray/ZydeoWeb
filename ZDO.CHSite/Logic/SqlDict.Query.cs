@@ -185,9 +185,9 @@ namespace ZDO.CHSite.Logic
                     Token qtok = qtoks[j];
                     if (rtok.Norm == qtok.Norm)
                     {
-                        // Stopwords: only OK if retrieved sense is a single token
-                        //ok = (!trgStopWords.Contains(rtok.Norm) || rtoks.Count == 1);
-                        ok = true;
+                        // Stopwords: only OK if token is an entire sub-sense in retrieved sense
+                        if (!trgStopWords.Contains(rtok.Norm)) ok = true;
+                        else ok = rtok.SubSeq == 0 && (i == rtoks.Count - 1 || rtoks[i + 1].SubSeq == 0);
                     }
                     // First query word: can be second half of word in retrieved sense
                     if (j == 0 && rtok.SplitPosNorm != 0)
