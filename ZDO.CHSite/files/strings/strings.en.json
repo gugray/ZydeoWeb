@@ -3,12 +3,14 @@
     "topSearch": "Search",
     "topEdit": "Edit",
     "topRead": "Read",
+    "topFAQ": "FAQ",
     "topDownload": "Download",
     "subEditNew": "New entry",
     "subEditHistory": "History",
     "subEditExisting": "Edit entry",
     "subReadFAQ": "FAQ",
     "subReadDetails": "Details",
+    "subReadDetailsCHD": "Etc",
     "subReadAbout": "About",
     "subReadSearchTipsHDD": "Search tips",
     "subReadSearchTipsCHD": "Search tips",
@@ -35,6 +37,7 @@
   },
   "emails": {
     "senderNameHDD": "HanDeDict @ Zydeo website",
+    "senderNameCHD": "CHDICT website",
     "regConfirm": "Complete your registration",
     "mailChangeConfirm": "Confirm new email",
     "passreset": "Reset your password"

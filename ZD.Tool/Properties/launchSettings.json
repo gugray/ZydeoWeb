@@ -2,7 +2,7 @@
   "profiles": {
     "ZD.Tool": {
       "commandName": "Project",
-      "commandLineArgs": "--ch-prepare",
+      "commandLineArgs": "--ch-examine",
       "workingDirectory": "D:\\Development\\ZydeoWeb\\_work"
     }
   }

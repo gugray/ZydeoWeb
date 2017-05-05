@@ -109,6 +109,7 @@ namespace ZDO.CHSite.Logic
             }
         }
 
+        private readonly Mutation mut;
         private readonly ILogger logger;
         private readonly Emailer emailer;
         private readonly PageProvider pageProvider;
@@ -120,7 +121,7 @@ namespace ZDO.CHSite.Logic
         private readonly Thread busyThread;
         private readonly Dictionary<string, SessionInfo> sessions = new Dictionary<string, SessionInfo>();
 
-        public Auth(ILoggerFactory lf, IConfiguration config, Emailer emailer, PageProvider pageProvider)
+        public Auth(Mutation mut, ILoggerFactory lf, IConfiguration config, Emailer emailer, PageProvider pageProvider)
         {
             if (lf != null) logger = lf.CreateLogger(GetType().FullName);
             else logger = new DummyLogger();
@@ -574,8 +575,10 @@ namespace ZDO.CHSite.Logic
                 string msg = pageProvider.GetPage(lang, "?/mail.mailchangeconfirm", false).Html;
                 string url = baseUrl + lang + "/user/confirm/" + code;
                 msg = string.Format(msg, url);
-                emailer.SendMail(newEmail,
-                    TextProvider.Instance.GetString(lang, "emails.senderNameHDD"),
+                string senderName = mut == Mutation.HDD ?
+                    TextProvider.Instance.GetString(lang, "emails.senderNameHDD") :
+                    TextProvider.Instance.GetString(lang, "emails.senderNameCHD");
+                emailer.SendMail(newEmail, senderName,
                     TextProvider.Instance.GetString(lang, "emails.mailChangeConfirm"),
                     msg, true);
                 // We're good.
@@ -689,8 +692,10 @@ namespace ZDO.CHSite.Logic
                 string msg = pageProvider.GetPage(lang, "?/mail.passreset", false).Html;
                 string url = baseUrl + lang + "/user/confirm/" + code;
                 msg = string.Format(msg, url);
-                emailer.SendMail(email,
-                    TextProvider.Instance.GetString(lang, "emails.senderNameHDD"),
+                string senderName = mut == Mutation.HDD ?
+                    TextProvider.Instance.GetString(lang, "emails.senderNameHDD") :
+                    TextProvider.Instance.GetString(lang, "emails.senderNameCHD");
+                emailer.SendMail(email, senderName,
                     TextProvider.Instance.GetString(lang, "emails.passreset"),
                     msg, true);
             }
@@ -890,8 +895,10 @@ namespace ZDO.CHSite.Logic
                 string msg = pageProvider.GetPage(lang, "?/mail.regconfirm", false).Html;
                 string url = baseUrl + lang + "/user/confirm/" + code;
                 msg = string.Format(msg, url);
-                emailer.SendMail(email,
-                    TextProvider.Instance.GetString(lang, "emails.senderNameHDD"),
+                string senderName = mut == Mutation.HDD ?
+                    TextProvider.Instance.GetString(lang, "emails.senderNameHDD") :
+                    TextProvider.Instance.GetString(lang, "emails.senderNameCHD");
+                emailer.SendMail(email, senderName,
                     TextProvider.Instance.GetString(lang, "emails.regConfirm"),
                     msg, true);
             }

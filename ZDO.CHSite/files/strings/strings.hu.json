@@ -3,12 +3,14 @@
     "topSearch": "Keres",
     "topEdit": "Szerkeszt",
     "topRead": "Olvas",
+    "topFAQ": "GYIK",
     "topDownload": "Letölt",
     "subEditNew": "Új szócikk",
     "subEditHistory": "Változások",
     "subEditExisting": "Szócikk szerkesztése",
     "subReadFAQ": "GYIK",
     "subReadDetails": "Részletek",
+    "subReadDetailsCHD": "Egyéb",
     "subReadAbout": "A szótárról",
     "subReadSearchTipsHDD": "Keresési tippek",
     "subReadSearchTipsCHD": "Keresési tippek",
@@ -28,13 +30,14 @@
     "cookieNotice": "Az oldal egyes funkciókhoz cookie-kat (sütiket) használ. A böngészés folytatásával elfogadod a sütik használatát.",
     "cookieOK": "OK",
     "cookieLearnMore": "További információk",
-    "imprint": "Impresszum"
+    "imprint":  "Impresszum"
   },
   "search": {
     "annotationNotice": "A keresett kifejezés nem található meg egyben a szótárban. Alább a szövegben felismert különálló szavakat láthatod."
   },
   "emails": {
     "senderNameHDD": "HanDeDict @ Zydeo weboldal",
+    "senderNameCHD": "CHDICT honlap",
     "regConfirm": "Regisztráció megerősítése",
     "mailChangeConfirm": "Új e-mail cím megerősítése",
     "passreset": "Jelszó helyreállítása"
@@ -75,6 +78,6 @@
     "hwProblemExtraSpacesPinyin": "A pinyin-átirat fölösleges szóközöket tartalmaz."
   },
   "displayEntry": {
-    "classifier": "Számlálószó:"
+    "classifier": "Számlálószó"
   }
 }

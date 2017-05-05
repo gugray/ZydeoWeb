@@ -94,11 +94,23 @@ namespace ZDO.CHSite.Controllers
         }
 
         /// <summary>
-        /// Current year, for the copyright notice.
+        /// Current year, for HDD's copyright notice.
         /// </summary>
         public string Year
         {
             get { return DateTime.UtcNow.Year.ToString(); }
+        }
+
+        /// <summary>
+        /// Year or range, for CHD's copyright notice.
+        /// </summary>
+        public string CopyYearsCHD
+        {
+            get
+            {
+                if (DateTime.UtcNow.Year == 2017) return "2017";
+                else return "2017-" + DateTime.UtcNow.Year.ToString();
+            }
         }
 
         public string TeaserImageUrl

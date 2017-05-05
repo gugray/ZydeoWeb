@@ -55,6 +55,7 @@ namespace ZD.Tool
                         countPrefixes(entry, swDiag);
                         ++entryCount;
                         senseCount += entry.SenseCount;
+                        countMeasureWords(entry);
                     }
                 }
                 writeHeadIssues(swDiag);
@@ -62,13 +63,48 @@ namespace ZD.Tool
                 List<TC> tlst = new List<TC>();
                 foreach (var x in tags) tlst.Add(new TC { Tag = x.Key, Count = x.Value });
                 tlst.Sort((x, y) => y.Count.CompareTo(x.Count));
-                using (FileStream fsTags = new FileStream("chd-tags.txt", FileMode.Create, FileAccess.ReadWrite))
+                using (FileStream fsTags = new FileStream("chd-stats.txt", FileMode.Create, FileAccess.ReadWrite))
                 using (StreamWriter sw = new StreamWriter(fsTags))
                 {
                     sw.WriteLine("ZH entries: " + entryCount);
                     sw.WriteLine("HU senses: " + senseCount);
+                    sw.WriteLine("Entries with CL: " + entriesWithMW);
                     sw.WriteLine();
                     foreach (var x in tlst) sw.WriteLine(x.Count + "\t" + x.Tag);
+                    sw.WriteLine();
+                    List<string> mws = new List<string>();
+                    foreach (var x in simpMWCounts) mws.Add(x.Key);
+                    mws.Sort((x, y) => simpMWCounts[y].CompareTo(simpMWCounts[x]));
+                    foreach (string mw in mws) sw.WriteLine(simpMWCounts[mw] + "\t" + mw);
+                }
+            }
+        }
+
+        private readonly Regex reMW1 = new Regex(@"[^\|](.)\[");
+        private readonly Regex reMW2 = new Regex(@"(.)\|(.)\[");
+        private Dictionary<string, int> simpMWCounts = new Dictionary<string, int>();
+        private int entriesWithMW = 0;
+
+        private void countMeasureWords(CedictEntry entry)
+        {
+            MatchCollection matches;
+            foreach (var sense in entry.Senses)
+            {
+                if (!sense.Equiv.StartsWith("SZ:")) continue;
+                ++entriesWithMW;
+                matches = reMW1.Matches(sense.Equiv);
+                foreach (Match m in matches)
+                {
+                    string mw= m.Groups[1].Value;
+                    if (!simpMWCounts.ContainsKey(mw)) simpMWCounts[mw] = 1;
+                    else ++simpMWCounts[mw];
+                }
+                matches = reMW2.Matches(sense.Equiv);
+                foreach (Match m in matches)
+                {
+                    string mw = m.Groups[2].Value;
+                    if (!simpMWCounts.ContainsKey(mw)) simpMWCounts[mw] = 1;
+                    else ++simpMWCounts[mw];
                 }
             }
         }
