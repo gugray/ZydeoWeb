@@ -125,6 +125,7 @@ namespace ZDO.CHSite.Logic
         {
             if (lf != null) logger = lf.CreateLogger(GetType().FullName);
             else logger = new DummyLogger();
+            this.mut = mut;
             this.emailer = emailer;
             this.pageProvider = pageProvider;
             sessionTimeoutMinutes = int.Parse(config["sessionTimeoutMinutes"]);

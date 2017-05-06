@@ -102,20 +102,24 @@ namespace ZDO.CHSite.Controllers
         }
 
         /// <summary>
-        /// Year or range, for CHD's copyright notice.
+        /// CHD's entire copyright notice.
         /// </summary>
-        public string CopyYearsCHD
+        public string BottomCopy
         {
             get
             {
-                if (DateTime.UtcNow.Year == 2017) return "2017";
-                else return "2017-" + DateTime.UtcNow.Year.ToString();
+                string res = "©";
+                if (DateTime.UtcNow.Year == 2017) res += "2017";
+                else res += "2017-" + DateTime.UtcNow.Year.ToString();
+                if (Lang == "hu") res += " Ugray Gábor";
+                else res += " Gábor L Ugray";
+                return res;
             }
         }
 
         public string TeaserImageUrl
         {
-            get { return BaseUrl + "static/handedict-teaser.png"; }
+            get { return BaseUrl + "static/chdict-teaser.png"; }
         }
     }
 }

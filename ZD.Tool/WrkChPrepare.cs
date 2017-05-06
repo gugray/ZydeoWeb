@@ -51,7 +51,7 @@ namespace ZD.Tool
                     // Line with ID
                     sb.AppendLine("# ID-" + strId);
                     // First version metainfo
-                    string statStr = "Stat-New";
+                    string statStr = "Stat-Verif";
                     sb.AppendLine("# Ver 2017-05-02T22:41:05Z gabor " + statStr + " 001>CHDICT törzsanyag");
                     // The entry itself
                     sb.AppendLine(CedictWriter.Write(entry));
