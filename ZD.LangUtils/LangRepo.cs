@@ -353,7 +353,9 @@ namespace ZD.LangUtils
                     // Get genuine Hanzi info, if present
                     else
                     {
-                        int pos = chrPoss[(int)c];
+                        int cint = (int)c;
+                        int pos = 0;
+                        if (cint < chrPoss.Length) pos = chrPoss[cint];
                         if (pos == 0) continue;
                         br.Position = pos;
                         byte flags = br.ReadByte();
