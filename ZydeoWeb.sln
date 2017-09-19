@@ -19,6 +19,8 @@ Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Countries", "Countries\Coun
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "ZDO.ConcAlign", "ZDO.ConcAlign\ZDO.ConcAlign.xproj", "{F9A3A6D7-6A37-4FF5-B858-BA08C5E5EA2E}"
 EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "ZD.AlignTool", "ZD.AlignTool\ZD.AlignTool.xproj", "{54C5D7B9-F4EB-4739-B272-7800C27E2F76}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,6 +55,10 @@ Global
 		{F9A3A6D7-6A37-4FF5-B858-BA08C5E5EA2E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F9A3A6D7-6A37-4FF5-B858-BA08C5E5EA2E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F9A3A6D7-6A37-4FF5-B858-BA08C5E5EA2E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{54C5D7B9-F4EB-4739-B272-7800C27E2F76}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54C5D7B9-F4EB-4739-B272-7800C27E2F76}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{54C5D7B9-F4EB-4739-B272-7800C27E2F76}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54C5D7B9-F4EB-4739-B272-7800C27E2F76}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ZD.AlignTool": {
+      "commandName": "Project",
+      "workingDirectory": "D:\\Development\\ZydeoWeb\\_work_align"
+    }
+  }
+}

@@ -7,8 +7,7 @@ namespace ZDO.ConcAlign.Controllers
 {
     public class SearchHit
     {
-        public List<string> SrcTokens = new List<string>();
-        public List<string> TrgTokens = new List<string>();
-        public List<int[]> Map = new List<int[]>();
+        public string Source;
+        public string Target;
     }
 }
