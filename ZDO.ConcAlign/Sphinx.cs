@@ -13,6 +13,12 @@ namespace ZDO.ConcAlign
             List<SphinxResult> res = new List<SphinxResult>();
             query = query.Replace("'", "");
             query = query.Replace("\"", "");
+            string xquery = "";
+            foreach (char c in query)
+            {
+                if (query.Length > 0) xquery += "|";
+                xquery += c;
+            }
             string stdout;
             using (Process p = new Process())
             {
@@ -23,7 +29,7 @@ namespace ZDO.ConcAlign
                 p.StartInfo.RedirectStandardOutput = true;
                 p.StartInfo.RedirectStandardError = true;
                 p.Start();
-                p.StandardInput.Write("select zh, hu, zhtokmap, hutok20map, align20 from zhhu where match('" + query + "') limit " + limit.ToString() + ";");
+                p.StandardInput.Write("select zh, hu, zhtokmap, hutokstemmap, alignstem from zhhu where match('\"" + query + "\"') limit " + limit.ToString() + ";");
                 p.StandardInput.BaseStream.Dispose();
                 stdout = p.StandardOutput.ReadToEnd();
                 p.WaitForExit();

@@ -3,6 +3,7 @@
 @clrBg: #fafafa;
 @clrText: #444444;
 @clrBorder: #c7c7c7;
+@clrAccent: #f48668;
 @clrHilite: #fed5ca;
 
 * { margin: 0; padding: 0; border: 0; outline: none; }
@@ -35,12 +36,23 @@ input, textarea {
   width: 90%; max-width: 980px; margin: 3rem auto; float: none;
 }
 
+.search {
+  margin-bottom: 2rem;
+  input { 
+    display: block; width: 100%; border: 1pt solid @clrText; background-color: @clrBg;
+    font-size: 120%; padding: 0.4rem 0.5rem; box-sizing: border-box;
+  }
+}
+
 .results {
   .item { border-bottom: 1pt dotted @clrBorder; padding: 0.5rem 0; }
-  .item:first-child { border-top: 1pt dotted @clrBorder; }
+  .item:first-child { border-top: none; }
   .item div { width: 50%; cursor: default; }
   .source { padding-right: 0.5rem; font-size: 120%; }
   .target { padding-left: 0.5rem; }
   .item div span { border-radius: 0.3rem; }
-  .source span:hover, .target span.hilite { background-color: @clrHilite; }
+  .source span { background-color: @clrHilite; }
+  .target span.hlLo { background-color: lighten(@clrHilite, 10%); }
+  .target span.hlMid { background-color: lighten(@clrHilite, 4%); }
+  .target span.hlHi { background-color: @clrHilite; }
 }

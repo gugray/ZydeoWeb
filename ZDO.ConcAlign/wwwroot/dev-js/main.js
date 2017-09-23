@@ -11,11 +11,24 @@ App.xlate = (function (path) {
   enter();
 
   function enter() {
+    $("#txtSearch").select();
+    setTimeout(function () {
+      $("#txtSearch").focus();
+    }, 50);
+    $("#txtSearch").keypress(function (e) {
+      if ((e.keyCode || e.which) == 13) {
+        onSubmit();
+        return false;
+      }
+    });
+  }
+
+  function onSubmit() {
     var request = $.ajax({
       url: "/api/search/go",
       type: "GET",
       contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-      data: { query: "sailor" }
+      data: { query: $("#txtSearch").val() }
     });
     request.done(function (data) {
       render(data);
@@ -31,22 +44,43 @@ App.xlate = (function (path) {
       var hit = data[i];
       html += "<div class='item'>";
       html += "<div class='source'>";
-      for (var j = 0; j != hit.srcTokens.length; ++j) {
-        var pairs = getPairs(j, hit.map);
-        var tok = hit.srcTokens[j];
-        if (j != 0) html += " ";
-        if (pairs != "") html += "<span data-pairixs='" + pairs + "'>";
-        html += App.page.esc(tok);
-        if (pairs != "") html += "</span>";
+      var spanClosed = true;
+      for (var j = 0; j != hit.source.length; ++j) {
+        if (j == hit.srcHiStart) {
+          html += "<span>";
+          spanClosed = false;
+        }
+        if (j == hit.srcHiStart + hit.srcHiLen) {
+          html += "</span>";
+          spanClosed = true;
+        }
+        html += App.page.esc(hit.source[j]);
+      }
+      if (!spanClosed) {
+        html += "</span>";
+        spanClosed = true;
       }
       html += "</div>";
       html += "<div class='target'>";
-      for (var j = 0; j != hit.trgTokens.length; ++j) {
-        if (j != 0) html += " ";
-        html += "<span data-ix='" + j + "'>";
-        var tok = hit.trgTokens[j];
-        html += App.page.esc(tok);
+      spanClosed = true;
+      for (var j = 0; j != hit.target.length; ++j) {
+        if (hiliteEnds(hit, j)) {
+          html += "</span>";
+          spanClosed = true;
+        }
+        var score = hiliteStarts(hit, j);
+        if (score >= 20) {
+          var cls = "hlLo";
+          if (score > 100) cls = "hlMid";
+          if (score > 300) cls = "hlHi";
+          html += "<span data-score='" + score + "' class='" + cls + "'>";
+          spanClosed = false;
+        }
+        html += App.page.esc(hit.target[j]);
+      }
+      if (!spanClosed) {
         html += "</span>";
+        spanClosed = true;
       }
       html += "</div>";
       html += "</div>";
@@ -63,6 +97,20 @@ App.xlate = (function (path) {
     $(".item .source span").mouseleave(function () {
       $(".item .target span").removeClass("hilite");
     });
+  }
+
+  function hiliteStarts(hit, pos) {
+    for (var i = 0; i != hit.trgHilights.length; ++i) {
+      if (hit.trgHilights[i].start == pos) return hit.trgHilights[i].score;
+    }
+    return -1;
+  }
+
+  function hiliteEnds(hit, pos) {
+    for (var i = 0; i != hit.trgHilights.length; ++i) {
+      if (hit.trgHilights[i].start + hit.trgHilights[i].len == pos) return true;
+    }
+    return false;
   }
 
   function getPairs(ix, map) {

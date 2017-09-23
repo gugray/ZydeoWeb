@@ -22,37 +22,60 @@
 > Dropped: 2,462,433  Kept: 3,181,174
 
 - Tokenize for alignment externally, ZH and HU separately
-  For HU, 3 forms: BPE 20k, 30k, 40k
+  For HU, 3 forms: BPE 20k, 40k
 
 > ZH: https://github.com/fxsjy/jieba
   Installed via pip. Large ditionary downloaded separately.
   python zhotok-jieba.py <..\_work_align\04-tmp-zh.txt >..\_work_align\04-tmp-zh-seg.txt
 
 > HU: export is already lower-cased. Moses tokenizer for raw segmentation b/f BPE
+  Also Moses segment pure surface, for later morphological analysis
+  perl C:\moses-scripts\tokenizer\tokenizer.perl -l hu -no-escape < 04-tmp-hu-lo.txt > 04-tmp-hu-lo-rawseg.txt
   perl C:\moses-scripts\tokenizer\tokenizer.perl -l hu -no-escape < 04-tmp-hu.txt > 04-tmp-hu-rawseg.txt
   
   https://github.com/rsennrich/subword-nmt
   Actually using modified fork that inserts NMT joiner ￭
-  python D:\NMT\Code\subword-nmt\learn_bpe.py --input 04-tmp-hu-rawseg.txt -s 20000 -o hu20k.bpe
-  python D:\NMT\Code\subword-nmt\apply_bpe.py -c hu20k.bpe -i 04-tmp-hu.txt -o 04-tmp-hu-bpe20tok.txt --opennmt-separator
-  (etc for 30k and 40k)
+  python D:\NMT\Code\subword-nmt\learn_bpe.py --input 04-tmp-hu-lo-rawseg.txt -s 20000 -o hu20k.bpe
+  python D:\NMT\Code\subword-nmt\apply_bpe.py -c hu20k.bpe -i 04-tmp-hu-lo.txt -o 04-tmp-hu-bpe20tok.txt --opennmt-separator
+  python D:\NMT\Code\subword-nmt\learn_bpe.py --input 04-tmp-hu-lo-rawseg.txt -s 40000 -o hu40k.bpe
+  python D:\NMT\Code\subword-nmt\apply_bpe.py -c hu40k.bpe -i 04-tmp-hu-lo.txt -o 04-tmp-hu-bpe40tok.txt --opennmt-separator
+
+  https://github.com/dlt-rilmta/emMorph
+  https://github.com/dlt-rilmta/hunlp-GATE/blob/master/Lang_Hungarian/resources/hfst/hfst-wrapper/src/hu/nytud/hfst/Stemmer.java
+  Extract HU surface vocab, analyze offline, stem with "dictionary" in tool
+  hfst-lookup --cascade=composition --pipe-mode=input --xfst=print-pairs --xfst=print-space --time-cutoff=2 --progress hu.hfstol <04-tmp-hu-vocab.txt >04-tmp-hu-vocab-stemmed.txt
+
+  Stemmed or kept b/c frequent: 610285
+  Unanalyzed: 162926
+  Unique analyzed stems: 126589
+  Lines: 3181174
+  No UNKs: 3096496
+  One UNK: 75269
+  More UNKs: 9409
+  Dropped (failed to stem): 15616
+  Dropped (dupe): 222571
+  Failed (token map): 5
 
 - Remix tokenized for
   2 extra fields per tokenization: tokenized form; surf range of each token
   these fields exclude punctuation and joiner
   Dedupe along the way
   Also get output for alignment
+  !! Rerun: sticking with 20k and 40k
 
 - Align externally
   https://github.com/clab/fast_align
   Per-word score: https://github.com/gugray/fast_align
-  ./fast_align -i 05-tmp-zh-hu20.txt -d -o -v > 05-tmp-zh-hu20.align
+  ./fast_align -d -o -v -i 05-tmp-zh-hu20.txt > 05-tmp-zh-hu20.align
   (etc for 30k and 40k)
-  20k: cross entropy: 8.15784 perplexity: 285.597
-  30k: cross entropy: 8.20877 perplexity: 295.859
-  40k: cross entropy: 8.23634 perplexity: 301.567
-  Remix into main file
- 
+  20k:          perplexity: 284.480
+  30k:          perplexity: 295.859 (interim)
+  40k:          perplexity: 300.161
+  stem-partial  perplexity:  95.622 (top 50k surfs stemmed)
+  stem-medium   perplexity:  88.647 (1/3 of surfs stemmed)
+  stem-full     perplexity:  87.207 (all surface forms stemmed)
+
+- Remix into main file
 - Word freq stats, token length stats, word score histograms, ...
 
 
