@@ -1,0 +1,11 @@
+﻿import gensim, logging
+import io
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+ 
+sentences = []
+f = io.open('10-zhhu-for-w2v.txt', encoding='utf-8')
+for line in f:
+  sentences.append(line.split())
+
+model = gensim.models.Word2Vec(sentences, min_count=4, size=200, workers=8, window=60, sg=1)
+model.save('zhhu-wv-model.bin')

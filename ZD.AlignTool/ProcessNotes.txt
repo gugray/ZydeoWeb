@@ -87,3 +87,16 @@ searchd -c ../zhhu.conf
 
 select * from zhhu where match('11');
 
+
+BILINGUAL WORD2VEC
+------------------------------------------------------------------------------------
+
+Install Gensim on Linux
+sudo -H pip install Cython
+sudo -H pip install NumPy
+sudo -H pip install SciPy
+sudo -H pip install gensim
+
+Max joint length: 60
+Avg joint length: 12
+

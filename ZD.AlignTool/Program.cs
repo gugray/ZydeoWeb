@@ -779,6 +779,131 @@ namespace ZD.AlignTool
             }
         }
 
+        private class StemFreqItem
+        {
+            public string Stem;
+            public int AllFreq = 0;
+            public Dictionary<string, int> FormFreqs = new Dictionary<string, int>();
+        }
+
+        static Regex resStripPunct = new Regex("\\p{P}");
+
+        static void getForWord2Vec()
+        {
+            Dictionary<string, StemFreqItem> huStemToFreq = new Dictionary<string, StemFreqItem>();
+            Dictionary<string, int> zhFreq = new Dictionary<string, int>();
+            int maxJointLen = 0;
+            int sumLen = 0;
+            int count = 0;
+            using (StreamReader sr05tmpStemA = ropen("05-tmp-zh-hustem.txt"))
+            using (StreamReader sr04Stemtok = ropen("04-tmp-hu-stemtok.txt"))
+            using (StreamWriter swHuFreqs = wopen("10-hufreqs.txt"))
+            using (StreamWriter swZhfreqs = wopen("10-zhfreqs.txt"))
+            using (StreamWriter swW2V = wopen("10-zhhu-for-w2v.txt"))
+            {
+                string line;
+                // Chinese frequencies, and w2v output
+                while ((line = sr05tmpStemA.ReadLine()) != null)
+                {
+                    ++count;
+                    line = line.Replace(" ||| ", "\t");
+                    string[] zhhu = line.Split('\t');
+                    string[] zhToks = zhhu[0].Split(' ');
+                    bool first = true;
+                    foreach (string zhTok in zhToks)
+                    {
+                        if (!first) swW2V.Write(' ');
+                        swW2V.Write("zh_");
+                        swW2V.Write(zhTok);
+                        first = false;
+                        // ZH counts
+                        if (!zhFreq.ContainsKey(zhTok)) zhFreq[zhTok] = 1;
+                        else ++zhFreq[zhTok];
+                    }
+                    string[] huStems = zhhu[1].Split(' ');
+                    foreach (string huStem in huStems)
+                    {
+                        if (!first) swW2V.Write(' ');
+                        swW2V.Write("hu_");
+                        swW2V.Write(huStem);
+                        first = false;
+                    }
+                    swW2V.Write('\n');
+                    if (zhToks.Length + huStems.Length > maxJointLen) maxJointLen = zhToks.Length + huStems.Length;
+                    sumLen += zhToks.Length + huStems.Length;
+                }
+                List<string> zhFreqVect = new List<string>();
+                foreach (var x in zhFreq) zhFreqVect.Add(x.Key);
+                zhFreqVect.Sort((x, y) => zhFreq[y].CompareTo(zhFreq[x]));
+                foreach (var zhTok in zhFreqVect)
+                {
+                    swZhfreqs.Write(zhFreq[zhTok].ToString());
+                    swZhfreqs.Write('\t');
+                    swZhfreqs.Write(zhTok);
+                    swZhfreqs.Write('\n');
+                }
+                zhFreqVect.Clear();
+                zhFreq.Clear();
+                // Max joint length (in tokens)
+                Console.WriteLine("Max length: " + maxJointLen);
+                double avgLen = ((double)sumLen) / count;
+                Console.WriteLine("Avg length: " + avgLen.ToString("0.00"));
+                // Hungarian stem frequencies
+                while ((line = sr04Stemtok.ReadLine()) != null)
+                {
+                    string sent = line.Split()[2];
+                    string[] words = sent.Split(' ');
+                    foreach (string word in words)
+                    {
+                        if (word == "") continue;
+                        int tokCount = int.Parse(word.Substring(0, 1));
+                        int slashPos = word.IndexOf('/');
+                        int hashPos = word.IndexOf('#');
+                        string stem = word.Substring(slashPos + 1, hashPos - slashPos - 1).ToLower();
+                        string surf = word.Substring(hashPos + 1).ToLower();
+                        surf = resStripPunct.Replace(surf, "");
+                        if (tokCount > 1) surf = stem;
+                        StemFreqItem sfi = null;
+                        if (!huStemToFreq.ContainsKey(stem))
+                        {
+                            sfi = new StemFreqItem { Stem = stem };
+                            huStemToFreq[stem] = sfi;
+                        }
+                        else sfi = huStemToFreq[stem];
+                        ++sfi.AllFreq;
+                        if (!sfi.FormFreqs.ContainsKey(surf)) sfi.FormFreqs[surf] = 1;
+                        else ++sfi.FormFreqs[surf];
+                    }
+                }
+                List<StemFreqItem> huFreqs = new List<StemFreqItem>();
+                foreach (var x in huStemToFreq) huFreqs.Add(x.Value);
+                huFreqs.Sort((x, y) => y.AllFreq.CompareTo(x.AllFreq));
+                foreach (var sfi in huFreqs)
+                {
+                    swHuFreqs.Write(sfi.AllFreq.ToString());
+                    swHuFreqs.Write('\t');
+                    swHuFreqs.Write(sfi.Stem);
+                    swHuFreqs.Write('\t');
+                    List<string> surfs = new List<string>();
+                    foreach (var x in sfi.FormFreqs) surfs.Add(x.Key);
+                    surfs.Sort((x, y) => sfi.FormFreqs[y].CompareTo(sfi.FormFreqs[x]));
+                    bool first = true;
+                    foreach (string surf in surfs)
+                    {
+                        if (!first) swHuFreqs.Write(' ');
+                        swHuFreqs.Write(sfi.FormFreqs[surf].ToString());
+                        swHuFreqs.Write('/');
+                        swHuFreqs.Write(surf);
+                        first = false;
+                    }
+                    swHuFreqs.Write('\n');
+                }
+                huStemToFreq.Clear();
+                huFreqs.Clear();
+            }
+
+        }
+
         public static void Main(string[] args)
         {
             //filterA();
@@ -790,7 +915,9 @@ namespace ZD.AlignTool
             //getHuSurfVocab();
             //stemHu();
             //remixTokenized();
-            remixAligned();
+            //remixAligned();
+
+            getForWord2Vec();
 
             //getSet("隧道");
             //stemTest();
