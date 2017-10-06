@@ -26,4 +26,4 @@ if __name__ == '__main__':
     for line in sys.stdin:
       seg_list = jieba.cut(line, cut_all=False)
       sys.stdout.write(" ".join(seg_list))
-      sys.stdout.write("\n")
+      #sys.stdout.write("\n")

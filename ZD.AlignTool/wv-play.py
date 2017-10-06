@@ -44,15 +44,17 @@ def multi(model, g):
   sims = model.most_similar(positive=['zh_人', 'zh_火车'], topn=20)
 
 model = gensim.models.Word2Vec.load('../_work_align/zhhu-wv-model.bin')
-with open('../_work_align/_win.txt', encoding='utf-8') as f:
-  with open('../_work_align/_wout.txt', mode='w', encoding='utf-8') as g:
-    #multi(model, g)
-    similarities(model, g)
-    for line in f:
-      word = line.strip()
-      g.write('\n')
-      sims = model.most_similar(positive=[word], topn=20)
-      write_sims(word, g, sims)
+model.wv.save_word2vec_format('../_work_align/11-wvects.txt')
+
+# with open('../_work_align/_win.txt', encoding='utf-8') as f:
+#   with open('../_work_align/_wout.txt', mode='w', encoding='utf-8') as g:
+#     #multi(model, g)
+#     similarities(model, g)
+#     for line in f:
+#       word = line.strip()
+#       g.write('\n')
+#       sims = model.most_similar(positive=[word], topn=20)
+#       write_sims(word, g, sims)
 
 #model.most_similar(positive=['woman', 'king'], negative=['man'], topn=1)
 

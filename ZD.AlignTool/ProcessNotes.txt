@@ -1,12 +1,15 @@
 ﻿Corpus cleanup & pre-processing:
 ------------------------------------------------------------------------------------
-- Filter: where ZH contains lower-case [a-z]
+- Filter: where ZH contains lower-case [a-z], and corrupt Chinese chars
+  Filter HU: contains {[]}@\
+  Fix HU: õ>ő û>ű Õ>Ő Û>Ű
 > Source: 6,113,084 segs
-  Filtered: 5,653,090 segs
+  Filtered: 5,594,167 segs
 
 - From ZH, spot segs with traditional; extract; simplify; reconsolidate into BI
-> 503,067 segments with trad-only char inside
+> 489,652 segments with trad-only char inside
   Used https://github.com/BYVoid/OpenCC 0.4.3 for conversion
+> Get char freq list
 
 - Create histogram
   ZH, HU char lengths
@@ -19,14 +22,17 @@
   extreme punctuation ratios
   duplicates (lower-cased, w/o punct and spaces, src+trg)
   REMAIN COUNT??
-> Dropped: 2,462,433  Kept: 3,181,174
+> Dropped: 2,440,992  Kept: 3,147,758
 
 - Tokenize for alignment externally, ZH and HU separately
   For HU, 3 forms: BPE 20k, 40k
 
 > ZH: https://github.com/fxsjy/jieba
   Installed via pip. Large ditionary downloaded separately.
-  python zhotok-jieba.py <..\_work_align\04-tmp-zh.txt >..\_work_align\04-tmp-zh-seg.txt
+  python zhotok-jieba.py <..\_work_align\04-tmp-zh.txt >..\_work_align\04-tmp-zh-seg-jieba.txt
+
+> ZH ALT: Collocation-based gram merge, with smart blocking. Loosely inspired on Gensim's Phraser.
+  49589 + 17535 + 7123
 
 > HU: export is already lower-cased. Moses tokenizer for raw segmentation b/f BPE
   Also Moses segment pure surface, for later morphological analysis
@@ -68,12 +74,22 @@
   Per-word score: https://github.com/gugray/fast_align
   ./fast_align -d -o -v -i 05-tmp-zh-hu20.txt > 05-tmp-zh-hu20.align
   (etc for 30k and 40k)
+
+  ZH-TOK with Jieba:
   20k:          perplexity: 284.480
   30k:          perplexity: 295.859 (interim)
   40k:          perplexity: 300.161
+  nostem-lo     perplexity: 216.475
   stem-partial  perplexity:  95.622 (top 50k surfs stemmed)
   stem-medium   perplexity:  88.647 (1/3 of surfs stemmed)
   stem-full     perplexity:  87.207 (all surface forms stemmed)
+
+  ZH-TOK with Colloc:
+  cfew-20k:     perplexity: 355.753
+  cmany-20k:    perplexity: 302.542; 
+  cfew-stem     perplexity: 129.745; HU stem keeps more surface forms
+  cfew-stem     perplexity: 112.445; HU stem orig
+  cmany-stem    perplexity:  92.292; HU stem orig
 
 - Remix into main file
 - Word freq stats, token length stats, word score histograms, ...
@@ -97,6 +113,69 @@ sudo -H pip install NumPy
 sudo -H pip install SciPy
 sudo -H pip install gensim
 
-Max joint length: 60
-Avg joint length: 12
+With colloc+stem: Max joint length: 60  Avg joint length: 12.00
+With jieba+stem:  Max joint length: 65  Avg joint length: 14.11
 
+
+Run gensim: wv-train.py
+Export vectors: wv-play.py (partly)
+nohup python wv-train.py > train.log 2>&1 &
+
+
+OpenNMT
+------------------------------------------------------------------------------------
+********
+** ZH: single chars; HU: bpe20k
+th preprocess.lua -train_src 10-zhhu/data/10-zh-train.txt -train_tgt 10-zhhu/data/10-hu-train.txt -valid_src 10-zhhu/data/10-zh-valid.txt -valid_tgt 10-zhhu/data/10-hu-valid.txt -save_data 10-zhhu/init/init
+nohup th train.lua -data 10-zhhu/init/init-train.t7 -save_model 10-zhhu/train/model -max_batch_size 256 -gpuid 1 > 10-zhhu/train.log 2>&1 &
+
+[09/30/17 12:21:28 INFO] Preparing vocabulary...
+[09/30/17 12:21:28 INFO]  * Building source vocabularies...
+[09/30/17 12:22:25 INFO]  * Created word dictionary of size 11791 (pruned from 11791)
+[09/30/17 12:22:25 INFO]
+[09/30/17 12:22:25 INFO]  * Building target vocabularies...
+[09/30/17 12:23:22 INFO]  * Created word dictionary of size 20233 (pruned from 20233)
+
+Final perplexity: 16.27
+
+********
+** ZH: single chars; HU: stems
+th preprocess.lua -train_src 11-zhhu/data/10-zh-train.txt -train_tgt 11-zhhu/data/10-hu-train.txt -valid_src 11-zhhu/data/10-zh-valid.txt -valid_tgt 11-zhhu/data/10-hu-valid.txt -tgt_words_min_frequency 3 -save_data 11-zhhu/init/init
+nohup th train.lua -data 11-zhhu/init/init-train.t7 -save_model 11-zhhu/train/model -max_batch_size 256 -gpuid 1 > 11-zhhu/train.log 2>&1 &
+
+[09/30/17 23:31:04 INFO] Preparing vocabulary...
+[09/30/17 23:31:04 INFO]  * Building source vocabularies...
+[09/30/17 23:32:01 INFO]  * Created word dictionary of size 11792 (pruned from 11792)
+[09/30/17 23:32:01 INFO]
+[09/30/17 23:32:01 INFO]  * Building target vocabularies...
+[09/30/17 23:32:48 INFO]  * Created word dictionary of size 67887 (pruned from 229250)
+
+Final perplexity: 22.46
+
+********
+** ZH: colloc; HU: bpe20k
+th preprocess.lua -train_src 12-zhhu/data/10-zh-train.txt -train_tgt 12-zhhu/data/10-hu-train.txt -valid_src 12-zhhu/data/10-zh-valid.txt -valid_tgt 12-zhhu/data/10-hu-valid.txt -src_vocab_size 0 -save_data 12-zhhu/init/init
+nohup th train.lua -data 12-zhhu/init/init-train.t7 -save_model 12-zhhu/train/model -max_batch_size 256 -gpuid 1 > 12-zhhu/train.log 2>&1 &
+
+[10/01/17 13:27:15 INFO] Preparing vocabulary...
+[10/01/17 13:27:15 INFO]  * Building source vocabularies...
+[10/01/17 13:28:08 INFO]  * Created word dictionary of size 68720 (pruned from 68720)
+[10/01/17 13:28:08 INFO]
+[10/01/17 13:28:08 INFO]  * Building target vocabularies...
+[10/01/17 13:29:09 INFO]  * Created word dictionary of size 20233 (pruned from 20233)
+
+Final perplexity: 16.13
+
+********
+** ZH: jieba; HU: bpe20k
+th preprocess.lua -train_src 13-zhhu/data/10-zh-train.txt -train_tgt 13-zhhu/data/10-hu-train.txt -valid_src 13-zhhu/data/10-zh-valid.txt -valid_tgt 13-zhhu/data/10-hu-valid.txt -src_words_min_frequency 5 -save_data 13-zhhu/init/init
+nohup th train.lua -data 13-zhhu/init/init-train.t7 -save_model 13-zhhu/train/model -max_batch_size 256 -gpuid 1 > 13-zhhu/train.log 2>&1 &
+
+[10/06/17 19:15:12 INFO] Preparing vocabulary...
+[10/06/17 19:15:12 INFO]  * Building source vocabularies...
+[10/06/17 19:16:05 INFO]  * Created word dictionary of size 77290 (pruned from 236173)
+[10/06/17 19:16:05 INFO]
+[10/06/17 19:16:05 INFO]  * Building target vocabularies...
+[10/06/17 19:17:12 INFO]  * Created word dictionary of size 20233 (pruned from 20233)
+
+Final perplexity: 

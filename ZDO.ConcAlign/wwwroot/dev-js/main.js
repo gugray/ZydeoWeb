@@ -69,7 +69,7 @@ App.xlate = (function (path) {
           spanClosed = true;
         }
         var score = hiliteStarts(hit, j);
-        if (score >= 20) {
+        if (score >= 10) {
           var cls = "hlLo";
           if (score > 100) cls = "hlMid";
           if (score > 300) cls = "hlHi";

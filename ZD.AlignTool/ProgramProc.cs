@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.IO;
-using System.Diagnostics;
-using System.Threading;
 
 using ZD.LangUtils;
 
 namespace ZD.AlignTool
 {
-    public class Program
+    public partial class Program
     {
         static StreamReader ropen(string fileName)
         {
@@ -26,12 +24,28 @@ namespace ZD.AlignTool
             return sw;
         }
 
+        static bool isBarfZh(char c)
+        {
+            var cat = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c);
+            return (cat == System.Globalization.UnicodeCategory.PrivateUse ||
+                cat == System.Globalization.UnicodeCategory.Surrogate);
+        }
+
+        static bool hasBarfZh(string str)
+        {
+            foreach (char c in str)
+                if (isBarfZh(c)) return true;
+            return false;
+        }
+
         static Regex reLowerAlfa = new Regex("[a-z]");
 
         static void filterA()
         {
             int inCount = 0;
             int keptCount = 0;
+            char[] huBadChars = new char[] { '{', '[', '}', ']', '@', '\\' };
+            char[] huWrongCode = new char[] { 'õ', 'û', 'Õ', 'Û' };
             using (var srZh = ropen("00-osub.zh.txt"))
             using (var srHu = ropen("00-osub.hu.txt"))
             using (var sw = wopen("01-zh-hu.txt"))
@@ -45,6 +59,15 @@ namespace ZD.AlignTool
                     if (lnZh == null) break;
                     ++inCount;
                     if (reLowerAlfa.IsMatch(lnZh)) continue;
+                    if (hasBarfZh(lnZh)) continue;
+                    if (lnHu.IndexOfAny(huBadChars) >= 0) continue;
+                    if (lnHu.IndexOfAny(huWrongCode) >= 0)
+                    {
+                        lnHu = lnHu.Replace('õ', 'ő');
+                        lnHu = lnHu.Replace('û', 'ű');
+                        lnHu = lnHu.Replace('Õ', 'Ő');
+                        lnHu = lnHu.Replace('Û', 'Ű');
+                    }
                     ++keptCount;
                     sw.Write(lnZh);
                     sw.Write('\t');
@@ -94,9 +117,12 @@ namespace ZD.AlignTool
 
         static void fixTrad()
         {
+            int barfCount = 0;
+            Dictionary<char, int> freqs = new Dictionary<char, int>();
             using (var srMain = ropen("02-tmp-zh-hu.txt"))
             using (var srSimplified = ropen("02-tmp-simplified.txt"))
             using (var sw = wopen("02-zh-hu.txt"))
+            using (var swZhFreq = wopen("02-zh-freq.txt"))
             {
                 string line;
                 while ((line = srMain.ReadLine()) != null)
@@ -107,11 +133,33 @@ namespace ZD.AlignTool
                         string simp = srSimplified.ReadLine();
                         parts[0] = simp;
                     }
+
+                    // We're getting bards back from simplification too
+                    // At this point, just ignore
+                    if (hasBarfZh(parts[0])) { ++barfCount; continue; }
+
+                    foreach (char c in parts[0])
+                    {
+                        if (!freqs.ContainsKey(c)) freqs[c] = 1;
+                        else ++freqs[c];
+                    }
+
                     sw.Write(parts[0]);
                     sw.Write('\t');
                     sw.WriteLine(parts[1]);
                 }
+                List<char> chars = new List<char>();
+                foreach (var x in freqs) chars.Add(x.Key);
+                chars.Sort((x, y) => freqs[y].CompareTo(freqs[x]));
+                foreach (char c in chars)
+                {
+                    swZhFreq.Write(freqs[c].ToString());
+                    swZhFreq.Write('\t');
+                    swZhFreq.Write(c);
+                    swZhFreq.Write('\n');
+                }
             }
+            Console.WriteLine("Barf lines from simplified: " + barfCount);
         }
 
         static void histogram(string fn, string outfn)
@@ -208,6 +256,8 @@ namespace ZD.AlignTool
         }
 
         static Dictionary<string, string> surf2Stem = new Dictionary<string, string>();
+        //static string[] noStemSurfs = new string[] { "az", "ez", "én", "te", "ő", "mi", "ti", "ők" };
+        static string[] noStemSurfs = new string[0];
 
         static void buildStemDict()
         {
@@ -288,6 +338,9 @@ namespace ZD.AlignTool
                             else if (stems[i].Length > 0 && stems[i].Length < shortestStem.Length)
                                 shortestStem = stems[i];
                         }
+                        // Stems where we still want to keep surface form
+                        if (Array.IndexOf(noStemSurfs, shortestStem) != -1)
+                            shortestStem = surf.ToLower();
                         // File lower-cased stem in dictionary, if we have one
                         if (shortestStem.Length != 0)
                         {
@@ -558,6 +611,87 @@ namespace ZD.AlignTool
             mapStr = sb2.ToString();
         }
 
+        static void getZhFreqsJieba()
+        {
+            Dictionary<string, int> freqs = new Dictionary<string, int>();
+            using (StreamReader srZhSeg = ropen("04-tmp-zh-seg-jieba.txt"))
+            using (StreamWriter swFreq = wopen("04-zh-wordfreqs-jieba.txt"))
+            {
+                string line;
+                while ((line = srZhSeg.ReadLine()) != null)
+                {
+                    string[] toks = line.Split(' ');
+                    foreach (string tok in toks)
+                    {
+                        if (tok == "") continue;
+                        if (char.IsPunctuation(tok[0])) continue;
+                        if (char.IsDigit(tok[0])) continue;
+                        if (!freqs.ContainsKey(tok)) freqs[tok] = 1;
+                        else ++freqs[tok];
+                    }
+                }
+                List<string> zhWords = new List<string>();
+                foreach (var x in freqs) zhWords.Add(x.Key);
+                zhWords.Sort((x, y) => freqs[y].CompareTo(freqs[x]));
+                foreach (var word in zhWords)
+                {
+                    swFreq.Write(freqs[word]);
+                    swFreq.Write('\t');
+                    swFreq.Write(word);
+                    swFreq.Write('\n');
+                }
+            }
+        }
+
+        static void tokenizeZh(string tokChunksFile)
+        {
+            Dictionary<string, string> chunktToTok = new Dictionary<string, string>();
+            Dictionary<string, int> freqs = new Dictionary<string, int>();
+            using (StreamReader sr = ropen(tokChunksFile))
+            using (StreamReader srToTok = ropen("04-tmp-zh.txt"))
+            using (StreamWriter swZh = wopen("04-tmp-zh-seg-collocfew.txt"))
+            using (StreamWriter swFreq = wopen("04-zh-wordfreqs-colloc.txt"))
+            {
+                string line;
+                while ((line = sr.ReadLine()) != null)
+                {
+                    string[] parts = line.Split('\t');
+                    chunktToTok[parts[0]] = parts[1];
+                    string[] toks = parts[1].Split(' ');
+                    foreach (string tok in toks)
+                    {
+                        if (char.IsPunctuation(tok[0])) continue;
+                        if (char.IsDigit(tok[0])) continue;
+                        if (!freqs.ContainsKey(tok)) freqs[tok] = 1;
+                        else ++freqs[tok];
+                    }
+                }
+                StringBuilder sbOut = new StringBuilder();
+                while ((line = srToTok.ReadLine()) != null)
+                {
+                    sbOut.Clear();
+                    string[] chunks = line.Split(' ');
+                    foreach (string chunk in chunks)
+                    {
+                        if (chunk == "") continue;
+                        if (sbOut.Length > 0) sbOut.Append(' ');
+                        sbOut.Append(chunktToTok[chunk]);
+                    }
+                    swZh.WriteLine(sbOut.ToString());
+                }
+                List<string> zhWords = new List<string>();
+                foreach (var x in freqs) zhWords.Add(x.Key);
+                zhWords.Sort((x, y) => freqs[y].CompareTo(freqs[x]));
+                foreach (var word in zhWords)
+                {
+                    swFreq.Write(freqs[word]);
+                    swFreq.Write('\t');
+                    swFreq.Write(word);
+                    swFreq.Write('\n');
+                }
+            }
+        }
+
         static void remixTokenized()
         {
             int keptCount = 0;
@@ -581,7 +715,7 @@ namespace ZD.AlignTool
                     if (lnMain == null) break;
                     string[] parts = lnMain.Split('\t');
                     string lnZhTok = srZhTok.ReadLine();
-                    srZhTok.ReadLine(); // Extra empty lines in Jieba output
+                    //srZhTok.ReadLine(); // Extra empty lines in Jieba output
                     string lnHuTok20 = srHuTok20.ReadLine();
                     string lnHuTok40 = srHuTok40.ReadLine();
                     string lnHuTokStem = srHuTokStem.ReadLine();
@@ -670,12 +804,163 @@ namespace ZD.AlignTool
             Console.WriteLine("Failed (token map): " + failedCount);
         }
 
+        static void tmpGetForAlignSurf()
+        {
+            StringBuilder sbHu = new StringBuilder();
+            StringBuilder sbZh = new StringBuilder();
+            HashSet<int> hashes = new HashSet<int>();
+            using (StreamReader srMain = ropen("03-zh-hu.txt"))
+            using (StreamReader srZhTok = ropen("04-tmp-zh-seg-jieba.txt"))
+            using (StreamReader srHuTok20 = ropen("04-tmp-hu-bpe20tok.txt"))
+            using (StreamReader srHuTokStem = ropen("04-tmp-hu-stemtok.txt"))
+            using (StreamWriter swTmpFull = wopen("05-tmp-zh-hufull.txt"))
+            {
+                while (true)
+                {
+                    string lnMain = srMain.ReadLine();
+                    if (lnMain == null) break;
+                    string[] parts = lnMain.Split('\t');
+                    string lnZhTok = srZhTok.ReadLine();
+                    string lnHuTokStem = srHuTokStem.ReadLine();
+                    string[] lnHuTokStemParts = lnHuTokStem.Split('\t');
+                    string lnHuTok20 = srHuTok20.ReadLine();
+
+                    if (lnHuTokStemParts[2] == "") continue;
+
+                    // Too many unanalyzed tokens: drop (might be English, many typos etc.)
+                    int stemTokCount = int.Parse(lnHuTokStemParts[0]);
+                    int stemBadCount = int.Parse(lnHuTokStemParts[1]);
+                    bool dropBadStem = false;
+                    if (stemTokCount <= 3 && stemBadCount > 0) dropBadStem = true;
+                    if (stemTokCount > 3 && stemBadCount * 3 >= stemTokCount) dropBadStem = true;
+                    if (stemBadCount >= 3) dropBadStem = true;
+                    if (dropBadStem) continue;
+
+                    // Compact form of HU for hash. Any tokenized version will yield the same.
+                    string huCompact = compact(lnHuTok20);
+                    string toHash = parts[0].Replace(" ", "") + '\t' + huCompact;
+                    int hash = toHash.GetHashCode();
+                    if (hashes.Contains(hash)) continue;
+                    hashes.Add(hash);
+
+                    sbZh.Clear();
+                    string[] zhToks = lnZhTok.Split(' ');
+                    foreach (string tok in zhToks)
+                    {
+                        if (tok == "") continue;
+                        if (char.IsPunctuation(tok[0])) continue;
+                        if (sbZh.Length > 0) sbZh.Append(' ');
+                        sbZh.Append(tok);
+                    }
+
+                    sbHu.Clear();
+                    string[] huToks = lnHuTokStemParts[2].Split(' ');
+                    int ix = 0;
+                    while (ix < huToks.Length)
+                    {
+                        string tok = huToks[ix];
+                        if (tok == "") { ++ix; continue; }
+                        int cnt = int.Parse(tok.Substring(0, 1));
+                        if (cnt == 0) { ++ix;  continue; }
+                        string surf = tok.Substring(tok.IndexOf('#') + 1).ToLower();
+                        if (sbHu.Length > 0) sbHu.Append(' ');
+                        sbHu.Append(surf);
+                        ix += cnt;
+                    }
+                    swTmpFull.Write(sbZh.ToString());
+                    swTmpFull.Write(" ||| ");
+                    swTmpFull.Write(sbHu.ToString());
+                    swTmpFull.Write('\n');
+                }
+            }
+        }
+
+        static void remixForMT(bool huStemmed, bool useZhStem)
+        {
+            int count = 0;
+            int validCount = 0;
+            HashSet<int> hashes = new HashSet<int>();
+            StringBuilder sb = new StringBuilder();
+            string huFile = huStemmed ? "04-tmp-hu-stemtok.txt" : "04-tmp-hu-bpe20tok.txt";
+            using (StreamReader srMain = ropen("03-zh-hu.txt"))
+            using (StreamReader srZhTok = ropen("04-tmp-zh-seg-jieba.txt"))
+            using (StreamReader srHuTok = ropen(huFile))
+            using (StreamWriter swZhTrain = wopen("10-zh-train.txt"))
+            using (StreamWriter swHuTrain = wopen("10-hu-train.txt"))
+            using (StreamWriter swZhValid = wopen("10-zh-valid.txt"))
+            using (StreamWriter swHuValid = wopen("10-hu-valid.txt"))
+            {
+                while (true)
+                {
+                    string lnMain = srMain.ReadLine();
+                    if (lnMain == null) break;
+                    string[] parts = lnMain.Split('\t');
+                    string lnZhTok = srZhTok.ReadLine();
+                    string lnHuTok = srHuTok.ReadLine();
+
+                    if (huStemmed)
+                    {
+                        sb.Clear();
+                        string[] toks = lnHuTok.Split('\t')[2].Split(' ');
+                        foreach (string tok in toks)
+                        {
+                            if (tok == "") continue;
+                            int ix1 = tok.IndexOf('/');
+                            int ix2 = tok.IndexOf('#');
+                            if (sb.Length > 0) sb.Append(' ');
+                            sb.Append(tok.Substring(ix1 + 1, ix2 - ix1 - 1));
+                        }
+                        lnHuTok = sb.ToString();
+                    }
+
+
+                    // Compact form of HU for hash. Any tokenized version will yield the same.
+                    string huCompact = compact(lnHuTok);
+                    string toHash = parts[0].Replace(" ", "") + '\t' + huCompact;
+                    int hash = toHash.GetHashCode();
+                    if (hashes.Contains(hash)) continue;
+                    hashes.Add(hash);
+
+                    ++count;
+                    bool isValid = false;
+                    if (count % 580 == 0 && validCount < 5000) { isValid = true; ++validCount; }
+                    StreamWriter swHu = isValid ? swHuValid : swHuTrain;
+                    StreamWriter swZh = isValid ? swZhValid : swZhTrain;
+                    swHu.WriteLine(lnHuTok);
+
+                    sb.Clear();
+                    if (!useZhStem)
+                    {
+                        string[] zhToks = lnZhTok.Split(' ');
+                        foreach (string tok in zhToks)
+                        {
+                            if (tok == "") continue;
+                            if (char.IsDigit(tok[0]) || (tok[0] >= 'a' && tok[0] <= 'z') || (tok[0] >= 'A' && tok[0] <= 'Z'))
+                            {
+                                if (sb.Length > 0) sb.Append(' ');
+                                sb.Append(tok);
+                            }
+                            else
+                            {
+                                foreach (char c in tok)
+                                {
+                                    if (sb.Length > 0) sb.Append(' ');
+                                    sb.Append(c);
+                                }
+                            }
+                        }
+                        swZh.WriteLine(sb.ToString());
+                    }
+                    else swZh.WriteLine(lnZhTok);
+                }
+            }
+        }
 
         static void remixAligned()
         {
             using (StreamReader srMain = ropen("04-zh-hu.txt"))
-            using (StreamReader sr05tmp20A = ropen("05-tmp-zh-hu20.align"))
-            using (StreamReader sr05tmp40A = ropen("05-tmp-zh-hu40.align"))
+            //using (StreamReader sr05tmp20A = ropen("05-tmp-zh-hu20.align"))
+            //using (StreamReader sr05tmp40A = ropen("05-tmp-zh-hu40.align"))
             using (StreamReader sr05tmpStemA = ropen("05-tmp-zh-hustem.align"))
             using (StreamWriter sw05 = wopen("05-zh-hu.txt"))
             {
@@ -684,8 +969,11 @@ namespace ZD.AlignTool
                     string lnMain = srMain.ReadLine();
                     if (lnMain == null) break;
                     string[] parts = lnMain.Split('\t');
-                    string ln20A = sr05tmp20A.ReadLine();
-                    string ln40A = sr05tmp40A.ReadLine();
+                    //TMP
+                    //string ln20A = sr05tmp20A.ReadLine();
+                    //string ln40A = sr05tmp40A.ReadLine();
+                    string ln20A = "";
+                    string ln40A = "";
                     string lnStemA = sr05tmpStemA.ReadLine();
                     sw05.Write(parts[0]); // IDX
                     sw05.Write('\t');
@@ -707,25 +995,6 @@ namespace ZD.AlignTool
                     sw05.Write('\t');
                     sw05.Write(lnStemA); // ALIGN-STEM
                     sw05.Write('\n');
-                }
-            }
-        }
-
-        static void getSet(string filter)
-        {
-            using (StreamReader srText = ropen("05-tmp-zh-hu20.txt"))
-            using (StreamReader srAlign = ropen("05-tmp-zh-hu20.align"))
-            using (StreamWriter sw = wopen("set.txt"))
-            {
-                while (true)
-                {
-                    string lnText = srText.ReadLine();
-                    string lnAlign = srAlign.ReadLine();
-                    if (lnText == null) break;
-                    if (lnText.IndexOf(filter) < 0) continue;
-                    sw.Write(lnText.Replace(" ||| ", "\t"));
-                    sw.Write('\t');
-                    sw.WriteLine(lnAlign);
                 }
             }
         }
@@ -795,20 +1064,19 @@ namespace ZD.AlignTool
             int maxJointLen = 0;
             int sumLen = 0;
             int count = 0;
-            using (StreamReader sr05tmpStemA = ropen("05-tmp-zh-hustem.txt"))
+            using (StreamReader sr04ZhoTok = ropen("04-tmp-zh-seg-jieba.txt"))
             using (StreamReader sr04Stemtok = ropen("04-tmp-hu-stemtok.txt"))
-            using (StreamWriter swHuFreqs = wopen("10-hufreqs.txt"))
-            using (StreamWriter swZhfreqs = wopen("10-zhfreqs.txt"))
-            using (StreamWriter swW2V = wopen("10-zhhu-for-w2v.txt"))
+            using (StreamWriter swHuFreqs = wopen("10-jiestem-hufreqs.txt"))
+            using (StreamWriter swZhfreqs = wopen("10-jiestem-zhfreqs.txt"))
+            using (StreamWriter swW2V = wopen("10-jiestem-for-w2v.txt"))
             {
                 string line;
                 // Chinese frequencies, and w2v output
-                while ((line = sr05tmpStemA.ReadLine()) != null)
+                while ((line = sr04ZhoTok.ReadLine()) != null)
                 {
+                    string lineHu = sr04Stemtok.ReadLine();
                     ++count;
-                    line = line.Replace(" ||| ", "\t");
-                    string[] zhhu = line.Split('\t');
-                    string[] zhToks = zhhu[0].Split(' ');
+                    string[] zhToks = line.Split(' ');
                     bool first = true;
                     foreach (string zhTok in zhToks)
                     {
@@ -820,7 +1088,19 @@ namespace ZD.AlignTool
                         if (!zhFreq.ContainsKey(zhTok)) zhFreq[zhTok] = 1;
                         else ++zhFreq[zhTok];
                     }
-                    string[] huStems = zhhu[1].Split(' ');
+                    string[] huStems = lineHu.Split(' ');
+                    StringBuilder sb = new StringBuilder();
+                    foreach (string tok in huStems)
+                    {
+                        if (tok == "") continue;
+                        int ix1 = tok.IndexOf('/');
+                        if (ix1 == -1) continue;
+                        int ix2 = tok.IndexOf('#');
+                        if (sb.Length > 0) sb.Append(' ');
+                        sb.Append(tok.Substring(ix1 + 1, ix2 - ix1 - 1));
+                    }
+                    huStems = sb.ToString().Split(' ');
+
                     foreach (string huStem in huStems)
                     {
                         if (!first) swW2V.Write(' ');
@@ -849,6 +1129,7 @@ namespace ZD.AlignTool
                 double avgLen = ((double)sumLen) / count;
                 Console.WriteLine("Avg length: " + avgLen.ToString("0.00"));
                 // Hungarian stem frequencies
+                sr04Stemtok.BaseStream.Position = 0;
                 while ((line = sr04Stemtok.ReadLine()) != null)
                 {
                     string sent = line.Split()[2];
@@ -901,23 +1182,185 @@ namespace ZD.AlignTool
                 huStemToFreq.Clear();
                 huFreqs.Clear();
             }
+        }
 
+        static void getForColloc()
+        {
+            using (var sr = ropen("04-tmp-zh.txt"))
+            using (var sw = wopen("04-tmp-zh-tocolloc.txt"))
+            {
+                string line;
+                while ((line = sr.ReadLine()) != null)
+                {
+                    string[] sents = line.Split(' ');
+                    foreach (string sent in sents)
+                    {
+                        if (sent == "") continue;
+                        bool barf = false;
+                        foreach (char c in sent)
+                        {
+                            var cat = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c);
+                            if (cat == System.Globalization.UnicodeCategory.PrivateUse ||
+                                cat == System.Globalization.UnicodeCategory.Surrogate)
+                            {
+                                barf = true;
+                                break;
+                            }
+                        }
+                        if (barf) continue;
+                        sw.Write(sent);
+                        sw.Write('\t');
+                        for (int i = 0; i < sent.Length; ++i)
+                        {
+                            if (i > 0) sw.Write(' ');
+                            sw.Write(sent[i]);
+                        }
+                        sw.Write('\n');
+                    }
+                }
+            }
+        }
+
+        static int gramSampleSize = 0;
+        static Dictionary<string, int> coCounts = new Dictionary<string, int>();
+        static Dictionary<string, int> uniCounts = new Dictionary<string, int>();
+        static Dictionary<string, double> grams = new Dictionary<string, double>();
+        static Dictionary<string, string> mergeables = new Dictionary<string, string>();
+
+        static void mergeColloc(double threshold, int minCount, string inName, string gramName, string outName, bool preMerge)
+        {
+            string line;
+            gramSampleSize = 0;
+            coCounts.Clear();
+            uniCounts.Clear();
+            grams.Clear();
+            using (var sr = ropen(inName))
+            {
+                while ((line = sr.ReadLine()) != null)
+                {
+                    string[] cols = line.Split('\t');
+                    string line2 = preMerge ? mergeAlnum(cols[1]) : cols[1];
+                    string[] parts = line2.Split(' ');
+                    for (int i = 0; i < parts.Length; ++i)
+                    {
+                        string a = parts[i];
+                        if (char.IsPunctuation(a[0]) || char.IsDigit(a[0])) continue;
+                        if (!uniCounts.ContainsKey(a)) uniCounts[a] = 1;
+                        else ++uniCounts[a];
+                        if (i + 1 < parts.Length)
+                        {
+                            string b = parts[i + 1];
+                            if (char.IsPunctuation(b[0]) || char.IsDigit(b[0])) continue;
+                            ++gramSampleSize;
+                            string bi = "" + a + " " + b;
+                            if (!coCounts.ContainsKey(bi)) coCounts[bi] = 1;
+                            else ++coCounts[bi];
+                        }
+                    }
+                }
+            }
+            foreach (var x in coCounts)
+            {
+                string bi = x.Key;
+                if (x.Value < minCount) continue;
+                string[] ab = bi.Split(' ');
+                if (isMergeBlocked(ab[0], ab[1])) continue;
+                double scoreMI = Math.Log(gramSampleSize / ((double)uniCounts[ab[0]] * uniCounts[ab[1]]) * coCounts[bi]);
+                if (scoreMI > threshold)
+                {
+                    grams[bi] = scoreMI;
+                    mergeables[bi] = bi.Replace(" ", "");
+                }
+            }
+            Console.WriteLine("Merged gram count: " + grams.Count);
+            List<string> biSorted = new List<string>();
+            foreach (var x in grams) biSorted.Add(x.Key);
+            biSorted.Sort((x, y) => coCounts[y].CompareTo(coCounts[x]));
+            using (var sw = wopen(gramName))
+            {
+                foreach (string bi in biSorted)
+                {
+                    sw.Write(bi.Replace(" ", "_"));
+                    sw.Write('\t');
+                    sw.Write(coCounts[bi]);
+                    sw.Write('\t');
+                    sw.Write(grams[bi].ToString("0.000"));
+                    sw.Write('\n');
+                }
+            }
+            List<object>[] chartToRepl = new List<object>[65536];
+            foreach (var x in mergeables)
+            {
+                if (chartToRepl[x.Key[0]] == null) chartToRepl[x.Key[0]] = new List<object>();
+                chartToRepl[x.Key[0]].Add(x);
+            }
+            int lineCount = 0;
+            using (var sr = ropen(inName))
+            using (var sw = wopen(outName))
+            {
+                while ((line = sr.ReadLine()) != null)
+                {
+                    ++lineCount;
+                    if (lineCount % 100000 == 0) Console.WriteLine(lineCount.ToString());
+                    string[] cols = line.Split('\t');
+                    string line2 = preMerge ? mergeAlnum(cols[1]) : cols[1];
+                    string[] parts = line2.Split(' ');
+                    List<string> canMerge = new List<string>();
+                    for (int i = 0; i + 1 < parts.Length; ++i)
+                    {
+                        string pair = parts[i] + " " + parts[i + 1];
+                        if (mergeables.ContainsKey(pair))
+                            canMerge.Add(pair);
+                    }
+                    canMerge.Sort((x, y) => grams[y].CompareTo(grams[x]));
+                    foreach (var cm in canMerge)
+                        line2 = line2.Replace(cm, "|" + mergeables[cm] + "|");
+                    line2 = line2.Replace("|", "");
+                    sw.Write(cols[0]);
+                    sw.Write('\t');
+                    sw.WriteLine(line2);
+                }
+            }
         }
 
         public static void Main(string[] args)
         {
+            initMergeLimits();
+
             //filterA();
+
             //getTrad();
             //fixTrad();
+
             //histogram("02-zh-hu.txt", "02-lenhists.txt");
             //filterB();
             //splitForTok();
+
             //getHuSurfVocab();
             //stemHu();
+
+            //getForColloc();
+            //mergeColloc(2.5, 3, "04-tmp-zh-tocolloc.txt", "04-tmpA-zh-2grams.txt", "04-tmpA-zh-2merged.txt", true);
+            //mergeColloc(6, 5, "04-tmpA-zh-2merged.txt", "04-tmpB-zh-3grams.txt", "04-tmpB-zh-3merged.txt", false);
+            //mergeColloc(8, 3, "04-tmpB-zh-3merged.txt", "04-tmpC-zh-4grams.txt", "04-tmpC-zh-4merged.txt", false);
+
+            //getForColloc();
+            //mergeColloc(1.5, 3, "04-tmp-zh-tocolloc.txt", "04-tmpA-zh-2grams.txt", "04-tmpA-zh-2merged.txt", true);
+            //mergeColloc(4.0, 3, "04-tmpA-zh-2merged.txt", "04-tmpB-zh-3grams.txt", "04-tmpB-zh-3merged.txt", false);
+            //mergeColloc(4.0, 3, "04-tmpB-zh-3merged.txt", "04-tmpC-zh-4grams.txt", "04-tmpC-zh-4merged.txt", false);
+
+            //tokenizeZh("04-tmpC-zh-4merged.txt");
+
+            //tmpGetForAlignSurf();
+
+            //remixForMT(false, true);
             //remixTokenized();
             //remixAligned();
 
+
+            //getZhFreqsJieba();
             getForWord2Vec();
+
 
             //getSet("隧道");
             //stemTest();
