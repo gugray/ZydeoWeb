@@ -7,10 +7,10 @@ namespace ZDO.ConcAlign
 {
     public class SphinxResult
     {
-        public string Zh;
-        public string Hu;
-        public string ZhTokMap;
-        public string HuTokMap;
-        public string Align;
+        public List<int> SegPositionsZh;
+        public List<int> SegPositionsTrgLo;
+        public List<int> SegPositionsTrgStem;
+        public string ActualQuery;
+        public int TotalCount;
     }
 }
