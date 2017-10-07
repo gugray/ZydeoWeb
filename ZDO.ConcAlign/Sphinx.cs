@@ -32,6 +32,7 @@ namespace ZDO.ConcAlign
                     return null;
                 }
                 string line = p.StandardOutput.ReadLine();
+                if (line == null) return res;
                 res.TotalCount = int.Parse(line.Replace("COUNT: ", ""));
                 res.SegPositionsZh = new List<int>();
                 while ((line = p.StandardOutput.ReadLine()) != null)

@@ -4,6 +4,8 @@ use Time::HiRes qw(time);
 
 my ($query, $lang, $offset, $limit) = @ARGV;
 $query = uri_unescape($query);
+$query =~ s/\+/ /;
+
 $index = 'zh';
 if ($lang eq 'hulo') { $index = 'hulo'; }
 if ($lang eq 'hustem') { $index = 'hustem'; }
@@ -19,6 +21,7 @@ while ($row = $sth->fetchrow_hashref) {
 }
 $elapsed = time - $t0;
 #print "Elapsed time: $elapsed\n";
+
 
 $sth = $dbh->prepare_cached("SELECT id FROM $index WHERE MATCH('\"$query\"') LIMIT $offset, $limit OPTION max_matches=10000");
 $sth->execute();
