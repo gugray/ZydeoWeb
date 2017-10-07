@@ -40,6 +40,21 @@ App.xlate = (function (path) {
 
   function render(data) {
     var html = "";
+    for (var i = 0; i != data.srcSegs.length; ++i) {
+      html += "<div class='item'>";
+      html += "<div class='source'>";
+      html += data.srcSegs[i];
+      html += "</div>";
+      html += "<div class='target'>";
+      html += data.trgSegs[i];
+      html += "</div>";
+      html += "</div>";
+    }
+    $(".results").html(html);
+  }
+
+  function render_local(data) {
+    var html = "";
     for (var i = 0; i != data.length; ++i) {
       var hit = data[i];
       html += "<div class='item'>";
