@@ -11,9 +11,9 @@ namespace ZD.AlignTool
         static Dictionary<string, float[]> zhVects = new Dictionary<string, float[]>();
         static Dictionary<string, float[]> huVects = new Dictionary<string, float[]>();
 
-        static void loadVects()
+        static void loadVects(string vectFileName)
         {
-            using (var sr = ropen("11-wvects.txt"))
+            using (var sr = ropen(vectFileName))
             {
                 string line = sr.ReadLine();
                 while ((line = sr.ReadLine()) != null)
@@ -41,7 +41,7 @@ namespace ZD.AlignTool
                 squareSumA += a[i] * a[i];
                 squareSumB += b[i] * b[i];
             }
-            return prodSum / (Math.Sqrt(squareSumA) * Math.Sqrt(squareSumB));
+            return prodSum / (float)(Math.Sqrt(squareSumA) * Math.Sqrt(squareSumB));
         }
 
         private class SimPair
@@ -114,8 +114,8 @@ namespace ZD.AlignTool
 
         static void readFreqsStems()
         {
-            using (var srZh = ropen("10-zhfreqs.txt"))
-            using (var srHu = ropen("10-hufreqs.txt"))
+            using (var srZh = ropen("10-jiestem-zhfreqs.txt"))
+            using (var srHu = ropen("10-jiestem-hufreqs.txt"))
             using (var srHuNon = ropen("04-tmp-hu-vocab-stemmed.txt"))
             {
                 string line;
@@ -458,7 +458,7 @@ namespace ZD.AlignTool
 
         static float calcMI(int coCount, int zhCount, int huCount)
         {
-            float scoreMI = Math.Log((float)(corpusSegCount) / (zhCount * huCount) * coCount);
+            float scoreMI = (float)Math.Log((float)(corpusSegCount) / (zhCount * huCount) * coCount);
             return scoreMI;
         }
 
@@ -468,11 +468,11 @@ namespace ZD.AlignTool
             float b = zhCount - a;
             float c = huCount - a;
             float d = corpusSegCount - b - c + a;
-            float scoreLL = 2 *
+            float scoreLL = (float)(2 *
                 (a * Math.Log(a) + b * Math.Log(b) + c * Math.Log(c) + d * Math.Log(d) -
                 (a + b) * Math.Log(a + b) - (a + c) * Math.Log(a + c) -
                 (b + d) * Math.Log(b + d) - (c + d) * Math.Log(c + d) +
-                (a + b + c + d) * Math.Log(a + b + c + d));
+                (a + b + c + d) * Math.Log(a + b + c + d)));
             return scoreLL;
         }
 
@@ -536,15 +536,205 @@ namespace ZD.AlignTool
             }
         }
 
+        static void readDict(string fn, Dictionary<string, string> dict, List<string> simps, HashSet<string> simpSet)
+        {
+            string line;
+            using (var sr = ropen(fn))
+            {
+                while ((line = sr.ReadLine()) != null)
+                {
+                    if (line == "" || line.StartsWith("#")) continue;
+                    int ix1 = line.IndexOf(' ');
+                    int ix2 = line.IndexOf(' ', ix1 + 1);
+                    int ix3 = line.IndexOf(' ', ix2 + 1);
+                    string simp = line.Substring(ix1 + 1, ix2 - ix1 - 1);
+                    string entry = line.Substring(0, ix1) + line.Substring(ix2);
+                    if (dict.ContainsKey(simp)) dict[simp] += " @@ " + entry;
+                    else
+                    {
+                        dict[simp] = entry;
+                        if (!simpSet.Contains(simp))
+                        {
+                            simps.Add(simp);
+                            simpSet.Add(simp);
+                        }
+                    }
+                }
+            }
+        }
+
+        static void getDictBests(string fnOut, int simCount, int minHuFreq)
+        {
+            Dictionary<string, string> simpToCE = new Dictionary<string, string>();
+            Dictionary<string, string> simpToCH = new Dictionary<string, string>();
+            List<string> simps = new List<string>();
+            HashSet<string> simpSet = new HashSet<string>();
+            readDict("cedict_ts.u8", simpToCE, simps, simpSet);
+            readDict("chdict.u8", simpToCH, simps, simpSet);
+
+            // Prune HU vectors - for speed
+            List<string> huToRem = new List<string>();
+            foreach (var x in huVects)
+                if (!huFreqs.ContainsKey(x.Key) || huFreqs[x.Key] < minHuFreq)
+                    huToRem.Add(x.Key);
+            foreach (string hu in huToRem) huVects.Remove(hu);
+
+            StringBuilder sb = new StringBuilder();
+            List<SimPair> pairs = new List<SimPair>();
+            int count = 0;
+            Console.Write("Working: 0");
+            using (var sw = wopen(fnOut))
+            {
+                foreach (string simp in simps)
+                {
+                    ++count;
+                    if (count % 100 == 0) Console.Write("\rWorking: " + count.ToString());
+
+                    sb.Clear();
+                    pairs.Clear();
+                    sb.Append(simp);
+                    sb.Append('\t');
+                    if (simpToCE.ContainsKey(simp)) sb.Append(simpToCE[simp]);
+                    sb.Append('\t');
+                    if (simpToCH.ContainsKey(simp)) sb.Append(simpToCH[simp]);
+                    if (!zhVects.ContainsKey(simp))
+                    {
+                        sb.Insert(0, "0.000\t");
+                        for (int i = 0; i != simCount; ++i) sb.Append('\t');
+                    }
+                    else
+                    {
+                        float[] zhVect = zhVects[simp];
+                        foreach (var x in huVects)
+                        {
+                            //if (!huFreqs.ContainsKey(x.Key)) continue;
+                            //if (huFreqs[x.Key] < minHuFreq) continue;
+                            SimPair sp = new SimPair
+                            {
+                                Zh = simp,
+                                Hu = x.Key,
+                                Sim = calcSim(zhVect, x.Value, null)
+                            };
+                            pairs.Add(sp);
+                        }
+                        pairs.Sort((x, y) => y.Sim.CompareTo(x.Sim));
+                        for (int i = 0; i != simCount; ++i)
+                        {
+                            sb.Append('\t');
+                            sb.Append(huFreqs[pairs[i].Hu].ToString());
+                            sb.Append('/');
+                            sb.Append(pairs[i].Hu);
+                            sb.Append('/');
+                            sb.Append(pairs[i].Sim.ToString("0.000"));
+                        }
+                        sb.Insert(0, pairs[0].Sim.ToString("0.000") + "\t");
+                    }
+                    sw.WriteLine(sb.ToString());
+                }
+            }
+            Console.WriteLine();
+        }
+
+        static void analyzeHints(string fn, int hintLimit)
+        {
+            string line;
+            Dictionary<string, int> huCounts = new Dictionary<string, int>();
+            int hintedSimps = 0;
+            using (var sr = ropen(fn + ".txt"))
+            {
+                while ((line = sr.ReadLine()) != null)
+                {
+                    string[] parts = line.Split('\t');
+                    if (float.Parse(parts[0]) == 0) continue;
+                    ++hintedSimps;
+                    List<string> fullHints = new List<string>();
+                    for (int i = 4; i < parts.Length; ++i)
+                    {
+                        if (parts[i] == "") continue;
+                        fullHints.Add(parts[i]);
+                    }
+                    foreach (string fh in fullHints)
+                    {
+                        string[] hintParts = fh.Split('/');
+                        string word = hintParts[1];
+                        if (huCounts.ContainsKey(word)) ++huCounts[word];
+                        else huCounts[word] = 1;
+                    }
+                }
+            }
+            Console.WriteLine("Headwords with hints: " + hintedSimps);
+            List<string> hints = new List<string>();
+            foreach (var x in huCounts) hints.Add(x.Key);
+            hints.Sort((x, y) => huCounts[y].CompareTo(huCounts[x]));
+            using (var sw = wopen(fn + "-hintcounts.txt"))
+            {
+                foreach (string hint in hints)
+                {
+                    sw.Write(huCounts[hint].ToString());
+                    sw.Write('\t');
+                    sw.Write(hint);
+                    sw.Write('\n');
+                }
+            }
+            int keptHintedSimps = 0;
+            using (var sr = ropen(fn + ".txt"))
+            using (var sw = wopen(fn + "-filtered.txt"))
+            {
+                while ((line = sr.ReadLine()) != null)
+                {
+                    string[] parts = line.Split('\t');
+                    if (float.Parse(parts[0]) == 0) continue;
+                    List<string> fullHints = new List<string>();
+                    for (int i = 4; i < parts.Length; ++i)
+                    {
+                        if (parts[i] == "") continue;
+                        fullHints.Add(parts[i]);
+                    }
+                    List<string> keptHints = new List<string>();
+                    float bestScore = 0;
+                    foreach (string fh in fullHints)
+                    {
+                        string[] hintParts = fh.Split('/');
+                        string word = hintParts[1];
+                        if (huCounts[word] > hintLimit) continue;
+                        keptHints.Add(fh);
+                        float score = float.Parse(hintParts[2]);
+                        if (score > bestScore) bestScore = score;
+                    }
+                    if (keptHints.Count == 0) continue;
+                    ++keptHintedSimps;
+                    sw.Write(bestScore.ToString("0.000"));
+                    sw.Write('\t');
+                    sw.Write(parts[1]);
+                    sw.Write('\t');
+                    sw.Write(parts[2]);
+                    sw.Write('\t');
+                    sw.Write(parts[3]);
+                    foreach (string kh in keptHints)
+                    {
+                        sw.Write('\t');
+                        sw.Write(kh);
+                    }
+                    sw.Write('\n');
+                }
+            }
+            Console.WriteLine("Kept: " + keptHintedSimps);
+        }
+
         public static void xMain(string[] args)
         {
             // Word embedding vectors
-            loadVects();
+            //loadVects("10-jiestem-wv.txt");
             //readFreqsStems();
+            //getDictBests("11-jiestem-dict-wvsims.txt", 40, 3);
+
+            analyzeHints("11-jiestem-dict-wvsims", 100);
+
+
             //getGoodPairs(); // LONG, BRUTE FORCE N*M. Needs loadVects()
             //prunePairs();
             //dimReduce(); // Needs loadVects() and readFreqsStems()
-            testZhHu(new string[] { "羽毛" });
+            //testZhHu(new string[] { "羽毛" });
 
             // Collocation extraction
             //countCollocs(); // Needs readFreqsStems()

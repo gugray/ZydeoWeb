@@ -9,7 +9,8 @@
       "type": "platform",
       "version": "1.0.0"
     },
-    "ZD.LangUtils": "1.0.0-*"
+    "ZD.LangUtils": "1.0.0-*",
+    "ZD.Common": "1.0.0-*"
   },
 
   "frameworks": {

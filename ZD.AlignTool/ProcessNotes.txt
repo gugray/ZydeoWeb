@@ -41,6 +41,8 @@
   
   https://github.com/rsennrich/subword-nmt
   Actually using modified fork that inserts NMT joiner ￭
+  python D:\NMT\Code\subword-nmt\learn_bpe.py --input 04-tmp-hu-lo-rawseg.txt -s 10000 -o hu10k.bpe
+  python D:\NMT\Code\subword-nmt\apply_bpe.py -c hu10k.bpe -i 04-tmp-hu-lo.txt -o 04-tmp-hu-bpe10tok.txt --opennmt-separator
   python D:\NMT\Code\subword-nmt\learn_bpe.py --input 04-tmp-hu-lo-rawseg.txt -s 20000 -o hu20k.bpe
   python D:\NMT\Code\subword-nmt\apply_bpe.py -c hu20k.bpe -i 04-tmp-hu-lo.txt -o 04-tmp-hu-bpe20tok.txt --opennmt-separator
   python D:\NMT\Code\subword-nmt\learn_bpe.py --input 04-tmp-hu-lo-rawseg.txt -s 40000 -o hu40k.bpe
@@ -82,7 +84,7 @@
   nostem-lo     perplexity: 216.475
   stem-partial  perplexity:  95.622 (top 50k surfs stemmed)
   stem-medium   perplexity:  88.647 (1/3 of surfs stemmed)
-  stem-full     perplexity:  87.207 (all surface forms stemmed)
+  stem-full     perplexity:  86.972 (all surface forms stemmed)
 
   ZH-TOK with Colloc:
   cfew-20k:     perplexity: 355.753
@@ -90,6 +92,8 @@
   cfew-stem     perplexity: 129.745; HU stem keeps more surface forms
   cfew-stem     perplexity: 112.445; HU stem orig
   cmany-stem    perplexity:  92.292; HU stem orig
+
+  Jieba>hustem  perplexity: 185.484
 
 - Remix into main file
 - Word freq stats, token length stats, word score histograms, ...
@@ -129,11 +133,7 @@ OpenNMT
 th preprocess.lua -train_src 10-zhhu/data/10-zh-train.txt -train_tgt 10-zhhu/data/10-hu-train.txt -valid_src 10-zhhu/data/10-zh-valid.txt -valid_tgt 10-zhhu/data/10-hu-valid.txt -save_data 10-zhhu/init/init
 nohup th train.lua -data 10-zhhu/init/init-train.t7 -save_model 10-zhhu/train/model -max_batch_size 256 -gpuid 1 > 10-zhhu/train.log 2>&1 &
 
-[09/30/17 12:21:28 INFO] Preparing vocabulary...
-[09/30/17 12:21:28 INFO]  * Building source vocabularies...
 [09/30/17 12:22:25 INFO]  * Created word dictionary of size 11791 (pruned from 11791)
-[09/30/17 12:22:25 INFO]
-[09/30/17 12:22:25 INFO]  * Building target vocabularies...
 [09/30/17 12:23:22 INFO]  * Created word dictionary of size 20233 (pruned from 20233)
 
 Final perplexity: 16.27
@@ -143,11 +143,7 @@ Final perplexity: 16.27
 th preprocess.lua -train_src 11-zhhu/data/10-zh-train.txt -train_tgt 11-zhhu/data/10-hu-train.txt -valid_src 11-zhhu/data/10-zh-valid.txt -valid_tgt 11-zhhu/data/10-hu-valid.txt -tgt_words_min_frequency 3 -save_data 11-zhhu/init/init
 nohup th train.lua -data 11-zhhu/init/init-train.t7 -save_model 11-zhhu/train/model -max_batch_size 256 -gpuid 1 > 11-zhhu/train.log 2>&1 &
 
-[09/30/17 23:31:04 INFO] Preparing vocabulary...
-[09/30/17 23:31:04 INFO]  * Building source vocabularies...
 [09/30/17 23:32:01 INFO]  * Created word dictionary of size 11792 (pruned from 11792)
-[09/30/17 23:32:01 INFO]
-[09/30/17 23:32:01 INFO]  * Building target vocabularies...
 [09/30/17 23:32:48 INFO]  * Created word dictionary of size 67887 (pruned from 229250)
 
 Final perplexity: 22.46
@@ -157,11 +153,7 @@ Final perplexity: 22.46
 th preprocess.lua -train_src 12-zhhu/data/10-zh-train.txt -train_tgt 12-zhhu/data/10-hu-train.txt -valid_src 12-zhhu/data/10-zh-valid.txt -valid_tgt 12-zhhu/data/10-hu-valid.txt -src_vocab_size 0 -save_data 12-zhhu/init/init
 nohup th train.lua -data 12-zhhu/init/init-train.t7 -save_model 12-zhhu/train/model -max_batch_size 256 -gpuid 1 > 12-zhhu/train.log 2>&1 &
 
-[10/01/17 13:27:15 INFO] Preparing vocabulary...
-[10/01/17 13:27:15 INFO]  * Building source vocabularies...
 [10/01/17 13:28:08 INFO]  * Created word dictionary of size 68720 (pruned from 68720)
-[10/01/17 13:28:08 INFO]
-[10/01/17 13:28:08 INFO]  * Building target vocabularies...
 [10/01/17 13:29:09 INFO]  * Created word dictionary of size 20233 (pruned from 20233)
 
 Final perplexity: 16.13
@@ -171,11 +163,18 @@ Final perplexity: 16.13
 th preprocess.lua -train_src 13-zhhu/data/10-zh-train.txt -train_tgt 13-zhhu/data/10-hu-train.txt -valid_src 13-zhhu/data/10-zh-valid.txt -valid_tgt 13-zhhu/data/10-hu-valid.txt -src_words_min_frequency 5 -save_data 13-zhhu/init/init
 nohup th train.lua -data 13-zhhu/init/init-train.t7 -save_model 13-zhhu/train/model -max_batch_size 256 -gpuid 1 > 13-zhhu/train.log 2>&1 &
 
-[10/06/17 19:15:12 INFO] Preparing vocabulary...
-[10/06/17 19:15:12 INFO]  * Building source vocabularies...
 [10/06/17 19:16:05 INFO]  * Created word dictionary of size 77290 (pruned from 236173)
-[10/06/17 19:16:05 INFO]
-[10/06/17 19:16:05 INFO]  * Building target vocabularies...
 [10/06/17 19:17:12 INFO]  * Created word dictionary of size 20233 (pruned from 20233)
 
+Final perplexity: 16.29
+
+********
+** ZH: single chars; HU: bpe40k
+th preprocess.lua -train_src 14-zhhu/data/10-zh-train.txt -train_tgt 14-zhhu/data/10-hu-train.txt -valid_src 14-zhhu/data/10-zh-valid.txt -valid_tgt 14-zhhu/data/10-hu-valid.txt -save_data 14-zhhu/init/init
+nohup th train.lua -data 14-zhhu/init/init-train.t7 -save_model 14-zhhu/train/model -max_batch_size 256 -gpuid 1 > 14-zhhu/train.log 2>&1 &
+
+[10/07/17 11:41:31 INFO]  * Created word dictionary of size 12175 (pruned from 12175)
+[10/07/17 11:42:30 INFO]  * Created word dictionary of size 40194 (pruned from 40194)
+
 Final perplexity: 
+

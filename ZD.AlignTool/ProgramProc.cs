@@ -700,14 +700,13 @@ namespace ZD.AlignTool
             int failedCount = 0;
             HashSet<int> hashes = new HashSet<int>();
             using (StreamReader srMain = ropen("03-zh-hu.txt"))
-            using (StreamReader srZhTok = ropen("04-tmp-zh-seg.txt"))
+            using (StreamReader srZhTok = ropen("04-tmp-zh-seg-jieba.txt"))
             using (StreamReader srHuTok20 = ropen("04-tmp-hu-bpe20tok.txt"))
             using (StreamReader srHuTok40 = ropen("04-tmp-hu-bpe40tok.txt"))
             using (StreamReader srHuTokStem = ropen("04-tmp-hu-stemtok.txt"))
             using (StreamWriter sw04 = wopen("04-zh-hu.txt"))
-            using (StreamWriter sw05tmp20 = wopen("05-tmp-zh-hu20.txt"))
-            using (StreamWriter sw05tmp40 = wopen("05-tmp-zh-hu40.txt"))
-            using (StreamWriter sw05tmpStem = wopen("05-tmp-zh-hustem.txt"))
+            using (StreamWriter sw05tmpZhStem = wopen("05-tmp-zh-hustem.txt"))
+            using (StreamWriter sw05tmpStemZh = wopen("05-tmp-hustem-zh.txt"))
             {
                 while (true)
                 {
@@ -782,18 +781,24 @@ namespace ZD.AlignTool
                     }
                     sw04.Write('\n');
 
-                    sw05tmp20.Write(tokZh);
-                    sw05tmp20.Write(" ||| ");
-                    sw05tmp20.Write(tokHu20);
-                    sw05tmp20.Write('\n');
-                    sw05tmp40.Write(tokZh);
-                    sw05tmp40.Write(" ||| ");
-                    sw05tmp40.Write(tokHu40);
-                    sw05tmp40.Write('\n');
-                    sw05tmpStem.Write(tokZh);
-                    sw05tmpStem.Write(" ||| ");
-                    sw05tmpStem.Write(tokHuStem);
-                    sw05tmpStem.Write('\n');
+                    //sw05tmp20.Write(tokZh);
+                    //sw05tmp20.Write(" ||| ");
+                    //sw05tmp20.Write(tokHu20);
+                    //sw05tmp20.Write('\n');
+                    //sw05tmp40.Write(tokZh);
+                    //sw05tmp40.Write(" ||| ");
+                    //sw05tmp40.Write(tokHu40);
+                    //sw05tmp40.Write('\n');
+
+                    sw05tmpZhStem.Write(tokZh);
+                    sw05tmpZhStem.Write(" ||| ");
+                    sw05tmpZhStem.Write(tokHuStem);
+                    sw05tmpZhStem.Write('\n');
+
+                    sw05tmpStemZh.Write(tokHuStem);
+                    sw05tmpStemZh.Write(" ||| ");
+                    sw05tmpStemZh.Write(tokZh);
+                    sw05tmpStemZh.Write('\n');
 
                     ++keptCount;
                 }
@@ -881,7 +886,7 @@ namespace ZD.AlignTool
             int validCount = 0;
             HashSet<int> hashes = new HashSet<int>();
             StringBuilder sb = new StringBuilder();
-            string huFile = huStemmed ? "04-tmp-hu-stemtok.txt" : "04-tmp-hu-bpe20tok.txt";
+            string huFile = huStemmed ? "04-tmp-hu-stemtok.txt" : "04-tmp-hu-bpe10tok.txt";
             using (StreamReader srMain = ropen("03-zh-hu.txt"))
             using (StreamReader srZhTok = ropen("04-tmp-zh-seg-jieba.txt"))
             using (StreamReader srHuTok = ropen(huFile))
@@ -952,6 +957,102 @@ namespace ZD.AlignTool
                         swZh.WriteLine(sb.ToString());
                     }
                     else swZh.WriteLine(lnZhTok);
+                }
+            }
+        }
+
+        static void buildAligned()
+        {
+            string[] parts1, parts2;
+            using (StreamReader srMain = ropen("04-zh-hu.txt"))
+            using (StreamReader sr05ZhHuT = ropen("05-tmp-zh-hustem.txt"))
+            using (StreamReader sr05ZhHuA = ropen("05-tmp-zh-hustem.align"))
+            using (StreamReader sr05HuZhA = ropen("05-tmp-hustem-zh.align"))
+            using (StreamWriter swHuStem = wopen("zhhu-hustem.txt"))
+            using (StreamWriter swHuLo = wopen("zhhu-hulo.txt"))
+            using (StreamWriter swZh = wopen("zhhu-zh.txt"))
+            using (var bw = new ZD.Common.BinWriter("zhhu-data.bin"))
+            {
+                while (true)
+                {
+                    string lnMain = srMain.ReadLine();
+                    if (lnMain == null) break;
+                    string lnZhHu = sr05ZhHuT.ReadLine();
+                    lnZhHu = lnZhHu.Replace(" ||| ", "\t");
+                    string huStem = lnZhHu.Split('\t')[1];
+                    string lnZhHuA = sr05ZhHuA.ReadLine();
+                    string lnHuZhA = sr05HuZhA.ReadLine();
+
+                    string[] parts = lnMain.Split('\t');
+                    string zhSurf = parts[1];
+                    string huSurf = parts[2];
+                    string huLo = huSurf.ToLower();
+                    
+                    string zhTokMapStr = parts[3];
+                    List<short[]> zhTokMap = new List<short[]>();
+                    parts1 = zhTokMapStr.Split(' ');
+                    foreach (string part in parts1)
+                    {
+                        parts2 = part.Split('/');
+                        zhTokMap.Add(new short[2] { short.Parse(parts2[0]), short.Parse(parts2[1]) });
+                    }
+
+                    string huTokMapStr = parts[6];
+                    List<short[]> huTokMap = new List<short[]>();
+                    parts1 = huTokMapStr.Split(' ');
+                    foreach (string part in parts1)
+                    {
+                        parts2 = part.Split('/');
+                        huTokMap.Add(new short[2] { short.Parse(parts2[0]), short.Parse(parts2[1]) });
+                    }
+
+                    List<ZD.Common.CorpusSegment.AlignPair> zhToHuAlign = new List<Common.CorpusSegment.AlignPair>();
+                    parts1 = lnZhHuA.Split(' ');
+                    foreach (string part in parts1)
+                    {
+                        if (part == "") continue;
+                        int pos1 = part.IndexOf('-');
+                        int pos2 = part.IndexOf('!');
+                        var alm = new Common.CorpusSegment.AlignPair
+                        {
+                            Ix1 = short.Parse(part.Substring(0, pos1)),
+                            Ix2 = short.Parse(part.Substring(pos1 + 1, pos2 - pos1 - 1)),
+                            Score = float.Parse(part.Substring(pos2 + 1))
+                        };
+                        zhToHuAlign.Add(alm);
+                    }
+
+                    List<ZD.Common.CorpusSegment.AlignPair> huToZhAlign = new List<Common.CorpusSegment.AlignPair>();
+                    parts1 = lnHuZhA.Split(' ');
+                    foreach (string part in parts1)
+                    {
+                        if (part == "") continue;
+                        int pos1 = part.IndexOf('-');
+                        int pos2 = part.IndexOf('!');
+                        var alm = new Common.CorpusSegment.AlignPair
+                        {
+                            Ix1 = short.Parse(part.Substring(0, pos1)),
+                            Ix2 = short.Parse(part.Substring(pos1 + 1, pos2 - pos1 - 1)),
+                            Score = float.Parse(part.Substring(pos2 + 1))
+                        };
+                        huToZhAlign.Add(alm);
+                    }
+
+                    int pos = bw.Position + 1;
+                    ZD.Common.CorpusSegment cseg = new Common.CorpusSegment(zhSurf, huSurf, zhTokMap, huTokMap, zhToHuAlign, huToZhAlign);
+                    cseg.Serialize(bw);
+
+                    swHuStem.Write(pos.ToString());
+                    swHuStem.Write('\t');
+                    swHuStem.WriteLine(huStem);
+
+                    swHuLo.Write(pos.ToString());
+                    swHuLo.Write('\t');
+                    swHuLo.WriteLine(huLo);
+
+                    swZh.Write(pos.ToString());
+                    swZh.Write('\t');
+                    swZh.WriteLine(zhSurf);
                 }
             }
         }
@@ -1353,13 +1454,14 @@ namespace ZD.AlignTool
 
             //tmpGetForAlignSurf();
 
-            //remixForMT(false, true);
+            //remixForMT(false, false);
             //remixTokenized();
             //remixAligned();
+            buildAligned();
 
 
             //getZhFreqsJieba();
-            getForWord2Vec();
+            //getForWord2Vec();
 
 
             //getSet("隧道");

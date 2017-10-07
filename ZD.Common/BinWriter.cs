@@ -60,6 +60,11 @@ namespace ZD.Common
             writer.Write(i);
         }
 
+        public void WriteDouble(double d)
+        {
+            writer.Write(d);
+        }
+
         public void WriteShort(short s)
         {
             writer.Write(s);
