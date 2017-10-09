@@ -17,8 +17,8 @@ namespace ZDO.ConcAlign
             string currDir = Directory.GetCurrentDirectory();
             using (Process p = new Process())
             {
-                if (currDir.StartsWith("/usr/bin/perl"))
-                   p.StartInfo.FileName = "/";
+                if (currDir.StartsWith("/"))
+                   p.StartInfo.FileName = "/usr/bin/perl";
                 else
                     p.StartInfo.FileName = "C:/Strawberry/perl/bin/perl.exe";
                 p.StartInfo.Arguments = "query.pl " + WebUtility.UrlEncode(query) + " " + lang + " 0 " + limit.ToString();
