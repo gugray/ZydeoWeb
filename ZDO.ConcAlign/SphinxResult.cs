@@ -7,10 +7,11 @@ namespace ZDO.ConcAlign
 {
     public class SphinxResult
     {
-        public List<int> SegPositionsZh = new List<int>();
-        public List<int> SegPositionsTrgLo = new List<int>();
-        public List<int> SegPositionsTrgStem = new List<int>();
-        public string ActualQuery;
+        public List<int> SurfSegPositions = new List<int>();
+        public List<KeyValuePair<int, string>> StemmedSegs = new List<KeyValuePair<int, string>>();
+        public string StemmedQuery;
         public int TotalCount = 0;
+        public float PerlInnerElapsed;
+        public float PerlOuterElapsed;
     }
 }

@@ -14,30 +14,79 @@ namespace ZDO.ConcAlign.Controllers
     {
         public IActionResult Go([FromQuery] string query)
         {
+            int limit = 100;
             SearchResult res = new SearchResult();
             query = query.Trim();
             res.ActualQuery = query;
             if (query.Length == 0) return new ObjectResult(res);
 
             bool isZhoSearch = hasHanzi(query);
-            SphinxResult sres = Sphinx.Query(query, isZhoSearch, 100);
+            if (!isZhoSearch) query = pruneSurf(query, true, null);
+            res.ActualQuery = query;
+
+            SphinxResult sres = Sphinx.Query(query, isZhoSearch, limit);
             if (sres == null) return StatusCode(500);
-            res.ActualQuery = sres.ActualQuery;
             using (BinReader br = new BinReader("zhhu-data.bin"))
             {
                 List<float> trgHilites = new List<float>();
                 List<float> srcHilites = new List<float>();
-                foreach (int pos in sres.SegPositionsZh)
+                HashSet<int> usedPoss = new HashSet<int>();
+                int resultCount = 0;
+                // Render surface search results
+                foreach (int pos in sres.SurfSegPositions)
                 {
+                    ++resultCount;
+                    usedPoss.Add(pos);
                     br.Position = pos;
                     CorpusSegment cseg = new CorpusSegment(br);
-                    if (isZhoSearch) buildHilitesZhoToHu(sres.ActualQuery, cseg, trgHilites, srcHilites);
-                    else buildHilitesHuLoToZho(sres.ActualQuery, cseg, trgHilites, srcHilites);
+                    if (isZhoSearch) buildHilitesZhoToHu(query, cseg, trgHilites, srcHilites);
+                    else buildHilitesHuToZho(query, null, cseg, trgHilites, srcHilites);
+                    res.SrcSegs.Add(renderSegment(cseg.ZhSurf, srcHilites, isZhoSearch));
+                    res.TrgSegs.Add(renderSegment(cseg.TrgSurf, trgHilites, isZhoSearch));
+                }
+                // Render stem search results to fill up to limit
+                for (int i = 0; i < sres.StemmedSegs.Count && resultCount < limit; ++i)
+                {
+                    int pos = sres.StemmedSegs[i].Key;
+                    if (usedPoss.Contains(pos)) continue;
+                    ++resultCount;
+                    br.Position = pos;
+                    CorpusSegment cseg = new CorpusSegment(br);
+                    buildHilitesHuToZho(sres.StemmedQuery, sres.StemmedSegs[i].Value, cseg, trgHilites, srcHilites);
                     res.SrcSegs.Add(renderSegment(cseg.ZhSurf, srcHilites, isZhoSearch));
                     res.TrgSegs.Add(renderSegment(cseg.TrgSurf, trgHilites, isZhoSearch));
                 }
             }
             return new ObjectResult(res);
+        }
+
+        private static string pruneSurf(string str, bool toLower, List<int> posMap)
+        {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i != str.Length; ++i)
+            {
+                char c = str[i];
+                if (char.IsWhiteSpace(c) || char.IsPunctuation(c))
+                {
+                    if (sb.Length > 0 && sb[sb.Length - 1] != ' ')
+                    {
+                        if (posMap != null) posMap.Add(i);
+                        sb.Append(' ');
+                    }
+                }
+                else
+                {
+                    if (posMap != null) posMap.Add(i);
+                    if (toLower) sb.Append(char.ToLower(c));
+                    else sb.Append(c);
+                }
+            }
+            if (sb.Length > 0 && sb[sb.Length - 1] == ' ')
+            {
+                sb.Remove(sb.Length - 1, 1);
+                posMap.RemoveAt(posMap.Count - 1);
+            }
+            return sb.ToString();
         }
 
         private static bool hasHanzi(string str)
@@ -117,7 +166,12 @@ namespace ZDO.ConcAlign.Controllers
                 bool keeper = false;
                 if (ptr.A <= srcStart && ptr.A + ptr.B > srcStart) keeper = true;
                 if (ptr.A < srcStart + srcLen && ptr.A + ptr.B >= srcStart + srcLen) keeper = true;
-                if (keeper) srcIxs.Add(i);
+                if (keeper)
+                {
+                    srcIxs.Add(i);
+                    // Mark all these ranges gently
+                    for (int j = ptr.A; j != ptr.A + ptr.B; ++j) shls[j] = (float)0.03;
+                }
             }
             // Target tokens with score: token ix -> score
             Dictionary<int, float> trgToks = new Dictionary<int, float>();
@@ -165,19 +219,42 @@ namespace ZDO.ConcAlign.Controllers
             for (int pos = srcStart; pos < srcStart + srcLen; ++pos) shls[pos] = 1;
         }
         
-
-        private void buildHilitesHuLoToZho(string actualQuery, CorpusSegment cseg, List<float> thls, List<float> shls)
+        private void buildHilitesHuToZho(string query, string stemmed, CorpusSegment cseg, List<float> thls, List<float> shls)
         {
             thls.Clear();
             for (int i = 0; i < cseg.TrgSurf.Length; ++i) thls.Add(0);
             shls.Clear();
             for (int i = 0; i < cseg.ZhSurf.Length; ++i) shls.Add(0);
 
-            int trgStart = cseg.TrgSurf.IndexOf(actualQuery, StringComparison.OrdinalIgnoreCase);
-            // Weirdness: search text not found
-            if (trgStart == -1) return;
-            // TO-DO: Fix for intervening punctuation, multiple WS
-            int trgLen = actualQuery.Length;
+            int trgStart, trgLen;
+            if (stemmed == null)
+            {
+                List<int> posMap = new List<int>();
+                string trgPruned = pruneSurf(cseg.TrgSurf, true, posMap);
+                int startInPruned = trgPruned.IndexOf(query);
+                // Weirdness: search text not found
+                if (startInPruned == -1) return;
+                int lengthInPruned = query.Length;
+                // Map back to surface positions
+                trgStart = posMap[startInPruned];
+                int trgLast = posMap[startInPruned + lengthInPruned - 1];
+                trgLen = trgLast - trgStart + 1;
+            }
+            else
+            {
+                int startInStemmed = stemmed.IndexOf(query);
+                // Weirdness: search text not found
+                if (startInStemmed == -1) return;
+                // Token IX, token count
+                int trgTokStartIx = 0;
+                for (int i = 0; i < startInStemmed; ++i) if (stemmed[i] == ' ') ++trgTokStartIx;
+                int trgTokLastIx = trgTokStartIx;
+                for (int i = 0; i < query.Length; ++i) if (query[i] == ' ') ++trgTokLastIx;
+                // Map token range back to surface positions
+                trgStart = cseg.TrgTokMap[trgTokStartIx].A;
+                int trgEnd = cseg.TrgTokMap[trgTokLastIx].A + cseg.TrgTokMap[trgTokLastIx].B;
+                trgLen = trgEnd - trgStart;
+            }
 
             // Parse alignments
             Dictionary<int, List<CorpusSegment.AlignPair>> alms = new Dictionary<int, List<CorpusSegment.AlignPair>>();
