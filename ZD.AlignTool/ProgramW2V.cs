@@ -721,6 +721,39 @@ namespace ZD.AlignTool
             Console.WriteLine("Kept: " + keptHintedSimps);
         }
 
+        static void getForDictTrans()
+        {
+            Dictionary<string, string> simpToCE = new Dictionary<string, string>();
+            List<string> simps = new List<string>();
+            HashSet<string> simpSet = new HashSet<string>();
+            readDict("cedict_ts.u8", simpToCE, simps, simpSet);
+
+            using (var swHeads = wopen("20-zh-heads.txt"))
+            using (var swChar = wopen("20-zh-char.txt"))
+            {
+                foreach (string simp in simps)
+                {
+                    bool skip = false;
+                    foreach (char c in simp)
+                    {
+                        if (c >= '0' && c <= '9') skip = true;
+                        if (c >= 'a' && c <= 'z') skip = true;
+                        if (c >= 'A' && c <= 'Z') skip = true;
+                        if (char.IsPunctuation(c)) continue;
+                        if (char.IsWhiteSpace(c)) continue;
+                    }
+                    if (skip) continue;
+                    swHeads.WriteLine(simp);
+                    for (int i = 0; i != simp.Length; ++i)
+                    {
+                        if (i > 0) swChar.Write(' ');
+                        swChar.Write(simp[i]);
+                    }
+                    swChar.Write('\n');
+                }
+            }
+        }
+
         public static void xMain(string[] args)
         {
             // Word embedding vectors
@@ -728,7 +761,9 @@ namespace ZD.AlignTool
             //readFreqsStems();
             //getDictBests("11-jiestem-dict-wvsims.txt", 40, 3);
 
-            analyzeHints("11-jiestem-dict-wvsims", 100);
+            //analyzeHints("11-jiestem-dict-wvsims", 100);
+
+            getForDictTrans();
 
 
             //getGoodPairs(); // LONG, BRUTE FORCE N*M. Needs loadVects()

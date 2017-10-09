@@ -132,49 +132,82 @@ OpenNMT
 ** ZH: single chars; HU: bpe20k
 th preprocess.lua -train_src 10-zhhu/data/10-zh-train.txt -train_tgt 10-zhhu/data/10-hu-train.txt -valid_src 10-zhhu/data/10-zh-valid.txt -valid_tgt 10-zhhu/data/10-hu-valid.txt -save_data 10-zhhu/init/init
 nohup th train.lua -data 10-zhhu/init/init-train.t7 -save_model 10-zhhu/train/model -max_batch_size 256 -gpuid 1 > 10-zhhu/train.log 2>&1 &
+th translate.lua -src 10-zhhu/data/10-zh-valid.txt -output 10-zhhu/data/10-xlated-valid.txt -model 10-zhhu/train/_model.t7 -gpuid 1
+th tools/score.lua 10-zhhu/data/10-hu-valid.txt -scorer bleu < 10-zhhu/data/10-xlated-valid.txt
 
 [09/30/17 12:22:25 INFO]  * Created word dictionary of size 11791 (pruned from 11791)
 [09/30/17 12:23:22 INFO]  * Created word dictionary of size 20233 (pruned from 20233)
-
 Final perplexity: 16.27
+BLEU: 8.85
 
 ********
 ** ZH: single chars; HU: stems
 th preprocess.lua -train_src 11-zhhu/data/10-zh-train.txt -train_tgt 11-zhhu/data/10-hu-train.txt -valid_src 11-zhhu/data/10-zh-valid.txt -valid_tgt 11-zhhu/data/10-hu-valid.txt -tgt_words_min_frequency 3 -save_data 11-zhhu/init/init
 nohup th train.lua -data 11-zhhu/init/init-train.t7 -save_model 11-zhhu/train/model -max_batch_size 256 -gpuid 1 > 11-zhhu/train.log 2>&1 &
+th translate.lua -src 11-zhhu/data/10-zh-valid.txt -output 11-zhhu/data/10-xlated-valid.txt -model 11-zhhu/train/_model.t7 -gpuid 1
+th tools/score.lua 11-zhhu/data/10-hu-valid.txt -scorer bleu < 11-zhhu/data/10-xlated-valid.txt
 
 [09/30/17 23:32:01 INFO]  * Created word dictionary of size 11792 (pruned from 11792)
 [09/30/17 23:32:48 INFO]  * Created word dictionary of size 67887 (pruned from 229250)
-
 Final perplexity: 22.46
+BLEU: 10.41
 
 ********
 ** ZH: colloc; HU: bpe20k
 th preprocess.lua -train_src 12-zhhu/data/10-zh-train.txt -train_tgt 12-zhhu/data/10-hu-train.txt -valid_src 12-zhhu/data/10-zh-valid.txt -valid_tgt 12-zhhu/data/10-hu-valid.txt -src_vocab_size 0 -save_data 12-zhhu/init/init
 nohup th train.lua -data 12-zhhu/init/init-train.t7 -save_model 12-zhhu/train/model -max_batch_size 256 -gpuid 1 > 12-zhhu/train.log 2>&1 &
+th translate.lua -src 12-zhhu/data/10-zh-valid.txt -output 12-zhhu/data/10-xlated-valid.txt -model 12-zhhu/train/_model.t7 -gpuid 1
+th tools/score.lua 12-zhhu/data/10-hu-valid.txt -scorer bleu < 12-zhhu/data/10-xlated-valid.txt
 
 [10/01/17 13:28:08 INFO]  * Created word dictionary of size 68720 (pruned from 68720)
 [10/01/17 13:29:09 INFO]  * Created word dictionary of size 20233 (pruned from 20233)
-
 Final perplexity: 16.13
+BLEU: 9.99
 
 ********
 ** ZH: jieba; HU: bpe20k
 th preprocess.lua -train_src 13-zhhu/data/10-zh-train.txt -train_tgt 13-zhhu/data/10-hu-train.txt -valid_src 13-zhhu/data/10-zh-valid.txt -valid_tgt 13-zhhu/data/10-hu-valid.txt -src_words_min_frequency 5 -save_data 13-zhhu/init/init
 nohup th train.lua -data 13-zhhu/init/init-train.t7 -save_model 13-zhhu/train/model -max_batch_size 256 -gpuid 1 > 13-zhhu/train.log 2>&1 &
+th translate.lua -src 13-zhhu/data/10-zh-valid.txt -output 13-zhhu/data/10-xlated-valid.txt -model 13-zhhu/train/_model.t7 -gpuid 1
+th tools/score.lua 13-zhhu/data/10-hu-valid.txt -scorer bleu < 13-zhhu/data/10-xlated-valid.txt
 
 [10/06/17 19:16:05 INFO]  * Created word dictionary of size 77290 (pruned from 236173)
 [10/06/17 19:17:12 INFO]  * Created word dictionary of size 20233 (pruned from 20233)
-
 Final perplexity: 16.29
+BLEU: 10.03
 
 ********
 ** ZH: single chars; HU: bpe40k
 th preprocess.lua -train_src 14-zhhu/data/10-zh-train.txt -train_tgt 14-zhhu/data/10-hu-train.txt -valid_src 14-zhhu/data/10-zh-valid.txt -valid_tgt 14-zhhu/data/10-hu-valid.txt -save_data 14-zhhu/init/init
 nohup th train.lua -data 14-zhhu/init/init-train.t7 -save_model 14-zhhu/train/model -max_batch_size 256 -gpuid 1 > 14-zhhu/train.log 2>&1 &
+th translate.lua -src 14-zhhu/data/10-zh-valid.txt -output 14-zhhu/data/10-xlated-valid.txt -model 14-zhhu/train/_model.t7 -gpuid 1
+th tools/score.lua 14-zhhu/data/10-hu-valid.txt -scorer bleu < 14-zhhu/data/10-xlated-valid.txt
 
 [10/07/17 11:41:31 INFO]  * Created word dictionary of size 12175 (pruned from 12175)
 [10/07/17 11:42:30 INFO]  * Created word dictionary of size 40194 (pruned from 40194)
+Final perplexity: 18.35
+BLEU: 8.80
 
-Final perplexity: 
+********
+** ZH: single chars; HU: bpe10k
+th preprocess.lua -train_src 15-zhhu/data/10-zh-train.txt -train_tgt 15-zhhu/data/10-hu-train.txt -valid_src 15-zhhu/data/10-zh-valid.txt -valid_tgt 15-zhhu/data/10-hu-valid.txt -save_data 15-zhhu/init/init
+nohup th train.lua -data 15-zhhu/init/init-train.t7 -save_model 15-zhhu/train/model -max_batch_size 256 -gpuid 1 > 15-zhhu/train.log 2>&1 &
+th translate.lua -src 15-zhhu/data/10-zh-valid.txt -output 15-zhhu/data/10-xlated-valid.txt -model 15-zhhu/train/_model.t7 -gpuid 1
+th tools/score.lua 15-zhhu/data/10-hu-valid.txt -scorer bleu < 15-zhhu/data/10-xlated-valid.txt
+
+[10/08/17 01:30:11 INFO]  * Created word dictionary of size 12169 (pruned from 12169)
+[10/08/17 01:31:10 INFO]  * Created word dictionary of size 10236 (pruned from 10236)
+Final perplexity: 14.10
+BLEU: 9.58
+
+********
+DICT TRANSLATE
+getForDictTrans()
+python zhotok-jieba.py <..\_work_align\20-zh-heads.txt >..\_work_align\20-zh-jie.txt
+th translate.lua -src zhx/20-zh-char.txt -output zhx/20-zh-char-xlated.txt -model 15-zhhu/train/_model.t7 -gpuid 1 -n_best 20 -beam_size 20 > zhx/20-zh-char-xlog.txt
+th translate.lua -src zhx/20-zh-char.txt -output zhx/20-zh-char-stem-xlated.txt -model 11-zhhu/train/_model.t7 -gpuid 1 -n_best 20 -beam_size 20 > zhx/20-zh-char-stem-xlog.txt
+th translate.lua -src zhx/20-zh-jie.txt  -output zhx/20-zh-jie-xlated.txt  -model 13-zhhu/train/_model.t7 -gpuid 1 -n_best 20 -beam_size 20 > zhx/20-zh-jie-xlog.txt
+
+
+
 

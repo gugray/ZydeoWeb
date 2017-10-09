@@ -1424,6 +1424,30 @@ namespace ZD.AlignTool
             }
         }
 
+        static void writeStemDict()
+        {
+            HashSet<string> losurfs = new HashSet<string>();
+            using (var sw = wopen("zhhu-stemdict.txt"))
+            {
+                int ix = 0;
+                foreach (var x in surf2Stem)
+                {
+                    string surfLo = x.Key.ToLower();
+                    if (surfLo == x.Value) continue;
+                    if (losurfs.Contains(surfLo)) continue;
+                    losurfs.Add(surfLo);
+                    string stemSpaced = x.Value.Replace('+', ' ');
+                    ++ix;
+                    sw.Write(ix.ToString());
+                    sw.Write('\t');
+                    sw.Write(surfLo);
+                    sw.Write('\t');
+                    sw.Write(stemSpaced);
+                    sw.Write('\n');
+                }
+            }
+        }
+
         public static void Main(string[] args)
         {
             initMergeLimits();
@@ -1457,8 +1481,10 @@ namespace ZD.AlignTool
             //remixForMT(false, false);
             //remixTokenized();
             //remixAligned();
-            buildAligned();
+            //buildAligned();
 
+            buildStemDict();
+            writeStemDict();
 
             //getZhFreqsJieba();
             //getForWord2Vec();
