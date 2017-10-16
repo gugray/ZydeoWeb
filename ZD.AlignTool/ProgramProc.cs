@@ -1448,7 +1448,7 @@ namespace ZD.AlignTool
             }
         }
 
-        public static void Main(string[] args)
+        public static void xMain(string[] args)
         {
             initMergeLimits();
 

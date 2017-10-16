@@ -209,5 +209,8 @@ th translate.lua -src zhx/20-zh-char.txt -output zhx/20-zh-char-stem-xlated.txt 
 th translate.lua -src zhx/20-zh-jie.txt  -output zhx/20-zh-jie-xlated.txt  -model 13-zhhu/train/_model.t7 -gpuid 1 -n_best 20 -beam_size 20 > zhx/20-zh-jie-xlog.txt
 
 
-
-
+Perl install in Linux
+cpan App::cpanminus
+cpanm Bundle::DBI
+apt-get install libdbi-perl
+apt-get install libdbd-mysql-perl

@@ -53,6 +53,10 @@ namespace ZD.AlignTool
 
         static bool isHuBad(string hu, int minFreq = 10, bool nonWordsOk = false)
         {
+            if (hu == "vudu")
+            {
+                int jfdsk = 0;
+            }
             if (!huFreqs.ContainsKey(hu)) return true;
             if (huFreqs[hu] < minFreq) return true;
             if (!nonWordsOk && huNonWords.Contains(hu)) return true;
@@ -427,9 +431,9 @@ namespace ZD.AlignTool
                     string[] parts = line.Split('\t');
                     string[] zhs = parts[0].Split(' ');
                     string[] hus = parts[1].Split(' ');
-                    foreach (string zh in parts)
+                    foreach (string zh in zhs)
                     {
-                        if (isZhBad(zh, 10)) continue;
+                        if (isZhBad(zh, 20)) continue;
                         Dictionary<string, int> huCounts;
                         if (zhToHuCounts.ContainsKey(zh)) huCounts = zhToHuCounts[zh];
                         else
@@ -439,7 +443,7 @@ namespace ZD.AlignTool
                         }
                         foreach (string hu in hus)
                         {
-                            if (isHuBad(hu, 5, true)) continue;
+                            if (isHuBad(hu, 10, true)) continue;
                             if (huCounts.ContainsKey(hu)) ++huCounts[hu];
                             else huCounts[hu] = 1;
                         }
@@ -478,6 +482,8 @@ namespace ZD.AlignTool
 
         static void scoreCollocs()
         {
+            float llLimit = 100;
+            float miLimit = 7;
             List<ScoreItem> res = new List<ScoreItem>();
             foreach (string zh in zhToHuCounts.Keys)
             {
@@ -493,6 +499,8 @@ namespace ZD.AlignTool
                         ScoreLL = calcLL(x.Value, zhCount, huCount),
                         ScoreMI = calcMI(x.Value, zhCount, huCount),
                     };
+                    if (si.ScoreLL < llLimit && si.ScoreMI < miLimit) continue;
+                    if (float.IsNaN(si.ScoreLL) && float.IsNaN(si.ScoreMI)) continue;
                     res.Add(si);
                 }
             }
@@ -501,7 +509,8 @@ namespace ZD.AlignTool
             {
                 foreach (var si in res)
                 {
-                    sw.Write(si.ScoreLL.ToString("0.0000"));
+                    if (float.IsNaN(si.ScoreLL) || si.ScoreLL < llLimit) continue;
+                    sw.Write(si.ScoreLL.ToString("0"));
                     sw.Write('\t');
                     sw.Write(si.Zh);
                     sw.Write('\t');
@@ -520,7 +529,8 @@ namespace ZD.AlignTool
             {
                 foreach (var si in res)
                 {
-                    sw.Write(si.ScoreMI.ToString("0.0000"));
+                    if (float.IsNaN(si.ScoreMI) || si.ScoreMI < miLimit) continue;
+                    sw.Write(si.ScoreMI.ToString("0.000"));
                     sw.Write('\t');
                     sw.Write(si.Zh);
                     sw.Write('\t');
@@ -607,8 +617,8 @@ namespace ZD.AlignTool
                         float[] zhVect = zhVects[simp];
                         foreach (var x in huVects)
                         {
-                            //if (!huFreqs.ContainsKey(x.Key)) continue;
-                            //if (huFreqs[x.Key] < minHuFreq) continue;
+                            if (!huFreqs.ContainsKey(x.Key)) continue;
+                            if (huFreqs[x.Key] < minHuFreq) continue;
                             SimPair sp = new SimPair
                             {
                                 Zh = simp,
@@ -754,26 +764,365 @@ namespace ZD.AlignTool
             }
         }
 
-        public static void xMain(string[] args)
+        static Regex reSent = new Regex(@"[^\]]+\] SENT[^\:]+\:([^\n]+)");
+        static Regex reTrans = new Regex(@"[^\]]+\] \[([^\]]+)\] ([^\n]+)");
+        static StringBuilder sb = new StringBuilder();
+
+        static string prunePunct(string str)
+        {
+            sb.Clear();
+            foreach (char c in str)
+            {
+                if (char.IsWhiteSpace(c))
+                {
+                    if (sb.Length > 0 && sb[sb.Length - 1] != ' ') sb.Append(' ');
+                }
+                else if (char.IsPunctuation(c)) continue;
+                else if (char.IsDigit(c)) return "";
+                else sb.Append(c);
+            }
+            string res = sb.ToString();
+            if (res.StartsWith("a ")) res = res.Substring(2);
+            if (res.StartsWith("az ")) res = res.Substring(3);
+            return res;
+        }
+
+        static void parseTransLog(string fnLog, string fnClear, string fnFreq)
+        {
+            Dictionary<string, int> freqTrgs = new Dictionary<string, int>();
+            Dictionary<string, int> freqWords = new Dictionary<string, int>();
+            string line;
+            int count = 0;
+            using (var sr = ropen(fnLog))
+            using (var swClear = wopen(fnClear))
+            using (var swFreqT = wopen(fnFreq))
+            {
+                List<KeyValuePair<string, float>> currs = new List<KeyValuePair<string, float>>();
+                string currZh = null;
+                Match m = null;
+                while ((line = sr.ReadLine()) != null)
+                {
+                    m = reTrans.Match(line);
+                    if (m.Success)
+                    {
+                        float score = float.Parse(m.Groups[1].Value);
+                        string clear = m.Groups[2].Value.Replace("￭ ", "").Trim();
+                        clear = prunePunct(clear);
+                        if (clear == "") continue;
+                        bool seen = false;
+                        foreach (var cc in currs) if (cc.Key == clear) seen = true;
+                        if (seen) continue;
+                        currs.Add(new KeyValuePair<string, float>(clear, score));
+                        continue;
+                    }
+                    m = reSent.Match(line);
+                    if (m.Success)
+                    {
+                        if (currZh != null && currs.Count > 0)
+                        {
+                            swClear.Write(currZh);
+                            foreach (var x in currs)
+                            {
+                                swClear.Write('\t');
+                                swClear.Write(x.Value.ToString("0.00"));
+                                swClear.Write('\t');
+                                swClear.Write(x.Key);
+                                if (freqTrgs.ContainsKey(x.Key)) ++freqTrgs[x.Key];
+                                else freqTrgs[x.Key] = 1;
+                            }
+                            swClear.Write('\n');
+                        }
+                        currZh = m.Groups[1].Value;
+                        currZh = currZh.Replace(" ", "");
+                        currZh = currZh.Replace("\t", "");
+                        currs.Clear();
+                        ++count;
+                        if (count % 5000 == 0) Console.Write("\r" + count.ToString());
+                        continue;
+                    }
+                }
+                swClear.Write(currZh);
+                foreach (var x in currs)
+                {
+                    swClear.Write('\t');
+                    swClear.Write(x.Value.ToString("0.00"));
+                    swClear.Write('\t');
+                    swClear.Write(x.Key);
+                    if (freqTrgs.ContainsKey(x.Key)) ++freqTrgs[x.Key];
+                    else freqTrgs[x.Key] = 1;
+                }
+                swClear.Write('\n');
+                List<string> trgs = new List<string>();
+                foreach (var x in freqTrgs)
+                {
+                    trgs.Add(x.Key);
+                    string[] toks = x.Key.Split(' ');
+                    foreach (string tok in toks)
+                    {
+                        if (freqWords.ContainsKey(tok)) freqWords[tok] += x.Value;
+                        else freqWords[tok] = x.Value;
+                    }
+                }
+                trgs.Sort((x, y) => freqTrgs[y].CompareTo(freqTrgs[x]));
+                foreach (string str in trgs)
+                {
+                    swFreqT.Write(freqTrgs[str].ToString());
+                    swFreqT.Write('\t');
+                    swFreqT.Write(str);
+                    swFreqT.Write('\n');
+                }
+            }
+            Console.WriteLine();
+        }
+
+        static void filterClear(int limit, string fnClear, string fnFreqTrgs, string fnFiltered, string fnDropped)
+        {
+            string line;
+            HashSet<string> tooFrequent = new HashSet<string>();
+            int totalVariants = 0;
+            int keptCount = 0;
+            using (var srFreq = ropen(fnFreqTrgs))
+            using (var srClear = ropen(fnClear))
+            using (var swFiltered = wopen(fnFiltered))
+            using (var swDropped = wopen(fnDropped))
+            {
+                while ((line = srFreq.ReadLine()) != null)
+                {
+                    string[] parts = line.Split('\t');
+                    int freq = int.Parse(parts[0]);
+                    if (freq > limit) tooFrequent.Add(parts[1]);
+                    else break;
+                }
+                List<string> kepts = new List<string>();
+                while ((line = srClear.ReadLine()) != null)
+                {
+                    string[] parts = line.Split('\t');
+                    kepts.Clear();
+                    // Don't keep anything if *first* item is too frequent
+                    if (!tooFrequent.Contains(parts[2]))
+                    {
+                        for (int i = 1; i < parts.Length; i += 2)
+                        {
+                            // Keep rest, removing frequent ones
+                            if (tooFrequent.Contains(parts[i + 1])) continue;
+                            if (parts[i + 1].Contains("<unk>")) continue;
+                            kepts.Add(parts[i]);
+                            kepts.Add(parts[i + 1]);
+                        }
+                    }
+                    if (kepts.Count == 0) swDropped.WriteLine(line);
+                    else
+                    {
+                        ++keptCount;
+                        totalVariants += kepts.Count / 2;
+                        swFiltered.Write(parts[0]);
+                        foreach (string str in kepts)
+                        {
+                            swFiltered.Write('\t');
+                            swFiltered.Write(str);
+                        }
+                        swFiltered.Write('\n');
+                    }
+                }
+            }
+            Console.WriteLine("Kept headwords: " + keptCount);
+            Console.WriteLine("Average hints: " + ((float)totalVariants / keptCount).ToString("0.00"));
+        }
+
+        static void getCollocCounts(string fnColloc, string fnFreqZh, string fnFreqHu)
+        {
+            string line;
+            Dictionary<string, int> zhFreqs = new Dictionary<string, int>();
+            Dictionary<string, int> huFreqs = new Dictionary<string, int>();
+            using (var sr = ropen(fnColloc))
+            using (var swZh = wopen(fnFreqZh))
+            using (var swHu = wopen(fnFreqHu))
+            {
+                while ((line = sr.ReadLine()) != null)
+                {
+                    string[] parts = line.Split('\t');
+                    string zh = parts[1];
+                    string hu = parts[3];
+                    if (!zhFreqs.ContainsKey(zh)) zhFreqs[zh] = 1;
+                    else ++zhFreqs[zh];
+                    if (!huFreqs.ContainsKey(hu)) huFreqs[hu] = 1;
+                    else ++huFreqs[hu];
+                }
+                List<string> zhs = new List<string>();
+                foreach (var x in zhFreqs) zhs.Add(x.Key);
+                zhs.Sort((x, y) => zhFreqs[y].CompareTo(zhFreqs[x]));
+                foreach (var x in zhs)
+                {
+                    swZh.Write(zhFreqs[x].ToString());
+                    swZh.Write('\t');
+                    swZh.Write(x);
+                    swZh.Write('\n');
+                }
+                List<string> hus = new List<string>();
+                foreach (var x in huFreqs) hus.Add(x.Key);
+                hus.Sort((x, y) => huFreqs[y].CompareTo(huFreqs[x]));
+                foreach (var x in hus)
+                {
+                    swHu.Write(huFreqs[x].ToString());
+                    swHu.Write('\t');
+                    swHu.Write(x);
+                    swHu.Write('\n');
+                }
+            }
+        }
+
+        static void getBestCollocs(string fnColloc, string fnFreqZh, string fnFreqHu, int zhLimit, int huLimit, string fnOut)
+        {
+            string line;
+            HashSet<string> zhs = new HashSet<string>();
+            HashSet<string> hus = new HashSet<string>();
+            using (var sr = ropen(fnFreqZh))
+            {
+                while ((line = sr.ReadLine()) != null)
+                {
+                    string[] parts = line.Split('\t');
+                    if (int.Parse(parts[0]) > zhLimit) continue;
+                    zhs.Add(parts[1]);
+                }
+            }
+            using (var sr = ropen(fnFreqHu))
+            {
+                while ((line = sr.ReadLine()) != null)
+                {
+                    string[] parts = line.Split('\t');
+                    if (int.Parse(parts[0]) > huLimit) continue;
+                    hus.Add(parts[1]);
+                }
+            }
+            Dictionary<string, List<KeyValuePair<string, float>>> zhToHu = new Dictionary<string, List<KeyValuePair<string, float>>>();
+            using (var sr = ropen(fnColloc))
+            {
+                while ((line = sr.ReadLine()) != null)
+                {
+                    string[] parts = line.Split('\t');
+                    string zh = parts[1];
+                    string hu = parts[3];
+                    if (!zhs.Contains(zh)) continue;
+                    if (!hus.Contains(hu)) continue;
+                    float score = float.Parse(parts[0]);
+                    if (!zhToHu.ContainsKey(zh)) zhToHu[zh] = new List<KeyValuePair<string, float>>();
+                    zhToHu[zh].Add(new KeyValuePair<string, float>(hu, score));
+                }
+            }
+            using (var sw = wopen(fnOut))
+            {
+                foreach (var x in zhToHu)
+                {
+                    sw.Write(x.Key);
+                    foreach (var y in x.Value)
+                    {
+                        sw.Write('\t');
+                        sw.Write(y.Value.ToString());
+                        sw.Write('\t');
+                        sw.Write(y.Key);
+                    }
+                    sw.Write('\n');
+                }
+            }
+        }
+
+        static void collocDictCompare()
+        {
+            string line;
+            Dictionary<string, string> simpToCE = new Dictionary<string, string>();
+            Dictionary<string, string> simpToCH = new Dictionary<string, string>();
+            List<string> simps = new List<string>();
+            HashSet<string> simpSet = new HashSet<string>();
+            readDict("cedict_ts.u8", simpToCE, simps, simpSet);
+            readDict("chdict.u8", simpToCH, simps, simpSet);
+
+            List<string> llInDict = new List<string>();
+            List<string> llInCH = new List<string>();
+            List<string> llNotInDict = new List<string>();
+            List<string> miInDict = new List<string>();
+            List<string> miInCH = new List<string>();
+            List<string> miNotInDict = new List<string>();
+            using (var sr = ropen("15-colloc-ll-filtered.txt"))
+            {
+                while ((line = sr.ReadLine()) != null)
+                {
+                    string zh = line.Split('\t')[0];
+                    if (simpToCE.ContainsKey(zh)) llInDict.Add(zh);
+                    else llNotInDict.Add(zh);
+                    if (simpToCH.ContainsKey(zh)) llInCH.Add(zh);
+                }
+            }
+            using (var sr = ropen("15-colloc-mi-filtered.txt"))
+            {
+                while ((line = sr.ReadLine()) != null)
+                {
+                    string zh = line.Split('\t')[0];
+                    if (simpToCE.ContainsKey(zh)) miInDict.Add(zh);
+                    else miNotInDict.Add(zh);
+                    if (simpToCH.ContainsKey(zh)) miInCH.Add(zh);
+                }
+            }
+            using (var sw = wopen("15-colloc-vs-cedict.txt"))
+            {
+                sw.WriteLine("ll-in\tll-out\tll-ch\tmi-in\tmi-out\tmi-ch");
+                int count = 0;
+                if (llInDict.Count > count) count = llInDict.Count;
+                if (llNotInDict.Count > count) count = llNotInDict.Count;
+                if (miInDict.Count > count) count = miInDict.Count;
+                if (miNotInDict.Count > count) count = miNotInDict.Count;
+                for (int i = 0; i < count; ++i)
+                {
+                    if (i < llInDict.Count) sw.Write(llInDict[i]);
+                    sw.Write('\t');
+                    if (i < llNotInDict.Count) sw.Write(llNotInDict[i]);
+                    sw.Write('\t');
+                    if (i < llInCH.Count) sw.Write(llInCH[i]);
+                    sw.Write('\t');
+                    if (i < miInDict.Count) sw.Write(miInDict[i]);
+                    sw.Write('\t');
+                    if (i < miNotInDict.Count) sw.Write(miNotInDict[i]);
+                    sw.Write('\t');
+                    if (i < miInCH.Count) sw.Write(miInCH[i]);
+                    sw.Write('\n');
+                }
+            }
+        }
+
+
+        public static void Main(string[] args)
         {
             // Word embedding vectors
             //loadVects("10-jiestem-wv.txt");
             //readFreqsStems();
             //getDictBests("11-jiestem-dict-wvsims.txt", 40, 3);
-
             //analyzeHints("11-jiestem-dict-wvsims", 100);
 
-            getForDictTrans();
+            //getForDictTrans();
+            //--
+            //parseTransLog("20-zh-char-xlog.txt", "21-xl-char-char-clear.txt", "21-xl-char-char-freqs.txt");
+            //filterClear(200, "21-xl-char-char-clear.txt", "21-xl-char-char-freqs.txt", "22-xl-char-char-filtered.txt", "22-xl-char-char-dropped.txt");
+            //--
+            //parseTransLog("20-zh-char-stem-xlog.txt", "21-xl-char-stem-clear.txt", "21-xl-char-stem-freqs.txt");
+            //filterClear(1000, "21-xl-char-stem-clear.txt", "21-xl-char-stem-freqs.txt", "22-xl-char-stem-filtered.txt", "22-xl-char-stem-dropped.txt");
+            //--
+            //parseTransLog("20-zh-jie-xlog.txt", "21-xl-jie-char-clear.txt", "21-xl-jie-char-freqs.txt");
+            //filterClear(100, "21-xl-jie-char-clear.txt", "21-xl-jie-char-freqs.txt", "22-xl-jie-char-filtered.txt", "22-xl-jie-char-dropped.txt");
 
-
-            //getGoodPairs(); // LONG, BRUTE FORCE N*M. Needs loadVects()
-            //prunePairs();
-            //dimReduce(); // Needs loadVects() and readFreqsStems()
-            //testZhHu(new string[] { "羽毛" });
 
             // Collocation extraction
             //countCollocs(); // Needs readFreqsStems()
             //scoreCollocs();
+            //getCollocCounts("14-colloc-ll.txt", "14-colloc-ll-freqs-zh.txt", "14-colloc-ll-freqs-hu.txt");
+            //getCollocCounts("14-colloc-mi.txt", "14-colloc-mi-freqs-zh.txt", "14-colloc-mi-freqs-hu.txt");
+            //getBestCollocs("14-colloc-ll.txt", "14-colloc-ll-freqs-zh.txt", "14-colloc-ll-freqs-hu.txt", 40, 200, "15-colloc-ll-filtered.txt");
+            //getBestCollocs("14-colloc-mi.txt", "14-colloc-mi-freqs-zh.txt", "14-colloc-mi-freqs-hu.txt", 50, 300, "15-colloc-mi-filtered.txt");
+            collocDictCompare();
+
+            // NOT-REAL - EXPERIMENTAL - W2V
+            //getGoodPairs(); // LONG, BRUTE FORCE N*M. Needs loadVects()
+            //prunePairs();
+            //dimReduce(); // Needs loadVects() and readFreqsStems()
+            //testZhHu(new string[] { "羽毛" });
 
             Console.ReadLine();
         }
