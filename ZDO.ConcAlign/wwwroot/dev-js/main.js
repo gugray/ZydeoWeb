@@ -15,8 +15,8 @@ App.xlate = (function (path) {
     var match = rePath.exec(loc);
     var currPath = match[1];
 
-    if (App.page.startsWith(currPath, "/search/")) {
-      var query = decodeURI(currPath.substring(8));
+    if (App.page.startsWith(currPath, "/?q=")) {
+      var query = decodeURI(currPath.substring(4));
       $("#txtSearch").val(query);
       onSubmit();
     }
@@ -26,7 +26,7 @@ App.xlate = (function (path) {
     }, 50);
     $("#txtSearch").keypress(function (e) {
       if ((e.keyCode || e.which) == 13) {
-        App.page.inPageNavigate("/search/" + encodeURI($("#txtSearch").val()));
+        App.page.inPageNavigate("/?q=" + encodeURI($("#txtSearch").val()));
         return false;
       }
     });
@@ -158,7 +158,7 @@ App.page.registerPage({
   name: "main",
   isMyRoute: function (path) {
     if (path == "" || path == "/") return true;
-    if (App.page.startsWith(path, "/search/")) return true;
+    if (App.page.startsWith(path, "/?q=")) return true;
     return false;
   },
   getController: function (path) {

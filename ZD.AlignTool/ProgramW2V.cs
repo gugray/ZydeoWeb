@@ -53,10 +53,6 @@ namespace ZD.AlignTool
 
         static bool isHuBad(string hu, int minFreq = 10, bool nonWordsOk = false)
         {
-            if (hu == "vudu")
-            {
-                int jfdsk = 0;
-            }
             if (!huFreqs.ContainsKey(hu)) return true;
             if (huFreqs[hu] < minFreq) return true;
             if (!nonWordsOk && huNonWords.Contains(hu)) return true;
@@ -713,17 +709,21 @@ namespace ZD.AlignTool
                     }
                     if (keptHints.Count == 0) continue;
                     ++keptHintedSimps;
-                    sw.Write(bestScore.ToString("0.000"));
-                    sw.Write('\t');
+                    //sw.Write(bestScore.ToString("0.000"));
+                    //sw.Write('\t');
                     sw.Write(parts[1]);
-                    sw.Write('\t');
-                    sw.Write(parts[2]);
-                    sw.Write('\t');
-                    sw.Write(parts[3]);
+                    //sw.Write('\t');
+                    //sw.Write(parts[2]);
+                    //sw.Write('\t');
+                    //sw.Write(parts[3]);
                     foreach (string kh in keptHints)
                     {
                         sw.Write('\t');
-                        sw.Write(kh);
+                        //sw.Write(kh);
+                        string[] khparts = kh.Split('/');
+                        sw.Write(khparts[2]);
+                        sw.Write('\t');
+                        sw.Write(khparts[1]);
                     }
                     sw.Write('\n');
                 }
@@ -1089,7 +1089,7 @@ namespace ZD.AlignTool
         }
 
 
-        public static void Main(string[] args)
+        public static void yMain(string[] args)
         {
             // Word embedding vectors
             //loadVects("10-jiestem-wv.txt");
@@ -1116,7 +1116,7 @@ namespace ZD.AlignTool
             //getCollocCounts("14-colloc-mi.txt", "14-colloc-mi-freqs-zh.txt", "14-colloc-mi-freqs-hu.txt");
             //getBestCollocs("14-colloc-ll.txt", "14-colloc-ll-freqs-zh.txt", "14-colloc-ll-freqs-hu.txt", 40, 200, "15-colloc-ll-filtered.txt");
             //getBestCollocs("14-colloc-mi.txt", "14-colloc-mi-freqs-zh.txt", "14-colloc-mi-freqs-hu.txt", 50, 300, "15-colloc-mi-filtered.txt");
-            collocDictCompare();
+            //collocDictCompare();
 
             // NOT-REAL - EXPERIMENTAL - W2V
             //getGoodPairs(); // LONG, BRUTE FORCE N*M. Needs loadVects()
