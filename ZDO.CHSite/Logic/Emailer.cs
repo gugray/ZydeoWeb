@@ -32,9 +32,9 @@ namespace ZDO.CHSite.Logic
         {
             var msg = new MimeMessage();
             msg.From.Add(new MailboxAddress(senderFriendly, smtpFrom));
-            msg.ReplyTo.Add(new MailboxAddress(null, smtpReplyTo));
-            msg.To.Add(new MailboxAddress(null, to));
-            if (bcc) msg.Bcc.Add(new MailboxAddress(null, smtpBCC));
+            msg.ReplyTo.Add(new MailboxAddress("", smtpReplyTo));
+            msg.To.Add(new MailboxAddress("", to));
+            if (bcc) msg.Bcc.Add(new MailboxAddress("", smtpBCC));
             msg.Subject = subject;
             msg.Body = new TextPart("html") { Text = msgHtml };
             using (var client = new SmtpClient())

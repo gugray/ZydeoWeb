@@ -24,6 +24,7 @@ App.xlate = (function (path) {
     setTimeout(function () {
       $("#txtSearch").focus();
     }, 50);
+    $("#txtSearch").unbind("keypress");
     $("#txtSearch").keypress(function (e) {
       if ((e.keyCode || e.which) == 13) {
         App.page.inPageNavigate("/?q=" + encodeURI($("#txtSearch").val()));
