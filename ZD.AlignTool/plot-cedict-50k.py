@@ -97,9 +97,9 @@ for i in xarr:
   yarr2.append(words)
   words = buckets_subtlex[i]['words']
   yarr3.append(words)
-plt.plot(xarr, yarr1, color='blue', label='colloc')
+plt.plot(xarr, yarr1, color='blue', label='exp-merge')
 plt.plot(xarr, yarr2, color='red', label='jieba')
-plt.plot(xarr, yarr3, color='green', label='subtlex')
+plt.plot(xarr, yarr3, color='green', label='subtlex-ch')
 plt.ylim([0,1000])
 plt.legend()
 plt.show()

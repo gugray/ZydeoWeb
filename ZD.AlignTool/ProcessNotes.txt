@@ -214,3 +214,26 @@ cpan App::cpanminus
 cpanm Bundle::DBI
 apt-get install libdbi-perl
 apt-get install libdbd-mysql-perl
+
+
+
+
+LEX SCOPE
+------------------------------------------------------------------------------------
+
+Base: 200 simp HWs that are:
+  - In CEDICT, not in CHDICT
+  - Has MI or LL or both
+  - Has W2V
+  - Has 2 or 3 MT
+Extended with:
+  - trad/pron variants from CEDICT
+  - substring HWs from only CEDICT
+  - superstring HWs from only CEDICT
+
+Simplified words: 200
+Trad/pron variants: 4
+Part-of-word: 110
+Longer-words: 315
+Total: 599
+Parts in CHDICT: 413

@@ -210,7 +210,7 @@ namespace ZD.AlignTool
             }
         }
 
-        public static void Main(string[] args)
+        public static void lMain(string[] args)
         {
             //lexStats();
             getScope(49, 200);

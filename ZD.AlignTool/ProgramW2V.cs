@@ -1089,13 +1089,13 @@ namespace ZD.AlignTool
         }
 
 
-        public static void yMain(string[] args)
+        public static void wMain(string[] args)
         {
             // Word embedding vectors
             //loadVects("10-jiestem-wv.txt");
             //readFreqsStems();
             //getDictBests("11-jiestem-dict-wvsims.txt", 40, 3);
-            //analyzeHints("11-jiestem-dict-wvsims", 100);
+            analyzeHints("11-jiestem-dict-wvsims", 100);
 
             //getForDictTrans();
             //--

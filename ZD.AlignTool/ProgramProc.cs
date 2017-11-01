@@ -1448,7 +1448,43 @@ namespace ZD.AlignTool
             }
         }
 
-        public static void xMain(string[] args)
+        static void getStemStats()
+        {
+            string line;
+            HashSet<string> surfs = new HashSet<string>();
+            HashSet<string> analyzed = new HashSet<string>();
+            HashSet<string> noana = new HashSet<string>();
+            using (var sr = ropen("04-tmp-hu-vocab.txt"))
+            {
+                while ((line = sr.ReadLine()) != null) if (line != "") surfs.Add(line);
+            }
+            using (var sr = ropen("04-tmp-hu-vocab-stemmed.txt"))
+            {
+                string curr = null;
+                while ((line = sr.ReadLine()) != null)
+                {
+                    if (line != "")
+                    {
+                        string[] parts = line.Split('\t');
+                        if (parts[1].EndsWith("+?"))
+                        {
+                            surfs.Remove(parts[0]);
+                            noana.Add(parts[0]);
+                            curr = null;
+                        }
+                        else curr = parts[0];
+                    }
+                    else
+                    {
+                        surfs.Remove(curr);
+                        analyzed.Add(curr);
+                        curr = null;
+                    }
+                }
+            }
+        }
+
+        public static void Main(string[] args)
         {
             initMergeLimits();
 
@@ -1483,12 +1519,14 @@ namespace ZD.AlignTool
             //remixAligned();
             //buildAligned();
 
-            buildStemDict();
-            writeStemDict();
+            //buildStemDict();
+            //writeStemDict();
 
             //getZhFreqsJieba();
             //getForWord2Vec();
 
+            // Count how many surface forms are unanalyzed
+            getStemStats();
 
             //getSet("隧道");
             //stemTest();
