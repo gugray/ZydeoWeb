@@ -20,11 +20,12 @@ namespace ZDO.ConcAlign
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
             loggerFactory.AddConsole();
-            app.UseDefaultFiles();
+            //app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseMvc(routes =>
             {
                 routes.MapRoute("api", "api/{controller}/{action}/{*paras}", new { paras = "" });
+                routes.MapRoute("default", "{*paras}", new { controller = "Index", action = "Index", paras = "" });
             });
         }
     }
