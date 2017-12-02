@@ -8,13 +8,6 @@
     }
   },
   "profiles": {
-    "IIS Express": {
-      "commandName": "IISExpress",
-      "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
-    },
     "Dev-HDD": {
       "commandName": "Project",
       "launchBrowser": true,
@@ -42,6 +35,16 @@
       "environmentVariables": {
         "ZDO_PORT": "5002",
         "MUTATION": "HDD",
+        "ASPNETCORE_ENVIRONMENT": "Production"
+      }
+    },
+    "Prod-CHD": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "launchUrl": "http://localhost:5004/en",
+      "environmentVariables": {
+        "ZDO_PORT": "5004",
+        "MUTATION": "CHD",
         "ASPNETCORE_ENVIRONMENT": "Production"
       }
     }
