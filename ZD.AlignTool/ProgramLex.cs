@@ -105,7 +105,7 @@ namespace ZD.AlignTool
 
         static Regex reEntry = new Regex(@"([^ ]+) ([^ ]+) ([^\]]+\]) (\/[^\n]+\/)$");
 
-        static void getScope(int step, int max)
+        static void getScope(int step, int stepOffset, int max)
         {
             string line;
             Dictionary<string, List<string>> ceSimpToHeads = new Dictionary<string, List<string>>();
@@ -114,7 +114,7 @@ namespace ZD.AlignTool
             List<string> simps = new List<string>();
 
             using (var srCe = ropen("cedict_ts.u8"))
-            using (var srCh = ropen("chdict.u8"))
+            using (var srCh = ropen("../../Zydeo-DictTrans/_work_chdict_corpus/chdict.u8"))
             using (var srBase = ropen("31-lex-scope-base.txt"))
             {
                 while ((line = srCe.ReadLine()) != null)
@@ -135,7 +135,7 @@ namespace ZD.AlignTool
                 int i = 0;
                 while ((line = srBase.ReadLine()) != null)
                 {
-                    if (i % step == 0 && simps.Count < max) simps.Add(line.Split('\t')[0]);
+                    if (i % step == stepOffset && simps.Count < max) simps.Add(line.Split('\t')[0]);
                     ++i;
                 }
             }
@@ -210,10 +210,10 @@ namespace ZD.AlignTool
             }
         }
 
-        public static void lMain(string[] args)
+        public static void Main(string[] args)
         {
             //lexStats();
-            getScope(49, 200);
+            getScope(49, 1, 200);
 
             Console.ReadLine();
         }
