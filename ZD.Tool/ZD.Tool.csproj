@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <AssemblyName>ZD.Tool</AssemblyName>
+    <OutputType>Exe</OutputType>
+    <PackageId>ZD.Tool</PackageId>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ZD.Common\ZD.Common.csproj" />
+    <ProjectReference Include="..\ZD.LangUtils\ZD.LangUtils.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,56 @@
+﻿@fntBaseFamily: "Muli", sans-serif;
+@fntBaseSize: 13pt;
+@clrBg: #fafafa;
+@clrText: #444444;
+@clrBorder: #c7c7c7;
+@clrAccent: #f48668;
+@clrHilite: #fed5ca;
+
+* { margin: 0; padding: 0; border: 0; outline: none; }
+div, p, h1, h2, h3, ul, ol, blockquote {
+  position: relative; float: left; box-sizing: border-box; width: 100%;
+  height: auto; overflow-y: auto;
+}
+html { 
+  height: 100%; background-color: @clrBg; font-size: @fntBaseSize; font-family: @fntBaseFamily;
+  border: 0; margin: 0;
+}
+body {
+  position: relative; width: 100%; height: 100%; overflow-y: scroll;
+  box-sizing: border-box; background-color: @clrBg; color: @clrText;
+}
+// Fuck IE
+i.fa { cursor: default; }
+input::-ms-clear { display: none; width: 0; height: 0; }
+textarea::-ms-clear { display: none; width: 0; height: 0; }
+input[type=password]::-ms-reveal, input[type=password]::-ms-clear { display: none; }
+// Fuck iOS
+input, textarea {
+  -webkit-appearance: none;
+  -webkit-border-radius:0px;
+  border-radius: 0;
+  font-family: @fntBaseFamily; font-size: @fntBaseSize; color: @clrText;
+}
+
+.centrer {
+  width: 90%; max-width: 980px; margin: 3rem auto; float: none;
+}
+
+.search {
+  margin-bottom: 2rem;
+  input { 
+    display: block; width: 100%; border: 1pt solid @clrText; background-color: @clrBg;
+    font-size: 120%; padding: 0.4rem 0.5rem; box-sizing: border-box;
+  }
+}
+
+.results {
+  .item { border-bottom: 1pt dotted @clrBorder; padding: 0.5rem 0; }
+  .item:first-child { border-top: none; }
+  .item div { width: 50%; cursor: default; }
+  .source { padding-right: 0.5rem; font-size: 120%; }
+  .target { padding-left: 0.5rem; }
+  span.hlLo { background-color: lighten(@clrHilite, 6%); }
+  span.hlMid { background-color: lighten(@clrHilite, 2%); }
+  span.hlHi { background-color: darken(@clrHilite, 6%); }
+}

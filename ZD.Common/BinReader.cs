@@ -55,6 +55,11 @@ namespace ZD.Common
             return reader.ReadInt32();
         }
 
+        public double ReadDouble()
+        {
+            return reader.ReadDouble();
+        }
+
         public short ReadShort()
         {
             return reader.ReadInt16();

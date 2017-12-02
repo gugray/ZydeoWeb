@@ -1,0 +1,239 @@
+﻿Corpus cleanup & pre-processing:
+------------------------------------------------------------------------------------
+- Filter: where ZH contains lower-case [a-z], and corrupt Chinese chars
+  Filter HU: contains {[]}@\
+  Fix HU: õ>ő û>ű Õ>Ő Û>Ű
+> Source: 6,113,084 segs
+  Filtered: 5,594,167 segs
+
+- From ZH, spot segs with traditional; extract; simplify; reconsolidate into BI
+> 489,652 segments with trad-only char inside
+  Used https://github.com/BYVoid/OpenCC 0.4.3 for conversion
+> Get char freq list
+
+- Create histogram
+  ZH, HU char lengths
+  Length ratios in each band: Avg; StdDev; Mean
+  ZH, HU punct/nonpunct ratios in each band
+> lenhists.xlsx
+
+- Filter
+  extreme length ratios
+  extreme punctuation ratios
+  duplicates (lower-cased, w/o punct and spaces, src+trg)
+  REMAIN COUNT??
+> Dropped: 2,440,992  Kept: 3,147,758
+
+- Tokenize for alignment externally, ZH and HU separately
+  For HU, 3 forms: BPE 20k, 40k
+
+> ZH: https://github.com/fxsjy/jieba
+  Installed via pip. Large ditionary downloaded separately.
+  python zhotok-jieba.py <..\_work_align\04-tmp-zh.txt >..\_work_align\04-tmp-zh-seg-jieba.txt
+
+> ZH ALT: Collocation-based gram merge, with smart blocking. Loosely inspired on Gensim's Phraser.
+  49589 + 17535 + 7123
+
+> HU: export is already lower-cased. Moses tokenizer for raw segmentation b/f BPE
+  Also Moses segment pure surface, for later morphological analysis
+  perl C:\moses-scripts\tokenizer\tokenizer.perl -l hu -no-escape < 04-tmp-hu-lo.txt > 04-tmp-hu-lo-rawseg.txt
+  perl C:\moses-scripts\tokenizer\tokenizer.perl -l hu -no-escape < 04-tmp-hu.txt > 04-tmp-hu-rawseg.txt
+  
+  https://github.com/rsennrich/subword-nmt
+  Actually using modified fork that inserts NMT joiner ￭
+  python D:\NMT\Code\subword-nmt\learn_bpe.py --input 04-tmp-hu-lo-rawseg.txt -s 10000 -o hu10k.bpe
+  python D:\NMT\Code\subword-nmt\apply_bpe.py -c hu10k.bpe -i 04-tmp-hu-lo.txt -o 04-tmp-hu-bpe10tok.txt --opennmt-separator
+  python D:\NMT\Code\subword-nmt\learn_bpe.py --input 04-tmp-hu-lo-rawseg.txt -s 20000 -o hu20k.bpe
+  python D:\NMT\Code\subword-nmt\apply_bpe.py -c hu20k.bpe -i 04-tmp-hu-lo.txt -o 04-tmp-hu-bpe20tok.txt --opennmt-separator
+  python D:\NMT\Code\subword-nmt\learn_bpe.py --input 04-tmp-hu-lo-rawseg.txt -s 40000 -o hu40k.bpe
+  python D:\NMT\Code\subword-nmt\apply_bpe.py -c hu40k.bpe -i 04-tmp-hu-lo.txt -o 04-tmp-hu-bpe40tok.txt --opennmt-separator
+
+  https://github.com/dlt-rilmta/emMorph
+  https://github.com/dlt-rilmta/hunlp-GATE/blob/master/Lang_Hungarian/resources/hfst/hfst-wrapper/src/hu/nytud/hfst/Stemmer.java
+  Extract HU surface vocab, analyze offline, stem with "dictionary" in tool
+  hfst-lookup --cascade=composition --pipe-mode=input --xfst=print-pairs --xfst=print-space --time-cutoff=2 --progress hu.hfstol <04-tmp-hu-vocab.txt >04-tmp-hu-vocab-stemmed.txt
+
+  Stemmed or kept b/c frequent: 610285
+  Unanalyzed: 162926
+  Unique analyzed stems: 126589
+  Lines: 3181174
+  No UNKs: 3096496
+  One UNK: 75269
+  More UNKs: 9409
+  Dropped (failed to stem): 15616
+  Dropped (dupe): 222571
+  Failed (token map): 5
+
+- Remix tokenized for
+  2 extra fields per tokenization: tokenized form; surf range of each token
+  these fields exclude punctuation and joiner
+  Dedupe along the way
+  Also get output for alignment
+  !! Rerun: sticking with 20k and 40k
+
+- Align externally
+  https://github.com/clab/fast_align
+  Per-word score: https://github.com/gugray/fast_align
+  ./fast_align -d -o -v -i 05-tmp-zh-hu20.txt > 05-tmp-zh-hu20.align
+  (etc for 30k and 40k)
+
+  ZH-TOK with Jieba:
+  20k:          perplexity: 284.480
+  30k:          perplexity: 295.859 (interim)
+  40k:          perplexity: 300.161
+  nostem-lo     perplexity: 216.475
+  stem-partial  perplexity:  95.622 (top 50k surfs stemmed)
+  stem-medium   perplexity:  88.647 (1/3 of surfs stemmed)
+  stem-full     perplexity:  86.972 (all surface forms stemmed)
+
+  ZH-TOK with Colloc:
+  cfew-20k:     perplexity: 355.753
+  cmany-20k:    perplexity: 302.542; 
+  cfew-stem     perplexity: 129.745; HU stem keeps more surface forms
+  cfew-stem     perplexity: 112.445; HU stem orig
+  cmany-stem    perplexity:  92.292; HU stem orig
+
+  Jieba>hustem  perplexity: 185.484
+
+- Remix into main file
+- Word freq stats, token length stats, word score histograms, ...
+
+
+FEED INTO SPHINX
+------------------------------------------------------------------------------------
+D:\Sphinx\bin >>
+indexer -c ../zhhu.conf zhhu
+searchd -c ../zhhu.conf
+
+select * from zhhu where match('11');
+
+
+BILINGUAL WORD2VEC
+------------------------------------------------------------------------------------
+
+Install Gensim on Linux
+sudo -H pip install Cython
+sudo -H pip install NumPy
+sudo -H pip install SciPy
+sudo -H pip install gensim
+
+With colloc+stem: Max joint length: 60  Avg joint length: 12.00
+With jieba+stem:  Max joint length: 65  Avg joint length: 14.11
+
+
+Run gensim: wv-train.py
+Export vectors: wv-play.py (partly)
+nohup python wv-train.py > train.log 2>&1 &
+
+
+OpenNMT
+------------------------------------------------------------------------------------
+********
+** ZH: single chars; HU: bpe20k
+th preprocess.lua -train_src 10-zhhu/data/10-zh-train.txt -train_tgt 10-zhhu/data/10-hu-train.txt -valid_src 10-zhhu/data/10-zh-valid.txt -valid_tgt 10-zhhu/data/10-hu-valid.txt -save_data 10-zhhu/init/init
+nohup th train.lua -data 10-zhhu/init/init-train.t7 -save_model 10-zhhu/train/model -max_batch_size 256 -gpuid 1 > 10-zhhu/train.log 2>&1 &
+th translate.lua -src 10-zhhu/data/10-zh-valid.txt -output 10-zhhu/data/10-xlated-valid.txt -model 10-zhhu/train/_model.t7 -gpuid 1
+th tools/score.lua 10-zhhu/data/10-hu-valid.txt -scorer bleu < 10-zhhu/data/10-xlated-valid.txt
+
+[09/30/17 12:22:25 INFO]  * Created word dictionary of size 11791 (pruned from 11791)
+[09/30/17 12:23:22 INFO]  * Created word dictionary of size 20233 (pruned from 20233)
+Final perplexity: 16.27
+BLEU: 8.85
+
+********
+** ZH: single chars; HU: stems
+th preprocess.lua -train_src 11-zhhu/data/10-zh-train.txt -train_tgt 11-zhhu/data/10-hu-train.txt -valid_src 11-zhhu/data/10-zh-valid.txt -valid_tgt 11-zhhu/data/10-hu-valid.txt -tgt_words_min_frequency 3 -save_data 11-zhhu/init/init
+nohup th train.lua -data 11-zhhu/init/init-train.t7 -save_model 11-zhhu/train/model -max_batch_size 256 -gpuid 1 > 11-zhhu/train.log 2>&1 &
+th translate.lua -src 11-zhhu/data/10-zh-valid.txt -output 11-zhhu/data/10-xlated-valid.txt -model 11-zhhu/train/_model.t7 -gpuid 1
+th tools/score.lua 11-zhhu/data/10-hu-valid.txt -scorer bleu < 11-zhhu/data/10-xlated-valid.txt
+
+[09/30/17 23:32:01 INFO]  * Created word dictionary of size 11792 (pruned from 11792)
+[09/30/17 23:32:48 INFO]  * Created word dictionary of size 67887 (pruned from 229250)
+Final perplexity: 22.46
+BLEU: 10.41
+
+********
+** ZH: colloc; HU: bpe20k
+th preprocess.lua -train_src 12-zhhu/data/10-zh-train.txt -train_tgt 12-zhhu/data/10-hu-train.txt -valid_src 12-zhhu/data/10-zh-valid.txt -valid_tgt 12-zhhu/data/10-hu-valid.txt -src_vocab_size 0 -save_data 12-zhhu/init/init
+nohup th train.lua -data 12-zhhu/init/init-train.t7 -save_model 12-zhhu/train/model -max_batch_size 256 -gpuid 1 > 12-zhhu/train.log 2>&1 &
+th translate.lua -src 12-zhhu/data/10-zh-valid.txt -output 12-zhhu/data/10-xlated-valid.txt -model 12-zhhu/train/_model.t7 -gpuid 1
+th tools/score.lua 12-zhhu/data/10-hu-valid.txt -scorer bleu < 12-zhhu/data/10-xlated-valid.txt
+
+[10/01/17 13:28:08 INFO]  * Created word dictionary of size 68720 (pruned from 68720)
+[10/01/17 13:29:09 INFO]  * Created word dictionary of size 20233 (pruned from 20233)
+Final perplexity: 16.13
+BLEU: 9.99
+
+********
+** ZH: jieba; HU: bpe20k
+th preprocess.lua -train_src 13-zhhu/data/10-zh-train.txt -train_tgt 13-zhhu/data/10-hu-train.txt -valid_src 13-zhhu/data/10-zh-valid.txt -valid_tgt 13-zhhu/data/10-hu-valid.txt -src_words_min_frequency 5 -save_data 13-zhhu/init/init
+nohup th train.lua -data 13-zhhu/init/init-train.t7 -save_model 13-zhhu/train/model -max_batch_size 256 -gpuid 1 > 13-zhhu/train.log 2>&1 &
+th translate.lua -src 13-zhhu/data/10-zh-valid.txt -output 13-zhhu/data/10-xlated-valid.txt -model 13-zhhu/train/_model.t7 -gpuid 1
+th tools/score.lua 13-zhhu/data/10-hu-valid.txt -scorer bleu < 13-zhhu/data/10-xlated-valid.txt
+
+[10/06/17 19:16:05 INFO]  * Created word dictionary of size 77290 (pruned from 236173)
+[10/06/17 19:17:12 INFO]  * Created word dictionary of size 20233 (pruned from 20233)
+Final perplexity: 16.29
+BLEU: 10.03
+
+********
+** ZH: single chars; HU: bpe40k
+th preprocess.lua -train_src 14-zhhu/data/10-zh-train.txt -train_tgt 14-zhhu/data/10-hu-train.txt -valid_src 14-zhhu/data/10-zh-valid.txt -valid_tgt 14-zhhu/data/10-hu-valid.txt -save_data 14-zhhu/init/init
+nohup th train.lua -data 14-zhhu/init/init-train.t7 -save_model 14-zhhu/train/model -max_batch_size 256 -gpuid 1 > 14-zhhu/train.log 2>&1 &
+th translate.lua -src 14-zhhu/data/10-zh-valid.txt -output 14-zhhu/data/10-xlated-valid.txt -model 14-zhhu/train/_model.t7 -gpuid 1
+th tools/score.lua 14-zhhu/data/10-hu-valid.txt -scorer bleu < 14-zhhu/data/10-xlated-valid.txt
+
+[10/07/17 11:41:31 INFO]  * Created word dictionary of size 12175 (pruned from 12175)
+[10/07/17 11:42:30 INFO]  * Created word dictionary of size 40194 (pruned from 40194)
+Final perplexity: 18.35
+BLEU: 8.80
+
+********
+** ZH: single chars; HU: bpe10k
+th preprocess.lua -train_src 15-zhhu/data/10-zh-train.txt -train_tgt 15-zhhu/data/10-hu-train.txt -valid_src 15-zhhu/data/10-zh-valid.txt -valid_tgt 15-zhhu/data/10-hu-valid.txt -save_data 15-zhhu/init/init
+nohup th train.lua -data 15-zhhu/init/init-train.t7 -save_model 15-zhhu/train/model -max_batch_size 256 -gpuid 1 > 15-zhhu/train.log 2>&1 &
+th translate.lua -src 15-zhhu/data/10-zh-valid.txt -output 15-zhhu/data/10-xlated-valid.txt -model 15-zhhu/train/_model.t7 -gpuid 1
+th tools/score.lua 15-zhhu/data/10-hu-valid.txt -scorer bleu < 15-zhhu/data/10-xlated-valid.txt
+
+[10/08/17 01:30:11 INFO]  * Created word dictionary of size 12169 (pruned from 12169)
+[10/08/17 01:31:10 INFO]  * Created word dictionary of size 10236 (pruned from 10236)
+Final perplexity: 14.10
+BLEU: 9.58
+
+********
+DICT TRANSLATE
+getForDictTrans()
+python zhotok-jieba.py <..\_work_align\20-zh-heads.txt >..\_work_align\20-zh-jie.txt
+th translate.lua -src zhx/20-zh-char.txt -output zhx/20-zh-char-xlated.txt -model 15-zhhu/train/_model.t7 -gpuid 1 -n_best 20 -beam_size 20 > zhx/20-zh-char-xlog.txt
+th translate.lua -src zhx/20-zh-char.txt -output zhx/20-zh-char-stem-xlated.txt -model 11-zhhu/train/_model.t7 -gpuid 1 -n_best 20 -beam_size 20 > zhx/20-zh-char-stem-xlog.txt
+th translate.lua -src zhx/20-zh-jie.txt  -output zhx/20-zh-jie-xlated.txt  -model 13-zhhu/train/_model.t7 -gpuid 1 -n_best 20 -beam_size 20 > zhx/20-zh-jie-xlog.txt
+
+
+Perl install in Linux
+cpan App::cpanminus
+cpanm Bundle::DBI
+apt-get install libdbi-perl
+apt-get install libdbd-mysql-perl
+
+
+
+
+LEX SCOPE
+------------------------------------------------------------------------------------
+
+Base: 200 simp HWs that are:
+  - In CEDICT, not in CHDICT
+  - Has MI or LL or both
+  - Has W2V
+  - Has 2 or 3 MT
+Extended with:
+  - trad/pron variants from CEDICT
+  - substring HWs from only CEDICT
+  - superstring HWs from only CEDICT
+
+Simplified words: 200
+Trad/pron variants: 4
+Part-of-word: 110
+Longer-words: 315
+Total: 599
+Parts in CHDICT: 413
