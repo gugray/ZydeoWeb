@@ -1088,14 +1088,94 @@ namespace ZD.AlignTool
             }
         }
 
+        static void getWVInvRank(string fnOut, int simCount, int minHuFreq, int minZhFreq)
+        {
+            // Prune HU and ZH vectors - minimum frequency
+            List<string> huToRem = new List<string>();
+            foreach (var x in huVects)
+                if (!huFreqs.ContainsKey(x.Key) || huFreqs[x.Key] < minHuFreq)
+                    huToRem.Add(x.Key);
+            foreach (string hu in huToRem) huVects.Remove(hu);
+            List<string> zhToRem = new List<string>();
+            foreach (var x in zhVects)
+                if (!zhFreqs.ContainsKey(x.Key) || zhFreqs[x.Key] < minZhFreq)
+                    zhToRem.Add(x.Key);
+            foreach (string zh in zhToRem) zhVects.Remove(zh);
 
-        public static void wMain(string[] args)
+            // For every HU vector, find nearest N ZH vectors
+            Dictionary<string, SimPair[]> huToZhs = new Dictionary<string, SimPair[]>();
+            List<SimPair> nearests = new List<SimPair>();
+            int huCount = 0;
+            foreach (var x in huVects)
+            {
+                nearests.Clear();
+                foreach (var y in zhVects)
+                {
+                    SimPair sp = new SimPair
+                    {
+                        Hu = x.Key,
+                        Zh = y.Key,
+                        Sim = calcSim(x.Value, y.Value, null),
+                    };
+                    nearests.Add(sp);
+                }
+                nearests.Sort((a, b) => b.Sim.CompareTo(a.Sim));
+                SimPair[] ranked = new SimPair[simCount];
+                for (int i = 0; i != simCount; ++i) ranked[i] = nearests[i];
+                huToZhs[x.Key] = ranked;
+                if (huCount % 100 == 0) Console.Write("\r" + huCount + " / " + huVects.Count);
+                ++huCount;
+                //if (huCount == 200) break; // DBG
+            }
+            Console.WriteLine();
+            // Now, for every ZH, find that HU for it which it ranks best
+            Dictionary<string, List<RankedSim>> zhToRanked = new Dictionary<string, List<RankedSim>>();
+            foreach (var x in huToZhs)
+            {
+                for (int i = 0; i != x.Value.Length; ++i)
+                {
+                    SimPair sp = x.Value[i];
+                    List<RankedSim> ranked;
+                    if (!zhToRanked.ContainsKey(sp.Zh)) { ranked = new List<RankedSim>(); zhToRanked[sp.Zh] = ranked; }
+                    else ranked = zhToRanked[sp.Zh];
+                    ranked.Add(new RankedSim { SP = sp, Rank = i });
+                }
+            }
+            // Results: for each ZH, top-ranked HU words
+            using (var sw = wopen(fnOut))
+            {
+                foreach (var x in zhToRanked)
+                {
+                    // Sort each ranked list
+                    x.Value.Sort((a, b) => a.Rank.CompareTo(b.Rank));
+                    // Write result
+                    sw.Write(x.Key);
+                    for (int i = 0; i < simCount && i < x.Value.Count; ++i)
+                    {
+                        RankedSim rs = x.Value[i];
+                        sw.Write('\t');
+                        sw.Write(rs.Rank.ToString() + " " + rs.SP.Sim.ToString("0.00") + " " + rs.SP.Hu);
+                    }
+                    sw.WriteLine();
+                }
+            }
+        }
+
+        class RankedSim
+        {
+            public SimPair SP;
+            public int Rank;
+        }
+
+
+        public static void Main(string[] args)
         {
             // Word embedding vectors
-            //loadVects("10-jiestem-wv.txt");
-            //readFreqsStems();
+            loadVects("10-jiestem-wv.txt");
+            readFreqsStems();
             //getDictBests("11-jiestem-dict-wvsims.txt", 40, 3);
-            analyzeHints("11-jiestem-dict-wvsims", 100);
+            //analyzeHints("11-jiestem-dict-wvsims", 100);
+            getWVInvRank("11-wvsims-invrank.txt", 10, 3, 5);
 
             //getForDictTrans();
             //--
