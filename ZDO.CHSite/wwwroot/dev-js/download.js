@@ -11,7 +11,7 @@ var zdHistory = (function () {
     var req = zdAuth.ajax("/api/export/downloadinfo", "GET", null);
     req.done(function (data) {
       $("#lnkDictDownload").text(data.fileName);
-      $("#exportEntryCount").text(data.entryCount);
+      $("#exportSize").text(data.size);
       $("#exportDate").text(data.timestamp);
     });
   }
