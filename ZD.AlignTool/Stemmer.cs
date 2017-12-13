@@ -480,7 +480,8 @@ namespace ZD.AlignTool
                 {
                     //BAD input, stem is dropped
                     stem.bIncorrectWord = true;
-                    stem.szStem += "UNK";
+                    // We don't need UNKs
+                    //stem.szStem += "UNK";
                     //return 0;
                 }
 
