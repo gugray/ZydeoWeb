@@ -73,6 +73,61 @@ namespace ZDO.CHSite
             }
         }
 
+        /// <summary>
+        /// Import new entries from file as a single bulk change.
+        /// </summary>
+        public void BulkAdd(string dictPath, string workingFolder)
+        {
+            CedictParser parser = new CedictParser();
+            Startup.InitDB(config, null, false);
+            SqlDict dict = new SqlDict(null, mut);
+            int lineNum = 0;
+
+            DateTime dt = DateTime.Now;
+            string fnLog = "importlog-" + dt.Year + "-" + dt.Month.ToString("00") + "-" + dt.Day.ToString("00") + "!" + dt.Hour.ToString("00") + "-" + dt.Minute.ToString("00") + "-" + dt.Second.ToString("00") + ".txt";
+            fnLog = Path.Combine(workingFolder, fnLog);
+            using (FileStream fs = new FileStream(dictPath, FileMode.Open, FileAccess.Read))
+            using (StreamReader sr = new StreamReader(fs))
+            using (FileStream fsLog = new FileStream(fnLog, FileMode.Create, FileAccess.ReadWrite))
+            using (StreamWriter swLog = new StreamWriter(fsLog))
+            {
+                // First two lines are commented and have metainfo
+                // First line: user name
+                // Second line: bulk change's comment
+                string user = sr.ReadLine().Substring(1).Trim();
+                string note = sr.ReadLine().Substring(1).Trim();
+                lineNum = 2;
+                using (SqlDict.ImportBuilder builder = dict.GetBulkBuilder(user, note))
+                {
+                    string line;
+                    while ((line = sr.ReadLine()) != null)
+                    {
+                        ++lineNum;
+                        if (line == "" || line.StartsWith("#")) continue;
+                        CedictEntry entry = parser.ParseEntry(line, lineNum, swLog);
+                        if (entry == null)
+                        {
+                            swLog.WriteLine(line);
+                            continue;
+                        }
+                        entry.Status = EntryStatus.Approved;
+                        bool ok = builder.AddNewEntry(entry);
+                        if (!ok)
+                        {
+                            swLog.WriteLine("Line " + lineNum + ": Entry rejected by importer.");
+                            swLog.WriteLine(line);
+                            continue;
+                        }
+                    }
+                    builder.CommitRest();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Import dictionary data including version history.
+        /// Only used to initialize from scratch.
+        /// </summary>
         public void ImportDict(string dictPath, string workingFolder)
         {
             Startup.InitDB(config, null, false);
@@ -126,7 +181,7 @@ namespace ZDO.CHSite
                 }
                 // Second pass. Actual import.
                 fs.Position = 0;
-                using (SqlDict.ImportBuilder builder = dict.GetBulkBuilder(workingFolder, richUsers, bulks))
+                using (SqlDict.ImportBuilder builder = dict.GetBulkBuilder(richUsers, bulks))
                 {
                     while (true)
                     {

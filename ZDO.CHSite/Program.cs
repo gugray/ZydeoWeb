@@ -15,6 +15,7 @@ namespace ZDO.CHSite
                 if (args[1] == "recreate-db") ot.RecreateDB();
                 else if (args[1] == "import-freq") ot.ImportFreq(args[2]);
                 else if (args[1] == "import-dict") ot.ImportDict(args[2], args[3]);
+                else if (args[1] == "bulkadd") ot.BulkAdd(args[2], args[3]);
                 else throw new Exception("Unrecognized task: " + args[1]);
                 return 0;
             }

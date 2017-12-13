@@ -86,9 +86,17 @@ namespace ZDO.CHSite.Logic
         /// <summary>
         /// Gets a dictionary builder for all-out import from full versioned dictionary file.
         /// </summary>
-        public ImportBuilder GetBulkBuilder(string workingFolder, HashSet<string> users, Dictionary<int, ImportBuilder.BulkChangeInfo> bulks)
+        public ImportBuilder GetBulkBuilder(HashSet<string> users, Dictionary<int, ImportBuilder.BulkChangeInfo> bulks)
         {
-            return new ImportBuilder(index, workingFolder, users, bulks);
+            return new ImportBuilder(index, users, bulks);
+        }
+
+        /// <summary>
+        /// Gets a dictionary builder for importing a changeset as a single bulk
+        /// </summary>
+        public ImportBuilder GetBulkBuilder(string userName, string comment)
+        {
+            return new ImportBuilder(index, userName, comment);
         }
 
         public bool IsTrgStop(string word)

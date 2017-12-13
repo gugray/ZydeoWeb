@@ -658,17 +658,29 @@ namespace ZDO.CHSite.Logic
             /// </summary>
             private readonly Dictionary<int, int> bulkRefToModifId = new Dictionary<int, int>();
 
+            // Used when we're importing a single, implicit bulk
+            private readonly int bulkUserId;
+            private readonly int bulkRef;
+            private readonly int bulkModifId;
+            private readonly string bulkComment;
+            private readonly DateTime bulkTimestamp;
+            private int bulkNewCount = 0;
+
             /// <summary>
             /// Maps user IDs to the contribution score accumulated during the import.
             /// </summary>
             private readonly Dictionary<int, int> userIdToScore = new Dictionary<int, int>();
 
             /// <summary>
-            /// Ctor: initialize bulk builder resources.
+            /// Ctor: initialize bulk builder resources. Used for initial import from rich file already
+            /// containing bulk changes.
             /// </summary>
-            public ImportBuilder(Index index, string workingFolder, HashSet<string> users, Dictionary<int, BulkChangeInfo> bulks)
+            public ImportBuilder(Index index, HashSet<string> users, Dictionary<int, BulkChangeInfo> bulks)
                 : base(index)
             {
+                bulkUserId = bulkRef = bulkModifId = -1;
+                bulkComment = null;
+
                 tr = conn.BeginTransaction();
 
                 cmdInsBulkModif = DB.GetCmd(conn, "InsBulkModif");
@@ -717,6 +729,42 @@ namespace ZDO.CHSite.Logic
             }
 
             /// <summary>
+            /// Ctor: initialize bulk builder resources. Single bulk import.
+            /// </summary>
+            public ImportBuilder(Index index, string userName, string comment)
+                : base(index)
+            {
+                tr = conn.BeginTransaction();
+
+                cmdInsBulkModif = DB.GetCmd(conn, "InsBulkModif");
+                cmdUpdBulkModifCounts = DB.GetCmd(conn, "UpdBulkModifCounts");
+                cmdSelUserByName = DB.GetCmd(conn, "SelUserByName");
+                // Find user ID
+                int userId = -1;
+                cmdSelUserByName.Parameters["@user_name"].Value = userName;
+                using (var rdr = cmdSelUserByName.ExecuteReader())
+                {
+                    while (rdr.Read()) userId = rdr.GetInt32("id");
+                }
+                if (userId == -1) throw new Exception("User doesn't exist: " + userName);
+                bulkUserId = userId;
+                // Find next bulk ID
+                using (var cmdSelNextBulkModifRef = DB.GetCmd(conn, "SelNextBulkModifRef"))
+                {
+                    bulkRef = (int)(long)cmdSelNextBulkModifRef.ExecuteScalar();
+                }
+                // Insert modif record for bulk change
+                bulkTimestamp = DateTime.UtcNow;
+                bulkComment = comment;
+                cmdInsBulkModif.Parameters["@timestamp"].Value = bulkTimestamp;
+                cmdInsBulkModif.Parameters["@user_id"].Value = bulkUserId;
+                cmdInsBulkModif.Parameters["@note"].Value = bulkComment;
+                cmdInsBulkModif.Parameters["@bulk_ref"].Value = bulkRef;
+                cmdInsBulkModif.ExecuteNonQuery();
+                bulkModifId = (int)cmdInsBulkModif.LastInsertedId;
+            }
+
+            /// <summary>
             /// Dispose of bulk builder resources.
             /// </summary>
             protected override void DoDispose()
@@ -728,6 +776,68 @@ namespace ZDO.CHSite.Logic
 
                 // This must come at the end. Will close connection, which we need for disposing of our own stuff.
                 base.DoDispose();
+            }
+
+            public bool AddNewEntry(CedictEntry entry)
+            {
+                ++count;
+                // Cycle through transactions
+                if (count % 3000 == 0)
+                {
+                    // Make index apply changes
+                    index.ApplyChanges(indexCommands);
+                    // Commit to DB; start new transaction
+                    tr.Commit(); tr.Dispose(); tr = null;
+                    tr = conn.BeginTransaction();
+                    // Update cached entry count
+                    index.RefreshEntryCount(conn);
+                }
+
+                // Infuse corpus frequency
+                int iFreq = freq.GetFreq(entry.ChSimpl);
+                ushort uFreq = iFreq > ushort.MaxValue ? ushort.MaxValue : (ushort)iFreq;
+                entry.Freq = uFreq;
+                string hw, trg;
+                CedictWriter.Write(entry, out hw, out trg);
+                // Check restrictions. Will skip failing entries.
+                try { checkRestrictions(entry.ChSimpl, trg); }
+                catch { return false; }
+                // Check for duplicate
+                if (SqlDict.DoesHeadExist(hw)) return false;
+                // Reserve entry ID
+                int entryId = reserveEntryId();
+                // Serialize, store in DB, index. Infuse stable ID!
+                entry.StableId = entryId;
+                int binId = indexEntry(entry);
+
+                // Record change
+                cmdInsModif.Parameters["@parent_id"].Value = bulkModifId;
+                cmdInsModif.Parameters["@bulk_ref"].Value = bulkRef;
+                cmdInsModif.Parameters["@hw_before"].Value = "";
+                cmdInsModif.Parameters["@trg_before"].Value = "";
+                cmdInsModif.Parameters["@status_before"].Value = 99;
+                cmdInsModif.Parameters["@timestamp"].Value = bulkTimestamp;
+                cmdInsModif.Parameters["@user_id"].Value = bulkUserId;
+                cmdInsModif.Parameters["@note"].Value = bulkComment;
+                cmdInsModif.Parameters["@chg"].Value = (byte)Entities.ChangeType.New;
+                cmdInsModif.Parameters["@entry_id"].Value = entryId;
+                cmdInsModif.ExecuteNonQuery();
+                // Count contrib score
+                cmdAddContribScore.Parameters["@id"].Value = bulkUserId;
+                cmdAddContribScore.Parameters["@val"].Value = getContribScore((byte)Entities.ChangeType.New);
+                cmdAddContribScore.ExecuteNonQuery();
+                // Update previous version counts
+                cmdInsModifPreCounts1.Parameters["@top_id"].Value = cmdInsModif.LastInsertedId;
+                cmdInsModifPreCounts1.Parameters["@entry_id"].Value = entryId;
+                cmdInsModifPreCounts1.ExecuteNonQuery();
+                cmdInsModifPreCounts2.Parameters["@top_id"].Value = cmdInsModif.LastInsertedId;
+                cmdInsModifPreCounts2.Parameters["@entry_id"].Value = entryId;
+                cmdInsModifPreCounts2.ExecuteNonQuery();
+
+                // Populate entries table
+                storeEntry(entry.ChSimpl, hw, trg, entry.Status, binId, entryId);
+                ++bulkNewCount;
+                return true;
             }
 
             /// <summary>
@@ -836,6 +946,14 @@ namespace ZDO.CHSite.Logic
                     cmdAddContribScore.Parameters["@id"].Value = x.Key;
                     cmdAddContribScore.Parameters["@val"].Value = x.Value;
                     cmdAddContribScore.ExecuteNonQuery();
+                }
+                // For single changeset: fill in bulk change's count values here
+                if (bulkModifId != -1)
+                {
+                    cmdUpdBulkModifCounts.Parameters["@id"].Value = bulkModifId;
+                    cmdUpdBulkModifCounts.Parameters["@count_a"].Value = bulkNewCount;
+                    cmdUpdBulkModifCounts.Parameters["@count_b"].Value = 0;
+                    cmdUpdBulkModifCounts.ExecuteNonQuery();
                 }
 
                 // Finish transaction

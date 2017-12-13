@@ -330,6 +330,10 @@ UPDATE entries SET status=@status WHERE id=@id;
 UPDATE binary_entries SET data=@data WHERE id=@id;
 # End
 
+# Script SelNextBulkModifRef
+SELECT MAX(bulk_ref) + 1 FROM modifs WHERE chg=99;
+# End
+
 # Script InsBulkModif
 # @timestamp DATETIME
 # @user_id INT
