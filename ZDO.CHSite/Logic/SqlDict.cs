@@ -65,6 +65,11 @@ namespace ZDO.CHSite.Logic
             logger.LogInformation("SQL dictionary initialized.");
         }
 
+        public int EntryCount
+        {
+            get { return index.EntryCount; }
+        }
+
         /// <summary>
         /// Reloads index from DB. (For dev only: so system can continue running after recreating DB.)
         /// </summary>

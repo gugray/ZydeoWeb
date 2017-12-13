@@ -32,15 +32,16 @@ namespace ZDO.CHSite.Controllers
         /// Site key for Google recaptchas.
         /// </summary>
         private readonly string captchaSiteKey;
+
         /// <summary>
         /// Ctor: infuse dependencies.
         /// </summary>
-
-        public IndexController(PageProvider pageProvider, IConfiguration config, ILoggerFactory loggerFactory, Auth auth)
+        public IndexController(PageProvider pageProvider, IConfiguration config, 
+            ILoggerFactory loggerFactory, Auth auth, SqlDict dict)
         {
             mut = config["MUTATION"] == "HDD" ? Mutation.HDD : Mutation.CHD;
             baseUrl = config["baseUrl"];
-            dpc = new DynpageController(pageProvider, config, loggerFactory, auth);
+            dpc = new DynpageController(pageProvider, config, loggerFactory, auth, null, dict);
             gaCode = config["gaCode"];
             captchaSiteKey = config["captchaSiteKey"];
         }

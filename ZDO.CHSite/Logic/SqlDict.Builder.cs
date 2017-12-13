@@ -615,6 +615,9 @@ namespace ZDO.CHSite.Logic
 
                 // Commit. Otherwise, dispose will roll all this back if it finds non-null transaction.
                 tr.Commit(); tr.Dispose(); tr = null;
+
+                // Update cached entry count
+                index.RefreshEntryCount(conn);
             }
         }
 
@@ -741,8 +744,10 @@ namespace ZDO.CHSite.Logic
                     // Commit to DB; start new transaction
                     tr.Commit(); tr.Dispose(); tr = null;
                     tr = conn.BeginTransaction();
+                    // Update cached entry count
+                    index.RefreshEntryCount(conn);
                 }
-                
+
                 // The final entry: one in the last version
                 CedictEntry entry = vers[vers.Count - 1].Entry;
                 entry.Status = vers[vers.Count - 1].Status;
@@ -835,6 +840,9 @@ namespace ZDO.CHSite.Logic
 
                 // Finish transaction
                 tr.Commit(); tr.Dispose(); tr = null;
+
+                // Update cached entry count
+                index.RefreshEntryCount(conn);
             }
         }
 

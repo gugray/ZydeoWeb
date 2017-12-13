@@ -259,6 +259,10 @@ INSERT INTO entries (id) VALUES (@id)
 ON DUPLICATE KEY UPDATE id=@id;
 # End
 
+# Script SelEntryCount
+SELECT COUNT(*) FROM entries WHERE deleted=0;
+# End
+
 # Script SelHwByEntryId
 # @id INT
 SELECT hw FROM entries WHERE id=@id;

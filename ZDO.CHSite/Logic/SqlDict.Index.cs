@@ -225,6 +225,11 @@ namespace ZDO.CHSite.Logic
             private readonly HashSet<string> trgStopWords;
 
             /// <summary>
+            /// Count of non-deleted entries; cached here.
+            /// </summary>
+            public int EntryCount { get; private set; }
+
+            /// <summary>
             /// RW lock protecting index. Caller must acquire before invoking any function on index.
             /// </summary>
             public readonly ReaderWriterLockSlim Lock = new ReaderWriterLockSlim();
@@ -259,11 +264,20 @@ namespace ZDO.CHSite.Logic
                     loadHanzi(conn);
                     loadTrg(conn);
                     loadPinyin(conn);
+                    RefreshEntryCount(conn);
                 }
 
                 // Ugly, but this is one place where it's justified: collect our garbage from temporary index construction
                 // Only done once, at startup; better burn this time right now
                 GC.Collect();
+            }
+
+            public void RefreshEntryCount(MySqlConnection conn)
+            {
+                using (var cmd = DB.GetCmd(conn, "SelEntryCount"))
+                {
+                    EntryCount = (int)(long)cmd.ExecuteScalar();
+                }
             }
 
             /// <summary>

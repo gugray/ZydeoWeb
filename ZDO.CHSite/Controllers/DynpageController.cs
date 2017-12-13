@@ -24,7 +24,7 @@ namespace ZDO.CHSite.Controllers
         /// </summary>
         private readonly static string[] dynOnlyPrefixes = new string[]
         {
-            "search", "edit/history", "edit/new", "edit/existing", "user"
+            "", "search", "edit/history", "edit/new", "edit/existing", "user"
         };
 
         private readonly CountryResolver cres;
@@ -72,10 +72,12 @@ namespace ZDO.CHSite.Controllers
             foreach (var x in dynOnlyPrefixes) if (rel.StartsWith(x)) { isDynOnly = true; break; }
             if (isDynOnly)
             {
+                // Welcome page is special: we always work on it, but return it as static too.
+                if (rel == "" || rel.StartsWith("search/"))
+                    return doSearch(rel, lang, searchScript, searchTones, isMobile);
                 if (dynamic)
                 {
-                    if (rel.StartsWith("search/")) return doSearch(rel, lang, searchScript, searchTones, isMobile);
-                    else if (rel.StartsWith("edit/history")) return doHistory(rel, lang);
+                    if (rel.StartsWith("edit/history")) return doHistory(rel, lang);
                     else if (rel.StartsWith("edit/new")) return doNewEntry(rel, lang);
                     else if (rel.StartsWith("edit/existing")) return doEditExisting(rel, lang);
                     else if (rel.StartsWith("user/confirm/")) return doUserConfirm(rel, lang);
@@ -264,8 +266,17 @@ namespace ZDO.CHSite.Controllers
             bool isMobile, out string query)
         {
             query = "";
-            if (rel == "" || rel == "search/") return pageProvider.GetPage(lang, "", false);
             PageResult pr;
+            if (rel == "" || rel == "search/")
+            {
+                // Welcome screen has placeholder for entry count
+                pr = pageProvider.GetPage(lang, "", false);
+                string entryCountStr = "{0:#,0}";
+                entryCountStr = string.Format(entryCountStr, dict.EntryCount);
+                pr.Html = pr.Html.Replace("{entryCount}", entryCountStr);
+                pr.Description = pr.Description.Replace("{entryCount}", entryCountStr);
+                return pr;
+            }
             Stopwatch swatch = new Stopwatch();
             swatch.Restart();
 
