@@ -13,7 +13,6 @@ var zdHistory = (function () {
       $("#lnkDictDownload").text(data.fileName);
       $("#exportEntryCount").text(data.entryCount);
       $("#exportDate").text(data.timestamp);
-      $("#exportSize").text(data.size);
     });
   }
 })();

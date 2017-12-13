@@ -10,6 +10,5 @@ namespace ZDO.CHSite.Entities
         public string FileName;
         public string Timestamp;
         public string Size;
-        public string EntryCount;
     }
 }

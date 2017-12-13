@@ -39,8 +39,6 @@ namespace ZDO.CHSite.Controllers
             DateTime dt = fi.LastWriteTimeUtc.ToLocalTime();
             string strDate = dt.Year + "-" + dt.Month.ToString("00") + "-" + dt.Day.ToString("00") + "T";
             strDate += dt.Hour.ToString("00") + ":" + dt.Minute.ToString("00") + ":" + dt.Second.ToString("00") + "Z";
-            string entryCountStr = "{0:#,0}";
-            entryCountStr = string.Format(entryCountStr, dict.EntryCount);
             string sizeStr = "{0:#,0}";
             sizeStr = string.Format(sizeStr, fi.Length);
             DownloadInfo res = new DownloadInfo
@@ -48,7 +46,6 @@ namespace ZDO.CHSite.Controllers
                 FileName = fileName,
                 Timestamp = strDate,
                 Size = sizeStr,
-                EntryCount = entryCountStr,
             };
             return new ObjectResult(res);
         }
