@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -43,7 +44,7 @@ namespace ZDO.CHSite.Controllers
         /// That way, functionality is limited to serving static pages.
         /// </remarks>
         public DynpageController(PageProvider pageProvider, IConfiguration config, ILoggerFactory loggerFactory,
-            Auth auth, CountryResolver cres = null, SqlDict dict = null, QueryLogger qlog = null)
+            Auth auth, CountryResolver cres, SqlDict dict, QueryLogger qlog)
         {
             this.cres = cres;
             this.pageProvider = pageProvider;
@@ -60,10 +61,10 @@ namespace ZDO.CHSite.Controllers
         public IActionResult GetPage([FromQuery] string rel, [FromQuery] string lang, [FromQuery] bool isMobile = false,
             [FromQuery] string searchScript = null, [FromQuery] string searchTones = null)
         {
-            return new ObjectResult(GetPageResult(lang, rel, true, isMobile, searchScript, searchTones));
+            return new ObjectResult(GetPageResult(lang, rel, true, isMobile, HttpContext, searchScript, searchTones));
         }
 
-        internal PageResult GetPageResult(string lang, string rel, bool dynamic, bool isMobile,
+        internal PageResult GetPageResult(string lang, string rel, bool dynamic, bool isMobile, HttpContext ctxt,
             string searchScript = null, string searchTones = null)
         {
             if (rel == null) rel = "";
@@ -74,7 +75,7 @@ namespace ZDO.CHSite.Controllers
             {
                 // Welcome page is special: we always work on it, but return it as static too.
                 if (rel == "" || rel.StartsWith("search/"))
-                    return doSearch(rel, lang, searchScript, searchTones, isMobile);
+                    return doSearch(rel, lang, searchScript, searchTones, isMobile, ctxt);
                 if (dynamic)
                 {
                     if (rel.StartsWith("edit/history")) return doHistory(rel, lang);
@@ -239,12 +240,13 @@ namespace ZDO.CHSite.Controllers
             return pr;
         }
 
-        private PageResult doSearch(string rel, string lang, string searchScript, string searchTones, bool isMobile)
+        private PageResult doSearch(string rel, string lang, string searchScript, string searchTones, bool isMobile,
+            HttpContext ctxt)
         {
             string query = "";
             try
             {
-                var res = doSearchInner(rel, lang, searchScript, searchTones, isMobile, out query);
+                var res = doSearchInner(rel, lang, searchScript, searchTones, isMobile, ctxt, out query);
                 if (query == "Gasherd")
                 {
                     GC.AddMemoryPressure(256000000);
@@ -263,7 +265,7 @@ namespace ZDO.CHSite.Controllers
         }
 
         private PageResult doSearchInner(string rel, string lang, string searchScript, string searchTones, 
-            bool isMobile, out string query)
+            bool isMobile, HttpContext ctxt, out string query)
         {
             query = "";
             PageResult pr;
@@ -334,9 +336,9 @@ namespace ZDO.CHSite.Controllers
             }
             // Query log
             string country;
-            string xfwd = HttpContext.Request.Headers["X-Real-IP"];
+            string xfwd = ctxt.Request.Headers["X-Real-IP"];
             if (xfwd != null) country = cres.GetContryCode(IPAddress.Parse(xfwd));
-            else country = cres.GetContryCode(HttpContext.Connection.RemoteIpAddress);
+            else country = cres.GetContryCode(ctxt.Connection.RemoteIpAddress);
             int resCount = lr.Results.Count > 0 ? lr.Results.Count : lr.Annotations.Count;
             QueryLogger.SearchMode smode = QueryLogger.SearchMode.Target;
             if (lr.ActualSearchLang == SearchLang.Target) smode = QueryLogger.SearchMode.Target;
