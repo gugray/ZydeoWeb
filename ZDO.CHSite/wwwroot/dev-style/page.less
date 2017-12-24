@@ -18,9 +18,14 @@ body {
   position: relative; margin: 0 auto 5rem auto; width: @contentWidth; overflow-y: auto; height: auto;
   padding: 11rem 0.8rem 0 0.8rem; box-sizing: border-box; transition: none;
   &.nosubmenu { padding-top: 7rem; padding-left: 0.45rem; }
+  body.chd &.search { padding-top: 8.5rem; padding-left: 0.45rem; }
+  body.hdd &.search { padding-top: 7rem; padding-left: 0.45rem; }
   &.fading { opacity: 0.2; }
   html.resplay-stickleft & { margin: 0 0 0 7.5rem; }
-  html.resplay-hamburger & { margin: 0; width: 100%; padding: 8.5rem 1rem 0 1rem; }
+  html.resplay-hamburger & {
+    margin: 0; width: 100%; padding: 8.5rem 1rem 0 1rem;
+  }
+  html.resplay-hamburger body.chd &.search { padding-top: 10.5rem; }
 }
 #push { height: @footerHeight }
 #footer {
@@ -53,13 +58,15 @@ body {
   z-index: 11;
   > div { background-color: @clrDefBg; }
   #headerFull {
-    margin: 0 auto 0 auto; width: 45rem; height: 4.6rem;
+    margin: 0 auto 0 auto; width: @contentWidth; height: 6.6rem;
+    body.hdd & { height: 4.6rem; }
     html.resplay-stickleft & { margin: 0 0 0 7.5rem; }
   }
   #subHeader {
-    display: none; margin: 0 auto 0 auto; width: 45rem; padding-top: 0.4rem; height: 2.6rem;
+    display: none; margin: 0 auto 0 auto; width: @contentWidth; padding-top: 0.4rem; height: 2.6rem;
+    body.chd & { margin-top: -2rem; }
     html.resplay-stickleft & { margin: 0 0 0 7.5rem; }
-    &.visible { display: block;} 
+    &.visible { display: block; }
   }
   html.resplay-hamburger & { display: none; }
 }
@@ -101,6 +108,19 @@ body {
         &:hover { background-color: @clrLight; }
       }
     }
+    .searchSelect {
+      width: 100%; position: fixed; left: 0; top: 7rem;
+      background-color: @clrDefBg;
+      .searchMode {
+        box-sizing: border-box; border-bottom: 1pt solid @clrLight; width: 50%;
+        position: relative; float: left; font-size: 1rem;
+        height: 2rem; padding: 0.2rem 0 0 0;
+        text-transform: uppercase; text-align: center; color: @clrStrong; cursor: default;
+        &.on, &.on:hover { background-color: @clrLight; }
+        &:hover { background-color: @clrLightLight; }
+      }
+    }
+    &.welcome .searchSelect { display: none; }
   }
   .hdrTitle {
     display: none; height: 2rem; width: 100%; position: relative; float: left; padding: 0.5rem 0 0 0.5rem; white-space: nowrap;
@@ -165,6 +185,9 @@ body {
 // Top header when it's the search input
 #headerStickFull .hdrSearch {
   div, input, i { display: block; position: relative; float: left; }
+  height: 6rem; display: none;
+  &.on { display: block; }
+  body.hdd & { height: 4rem; }
   .searchBox {
     box-sizing: border-box; height: 3.6rem; padding-right: 0.2rem;
     background-color: @clrLightLight; cursor: default;
@@ -177,6 +200,22 @@ body {
       color: @clrMedium;
       &:hover { background-color: @clrLight; }
     }
+  }
+  .searchSelect {
+    position: absolute; box-sizing: border-box; width: @contentWidth; height: 2rem;
+    top: 3.8rem; cursor: default; background-color: @clrDefBg;
+    .searchModeBox {
+      box-sizing: border-box; width: auto; height: 2rem; border: 1pt solid @clrLightLight;
+      .searchMode { 
+        width: auto; height: 100%; padding: 0.3rem 1rem; font-size: 1rem; box-sizing: border-box;
+        text-transform: uppercase; color: @clrStrong; background-color: @clrDefBg;
+        &.on, &.on:hover { background-color: @clrLightLight; }
+        &:hover { background-color: @clrLight; }
+      }
+    }
+  }
+  &.welcome {
+    .searchSelect { display: none; }
   }
   #toMenu {
     display: block; position: relative; float: left;
@@ -263,7 +302,11 @@ body {
   background-size: 100% 100%;
   z-index: 10;
   &.nosubmenu { top: 5rem; }
+  body.hdd &.search { top: 5rem; }
+  body.chd &.search { top: 6.8rem; }
   html.resplay-hamburger &, html.resplay-hamburger &.nosubmenu { top: 6.5rem; }
+  html.resplay-hamburger body.hdd &.search { top: 6.5rem; }
+  html.resplay-hamburger body.chd &.search { top: 8.5rem; }
 }
 
 // === COOKIE WARNING =============================

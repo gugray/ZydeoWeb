@@ -343,8 +343,17 @@ var zdPage = (function () {
     if (rel == "" || startsWith(rel, "search")) {
       $("#hdrMenu").removeClass("on");
       $("#subHeader").removeClass("visible");
-      $("#dynPage").addClass("nosubmenu");
-      $("#headermask").addClass("nosubmenu");
+      var dpClassYes = "nosubmenu";
+      var dpClassNo = "search";
+      if (startsWith(rel, "search")) {
+        dpClassYes = "search"; dpClassNo = "nosubmenu";
+        $(".hdrSearch").removeClass("welcome");
+      }
+      else $(".hdrSearch").addClass("welcome");
+      $("#dynPage").addClass(dpClassYes);
+      $("#dynPage").removeClass(dpClassNo);
+      $("#headermask").addClass(dpClassYes);
+      $("#headermask").removeClass(dpClassNo);
       $(".hdrSearch").addClass("on");
       $(".hdrTitle").removeClass("on");
     }
@@ -354,7 +363,9 @@ var zdPage = (function () {
       $("#hdrMenu").addClass("on");
       $("#subHeader").addClass("visible");
       $("#dynPage").removeClass("nosubmenu");
+      $("#dynPage").removeClass("search");
       $("#headermask").removeClass("nosubmenu");
+      $("#headermask").removeClass("search");
       if (startsWith(rel, "edit")) {
         $("#topMenuEdit").addClass("on");
         $("#subMenuEdit").addClass("visible");

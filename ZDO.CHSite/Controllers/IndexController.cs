@@ -81,7 +81,9 @@ namespace ZDO.CHSite.Controllers
             }
             // Infuse requested page right away
             var pr = dpc.GetPageResult(lang, rel, false, false, HttpContext);
-            IndexModel model = new IndexModel(mut, baseUrl, lang, pr.RelNorm, pr, gaCode, AppVersion.VerStr, captchaSiteKey);
+            IndexModel model = new IndexModel(
+                mut, baseUrl, lang, pr.RelNorm, pr,
+                gaCode, AppVersion.VerStr, captchaSiteKey);
             return View("/Index.cshtml", model);
         }
     }

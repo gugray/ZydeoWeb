@@ -1,4 +1,4 @@
-﻿/// <binding BeforeBuild='default' Clean='clean' ProjectOpened='watch' />
+/// <binding Clean='clean' ProjectOpened='watch' />
 var gulp = require('gulp');
 var less = require('gulp-less');
 var path = require('path');

@@ -80,6 +80,25 @@ namespace ZDO.CHSite.Controllers
             }
         }
 
+        public string HdrSearchClass
+        {
+            get
+            {
+                if (Rel == "/") return "hdrSearch hdrAlt on welcome";
+                else return "hdrSearch hdrAlt on";
+            }
+        }
+
+        public string DynPageClass
+        {
+            get
+            {
+                if (Rel == "") return "nosubmenu";
+                else if (Rel.StartsWith("search/")) return "search";
+                else return "";
+            }
+        }
+
         /// <summary>
         /// Gets the language to be marked up on the HTML element.
         /// </summary>

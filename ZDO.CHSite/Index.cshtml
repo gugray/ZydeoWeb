@@ -43,7 +43,7 @@
   <div id="headerStickFull">
     <div id="headerFull">
       <a id="headerHome" href="/@Model.Lang"><span id="hdrHomeLatin">HANDEDICT</span><span id="hdrHomeZho">汉德词典</span></a>
-      <div class="hdrSearch hdrAlt on">
+      <div class="@Model.HdrSearchClass">
         <div class="searchBox">
           <input type="text" id="txtSearchFull" class="txtSearch active" />
           <i class="searchBtn btnWrite fa fa-paint-brush"></i>
@@ -90,7 +90,7 @@
       <i id="burger" class="fa fa-bars"></i>
       <span>HanDeDict <b>汉德词典</b></span>
     </div>
-    <div class="hdrSearch hdrAlt on">
+    <div class="@Model.HdrSearchClass">
       <div class="searchBox">
         <div class="searchBoxRight">
           <i class="searchBtn btnWrite fa fa-paint-brush"></i>
@@ -125,12 +125,18 @@ else
   <div id="headerStickFull">
     <div id="headerFull">
       <a id="headerHome" href="/@Model.Lang"><span id="hdrHomeLatin">CHDICT</span><span id="hdrHomeZho">汉匈词典</span></a>
-      <div class="hdrSearch hdrAlt on">
+      <div class="@Model.HdrSearchClass">
         <div class="searchBox">
           <input type="text" id="txtSearchFull" class="txtSearch active" />
           <i class="searchBtn btnWrite fa fa-paint-brush"></i>
           <i class="searchBtn btnSettings fa fa-cog"></i>
           <i class="searchBtn btnSearch fa fa-search"></i>
+        </div>
+        <div class="searchSelect">
+          <div class="searchModeBox">
+            <div class="searchMode smDict on">Dictionary</div>
+            <div class="searchMode smCorp">Corpus</div>
+          </div>
         </div>
         <i id="toMenu" class="fa fa-chevron-left"></i>
       </div>
@@ -172,7 +178,7 @@ else
       <i id="burger" class="fa fa-bars"></i>
       <span>CHDICT <b>汉匈词典</b></span>
     </div>
-    <div class="hdrSearch hdrAlt on">
+    <div class="@Model.HdrSearchClass">
       <div class="searchBox">
         <div class="searchBoxRight">
           <i class="searchBtn btnWrite fa fa-paint-brush"></i>
@@ -182,6 +188,10 @@ else
         <div class="searchBoxLeft">
           <input type="text" id="txtSearchHamburger" class="txtSearch" />
         </div>
+      </div>
+      <div class="searchSelect">
+        <div class="searchMode smDict on">Dictionary</div>
+        <div class="searchMode smCorp">Corpus</div>
       </div>
     </div>
     <div class="hdrTitle hdrAlt"></div>
@@ -210,7 +220,7 @@ else
   <div id="headermask">&nbsp;</div>
 
   <div id="hwrap">
-    <div id="dynPage" class="nosubmenu">
+    <div id="dynPage" class="@Model.DynPageClass">
       @Html.Raw(Model.PR.Html)
     </div>
     <div id="push"></div>
