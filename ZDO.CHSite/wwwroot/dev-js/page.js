@@ -295,6 +295,16 @@ var zdPage = (function () {
       // Stop propagating, or we'll self-close right away.
       evt.stopPropagation();
     });
+    // In lookup results, toggle between dictionary and corpus
+    $(".searchMode").click(function () {
+      if ($(this).hasClass("on")) return;
+      var query = "";
+      if (startsWith(rel, "search/")) query = rel.substring(7);
+      if (startsWith(rel, "corpus/")) query = rel.substring(7);
+      var trgRel = ($(this).hasClass("smDict") ? "search" : "corpus") + "/" + query;
+      history.pushState(null, null, "/" + lang + "/" + trgRel);
+      dynNavigate();
+    });
   }
 
   // General UI event wireup
@@ -340,16 +350,29 @@ var zdPage = (function () {
     $(".topMenu").removeClass("on");
     $(".subMenu").removeClass("visible");
     $(".loginIcon").removeClass("on");
-    if (rel == "" || startsWith(rel, "search")) {
+    var isWelcome = rel == "";
+    var isDict = startsWith(rel, "search");
+    var isCorpus = startsWith(rel, "corpus");
+    if (isWelcome || isDict || isCorpus) {
       $("#hdrMenu").removeClass("on");
       $("#subHeader").removeClass("visible");
       var dpClassYes = "nosubmenu";
       var dpClassNo = "search";
-      if (startsWith(rel, "search")) {
+      if (isDict || isCorpus) {
         dpClassYes = "search"; dpClassNo = "nosubmenu";
         $(".hdrSearch").removeClass("welcome");
       }
       else $(".hdrSearch").addClass("welcome");
+      if (isCorpus) {
+        $(".searchMode.smDict").removeClass("on");
+        $(".searchMode.smCorp").addClass("on");
+        $(".hdrSearch").addClass("corpus");
+      }
+      else {
+        $(".searchMode.smCorp").removeClass("on");
+        $(".searchMode.smDict").addClass("on");
+        $(".hdrSearch").removeClass("corpus");
+      }
       $("#dynPage").addClass(dpClassYes);
       $("#dynPage").removeClass(dpClassNo);
       $("#headermask").addClass(dpClassYes);
@@ -429,17 +452,13 @@ var zdPage = (function () {
       initScripts[pageRel] = init;
     },
 
-    globalInit: function(init) {
-      globalInitScripts.push(init);
-    },
+    globalInit: function(init) { globalInitScripts.push(init); },
 
-    getLang: function() {
-      return lang;
-    },
+    getLang: function () { return lang; },
 
-    isMobile: function() {
-      return $("html").hasClass("resplay-hamburger");
-    },
+    getRel: function () { return rel; },
+
+    isMobile: function() { return $("html").hasClass("resplay-hamburger"); },
 
     reload: function() {
       history.pushState(null, null, path);
@@ -454,8 +473,10 @@ var zdPage = (function () {
 
     applyFailHtml: function () { doApplyFailHtml(); },
 
-    submitSearch: function(query) {
-      history.pushState(null, null, "/" + lang + "/search/" + query);
+    submitSearch: function (query) {
+      var newTrg = "/" + lang + "/search/" + query;
+      if (startsWith(rel, "corpus")) newTrg = "/" + lang + "/corpus/" + query;
+      history.pushState(null, null, newTrg);
       dynNavigate();
     },
 

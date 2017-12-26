@@ -25,12 +25,14 @@ namespace ZDO.CHSite.Controllers
         /// </summary>
         private readonly static string[] dynOnlyPrefixes = new string[]
         {
-            "", "search", "edit/history", "edit/new", "edit/existing", "user"
+            "", "search", "corpus", "edit/history", "edit/new", "edit/existing", "user"
         };
 
         private readonly CountryResolver cres;
         private readonly PageProvider pageProvider;
         private readonly SqlDict dict;
+        private readonly Sphinx sphinx;
+        private readonly string corpusBinFileName;
         private readonly IConfiguration config;
         private readonly ILogger logger;
         private readonly QueryLogger qlog;
@@ -44,11 +46,13 @@ namespace ZDO.CHSite.Controllers
         /// That way, functionality is limited to serving static pages.
         /// </remarks>
         public DynpageController(PageProvider pageProvider, IConfiguration config, ILoggerFactory loggerFactory,
-            Auth auth, CountryResolver cres, SqlDict dict, QueryLogger qlog)
+            Auth auth, CountryResolver cres, SqlDict dict, QueryLogger qlog, Sphinx sphinx)
         {
             this.cres = cres;
             this.pageProvider = pageProvider;
             this.dict = dict;
+            this.sphinx = sphinx;
+            this.corpusBinFileName = config["corpusBinFileName"];
             this.qlog = qlog;
             this.config = config;
             this.logger = loggerFactory.CreateLogger("DynpageController");
@@ -76,6 +80,8 @@ namespace ZDO.CHSite.Controllers
                 // Welcome page is special: we always work on it, but return it as static too.
                 if (rel == "" || rel.StartsWith("search/"))
                     return doSearch(rel, lang, searchScript, searchTones, isMobile, ctxt);
+                if (rel.StartsWith("corpus/"))
+                    return doCorpus(rel, lang, ctxt);
                 if (dynamic)
                 {
                     if (rel.StartsWith("edit/history")) return doHistory(rel, lang);
@@ -347,6 +353,32 @@ namespace ZDO.CHSite.Controllers
             qlog.LogQuery(country, isMobile, lang, uiScript, uiTones, resCount, msecLookup, msecFull, smode, query);
             // Done
             return pr;
+        }
+
+        private PageResult doCorpus(string rel, string lang, HttpContext ctxt)
+        {
+            string query = "";
+            try
+            {
+                query = rel.Replace("corpus/", "");
+                query = WebUtility.UrlDecode(query);
+                CorpusController cc = new CorpusController(sphinx, qlog, corpusBinFileName);
+                string html;
+                cc.GetRenderedConcordance(ref query, out html);
+                PageResult res = new PageResult
+                {
+                    RelNorm = rel,
+                    Title = "Porkusz",
+                    Html = html,
+                    Data = query,
+                };
+                return res;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(new EventId(), ex, "Corpus search failed; query: \"" + query + "\"", rel, lang);
+                throw;
+            }
         }
     }
 }

@@ -116,6 +116,8 @@ var zdLookup = (function () {
 
   // Invoked when search text changes; starts prefix query, handles result.
   function prefixTrigger() {
+    // If we're on corpus page, no suggestions
+    if (startsWith(zdPage.getRel(), "corpus")) return;
     // If this comes when IME is composing, bollocks. Don't interfere.
     if (isComposing) return;
     // Show, or maybe hide

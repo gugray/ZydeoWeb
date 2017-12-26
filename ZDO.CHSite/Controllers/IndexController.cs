@@ -38,11 +38,12 @@ namespace ZDO.CHSite.Controllers
         /// Ctor: infuse dependencies.
         /// </summary>
         public IndexController(PageProvider pageProvider, IConfiguration config, 
-            ILoggerFactory loggerFactory, Auth auth, CountryResolver cres, SqlDict dict, QueryLogger qlog)
+            ILoggerFactory loggerFactory, Auth auth, CountryResolver cres, SqlDict dict, 
+            QueryLogger qlog, Sphinx sphinx)
         {
             mut = config["MUTATION"] == "HDD" ? Mutation.HDD : Mutation.CHD;
             baseUrl = config["baseUrl"];
-            dpc = new DynpageController(pageProvider, config, loggerFactory, auth, cres, dict, qlog);
+            dpc = new DynpageController(pageProvider, config, loggerFactory, auth, cres, dict, qlog, sphinx);
             gaCode = config["gaCode"];
             captchaSiteKey = config["captchaSiteKey"];
         }

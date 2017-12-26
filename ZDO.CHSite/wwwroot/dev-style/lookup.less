@@ -213,3 +213,33 @@
     }
   }
 }
+
+/* ------------------------------- SEARCH OPTIONS POPUP ------------------------------- */
+
+.corprow, .corpseg { box-sizing: border-box; }
+.corprow {
+  position: relative; float: left; clear: both; width: 100%;
+  border-bottom: 1px dashed @clrGray;
+  padding: 0.3rem 0 0.5rem 0;
+}
+.corpseg {
+  width: 50%; position: relative; float: left;
+  &:nth-child(1) { padding-right: 0.5rem; }
+  &:nth-child(2) { padding-left: 0.5rem; }
+  &.zho { 
+    font-size: 1.5rem; font-family: @fntZho; line-height: 130%;
+    span.hlLo { background-color: lighten(@clrLightAccent, 6%); }
+    span.hlMid { background-color: lighten(@clrLightAccent, 2%); }
+    span.hlHi { background-color: darken(@clrLightAccent, 6%); }
+  }
+  &.trg { 
+    font-size: 1.15rem; 
+    span.hlLo { background-color: lighten(@clrLightAccent, 6%); }
+    span.hlMid { background-color: lighten(@clrLightAccent, 2%); }
+    span.hlHi { background-color: darken(@clrLightAccent, 6%); }
+  }
+}
+html.resplay-hamburger {
+  .corprow { padding: 0.4rem 0 0.6rem 0; }
+  .corpseg { width: 100%; padding: 0; }
+}

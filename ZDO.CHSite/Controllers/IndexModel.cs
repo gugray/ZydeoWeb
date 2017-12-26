@@ -84,8 +84,9 @@ namespace ZDO.CHSite.Controllers
         {
             get
             {
-                if (Rel == "/") return "hdrSearch hdrAlt on welcome";
-                else return "hdrSearch hdrAlt on";
+                if (Rel == "/") return "welcome";
+                else if (Rel.StartsWith("corpus")) return "corpus";
+                else return "";
             }
         }
 
@@ -94,7 +95,8 @@ namespace ZDO.CHSite.Controllers
             get
             {
                 if (Rel == "") return "nosubmenu";
-                else if (Rel.StartsWith("search/")) return "search";
+                else if (Rel.StartsWith("search")) return "search";
+                else if (Rel.StartsWith("corpus")) return "search";
                 else return "";
             }
         }
