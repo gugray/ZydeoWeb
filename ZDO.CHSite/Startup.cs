@@ -106,7 +106,10 @@ namespace ZDO.CHSite
             Emailer emailer = new Emailer(config);
             services.AddSingleton(emailer);
             if (mut == Mutation.CHD)
-                services.AddSingleton(new Sphinx(loggerFactory, config["perlBin"], config["sphinxScript"]));
+            {
+                services.AddSingleton(new Sphinx(loggerFactory, config["perlBin"],
+                    config["sphinxScript"], config["corpusBinFileName"]));
+            }
             // These below have a shutdown action, so we store them in a member too.
             auth = new Auth(mut, loggerFactory, config, emailer, pageProvider);
             services.AddSingleton(auth);

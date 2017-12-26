@@ -32,7 +32,6 @@ namespace ZDO.CHSite.Controllers
         private readonly PageProvider pageProvider;
         private readonly SqlDict dict;
         private readonly Sphinx sphinx;
-        private readonly string corpusBinFileName;
         private readonly IConfiguration config;
         private readonly ILogger logger;
         private readonly QueryLogger qlog;
@@ -52,7 +51,6 @@ namespace ZDO.CHSite.Controllers
             this.pageProvider = pageProvider;
             this.dict = dict;
             this.sphinx = sphinx;
-            this.corpusBinFileName = config["corpusBinFileName"];
             this.qlog = qlog;
             this.config = config;
             this.logger = loggerFactory.CreateLogger("DynpageController");
@@ -362,9 +360,9 @@ namespace ZDO.CHSite.Controllers
             {
                 query = rel.Replace("corpus/", "");
                 query = WebUtility.UrlDecode(query);
-                CorpusController cc = new CorpusController(sphinx, qlog, corpusBinFileName);
+                CorpusController cc = new CorpusController(sphinx, qlog);
                 string html;
-                cc.GetRenderedConcordance(ref query, out html);
+                cc.GetRenderedConcordance(ref query, 0, out html);
                 PageResult res = new PageResult
                 {
                     RelNorm = rel,

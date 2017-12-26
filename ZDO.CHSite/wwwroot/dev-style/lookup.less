@@ -243,3 +243,19 @@ html.resplay-hamburger {
   .corprow { padding: 0.4rem 0 0.6rem 0; }
   .corpseg { width: 100%; padding: 0; }
 }
+.corpmore {
+  position: relative; width: 100%; float: left; box-sizing: border-box; margin: 2rem 0;
+  .corpmorebtn {
+    width: 20rem; font-size: 1.2rem; cursor: default; padding: 0.2rem 1.5rem;
+    position: relative; margin: 0 auto; text-align: center;
+    background-color: @clrLightAccent; transition: background-color ease 0.5s;
+    &:hover { background-color: @clrMediumAccent; }
+    i {
+      display: none; position: absolute; right: 0.2rem; top: 0.45rem;
+      -webkit-animation: fa-spin 1s infinite linear;
+      animation: fa-spin 1s infinite linear;
+    }
+    &.loading i { display: block; }
+
+  }
+}

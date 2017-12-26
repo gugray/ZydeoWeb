@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
+using System.Text.Encodings.Web;
 using System.Text;
 
 using ZD.Common;
@@ -15,19 +15,26 @@ namespace ZDO.CHSite.Controllers
         private const int pageSize = 100;
         private readonly Sphinx sphinx;
         private readonly QueryLogger qlog;
-        private readonly string corpusBinFileName;
 
         /// <summary>
         /// Ctor: init controller within app environment.
         /// </summary>
-        public CorpusController(Sphinx sphinx, QueryLogger qlog, string corpusBinFileName)
+        public CorpusController(Sphinx sphinx, QueryLogger qlog)
         {
             this.sphinx = sphinx;
             this.qlog = qlog;
-            this.corpusBinFileName = corpusBinFileName;
         }
 
-        public void GetRenderedConcordance(ref string query, out string html)
+        public IActionResult More([FromQuery] string query, [FromQuery] string offset)
+        {
+            int ofs = int.Parse(offset);
+            string qx = query;
+            string res;
+            GetRenderedConcordance(ref qx, ofs, out res);
+            return new ObjectResult(res);
+        }
+
+        public void GetRenderedConcordance(ref string query, int ofs, out string html)
         {
             StringBuilder sb = new StringBuilder();
             html = "";
@@ -37,8 +44,8 @@ namespace ZDO.CHSite.Controllers
             bool isZhoSearch = hasHanzi(query);
             if (!isZhoSearch) query = pruneSurf(query, true, null);
 
-            SphinxResult sres = sphinx.Query(query, isZhoSearch, 0, limit);
-            using (BinReader br = new BinReader(corpusBinFileName))
+            SphinxResult sres = sphinx.Query(query, isZhoSearch, ofs, limit);
+            using (BinReader br = new BinReader(sphinx.CorpusBinFileName))
             {
                 List<float> trgHilites = new List<float>();
                 List<float> srcHilites = new List<float>();
@@ -74,6 +81,15 @@ namespace ZDO.CHSite.Controllers
                     sb.Append(renderSegment(cseg.TrgSurf, trgHilites, isZhoSearch));
                     sb.AppendLine("</div></div>");
                 }
+            }
+            // "Load more" button
+            if (sres.TotalCount > ofs + limit)
+            {
+                sb.Append("<div class='corpmore'>");
+                sb.Append("<div class='corpmorebtn' data-offset='" + (ofs + limit).ToString() + "'>");
+                sb.Append(HtmlEncoder.Default.Encode("Load more")); // TO-DO: localize
+                sb.Append("<i class='fa fa-circle-o-notch fa-fw'></i>");
+                sb.AppendLine("</div></div>");
             }
             html = sb.ToString();
         }

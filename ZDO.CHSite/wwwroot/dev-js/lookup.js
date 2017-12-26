@@ -28,7 +28,18 @@ var zdLookup = (function () {
   zdPage.globalInit(globalInit);
 
   $(document).ready(function () {
+    // Subscribe to in-page navigation init script
     zdPage.registerInitScript("search", resultEventWireup);
+    zdPage.registerInitScript("corpus", resultEventWireup);
+
+    // Server-rendered page
+    var rel = zdPage.getRel();
+    if ((startsWith(rel, "corpus/") || startsWith(rel, "search/")) && rel.length > 7) {
+      // Put query from URL into textbox
+      $(".txtSearch").val(decodeURIComponent(rel.substring(7)));
+      // When corpus results come rendered server-side: hook up "load more"
+      $(".corpmorebtn").click(onCorpusLoadMore);
+    }
   });
 
   function globalInit() {
@@ -64,6 +75,7 @@ var zdLookup = (function () {
     // Debug: to work on strokes input
     //showStrokeInput();
 
+    // Events: prefix hints, submit etc.
     $(".btnSearch").click(submitSearch);
     $(".txtSearch").keyup(function (e) {
       if (e.keyCode == 13) {
@@ -107,6 +119,8 @@ var zdLookup = (function () {
         $(this).addClass("tapOver");
       });
     }
+    // When corpus results come from in-page navigation: hook up "load more"
+    $(".corpmorebtn").click(onCorpusLoadMore);
     // Hack [?] - but either something steals focus on load, or input field is not yet shown to accept focus.
     setTimeout(function () {
       if (!zdPage.isMobile()) $('.txtSearch.active').focus();
@@ -223,6 +237,26 @@ var zdLookup = (function () {
     zdPage.modalHidden();
     $("#searchSuggestions").remove();
     prefixActiveIx = -1;
+  }
+
+  function onCorpusLoadMore() {
+    if ($(this).hasClass("loading")) return;
+    var query = $(".txtSearch").val();
+    var offset = $(this).data("offset");
+    var req = zdAuth.ajax("/api/corpus/more", "GET", { query: query, offset: offset });
+    req.done(function (data) {
+      $(".corpmorebtn").removeClass("loading");
+      $(".corpmore").remove();
+      var elmMore = $(data);
+      $("#dynPage").append(elmMore);
+      $(".corpmorebtn").click(onCorpusLoadMore);
+    });
+    req.fail(function (jqXHR, textStatus, error) {
+      $(".corpmorebtn").removeClass("loading");
+      zdPage.showAlert("Something went wrong", "Couldn't load more corpus hits. Please try again in a few seconds. If the problem persists, let me know: zydeodict-[at]-gmail-[dot]-com.", true);
+    });
+    // We're now loading until request finishes
+    $(this).addClass("loading");
   }
 
   // Show the search settings popup (generate from template; event wireup; position).

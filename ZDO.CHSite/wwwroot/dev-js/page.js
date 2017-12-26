@@ -209,7 +209,7 @@ var zdPage = (function () {
 
   // Initializes scripts that signed up for current page.
   function runInitScripts(data) {
-    var isSearch = (rel == "" && key == "search");
+    var isSearch = (rel == "" && (key == "search" || key == "corpus"));
     for (var key in initScripts) {
       if (startsWith(rel, key)) initScripts[key](data);
       // Hack: call search initializer for ""
