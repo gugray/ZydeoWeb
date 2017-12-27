@@ -38,12 +38,11 @@ namespace ZDO.CHSite.Controllers
         /// Ctor: infuse dependencies.
         /// </summary>
         public IndexController(PageProvider pageProvider, IConfiguration config, 
-            ILoggerFactory loggerFactory, Auth auth, CountryResolver cres, SqlDict dict, 
-            QueryLogger qlog, Sphinx sphinx)
+            ILoggerFactory loggerFactory, Auth auth, SqlDict dict)
         {
             mut = config["MUTATION"] == "HDD" ? Mutation.HDD : Mutation.CHD;
             baseUrl = config["baseUrl"];
-            dpc = new DynpageController(pageProvider, config, loggerFactory, auth, cres, dict, qlog, sphinx);
+            dpc = new DynpageController(pageProvider, config, loggerFactory, auth, dict, null, null, null);
             gaCode = config["gaCode"];
             captchaSiteKey = config["captchaSiteKey"];
         }
@@ -81,7 +80,7 @@ namespace ZDO.CHSite.Controllers
                 return RedirectPermanent("/" + redirTo);
             }
             // Infuse requested page right away
-            var pr = dpc.GetPageResult(lang, rel, false, false, HttpContext);
+            var pr = dpc.GetPageResult(lang, rel, false, false);
             IndexModel model = new IndexModel(
                 mut, baseUrl, lang, pr.RelNorm, pr,
                 gaCode, AppVersion.VerStr, captchaSiteKey);

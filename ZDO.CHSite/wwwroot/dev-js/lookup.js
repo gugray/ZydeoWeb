@@ -31,15 +31,6 @@ var zdLookup = (function () {
     // Subscribe to in-page navigation init script
     zdPage.registerInitScript("search", resultEventWireup);
     zdPage.registerInitScript("corpus", resultEventWireup);
-
-    // Server-rendered page
-    var rel = zdPage.getRel();
-    if ((startsWith(rel, "corpus/") || startsWith(rel, "search/")) && rel.length > 7) {
-      // Put query from URL into textbox
-      $(".txtSearch").val(decodeURIComponent(rel.substring(7)));
-      // When corpus results come rendered server-side: hook up "load more"
-      $(".corpmorebtn").click(onCorpusLoadMore);
-    }
   });
 
   function globalInit() {

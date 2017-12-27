@@ -260,11 +260,14 @@ var zdPage = (function () {
         activeModalCloser = null;
       }
       // Trick: If we're on search page but menu is shown, link just changes display; no navigation
-      if ((rel == "" || startsWith(rel, "search")) && $(this).attr("id") == "topMenuSearch") {
+      if ((rel == "" || startsWith(rel, "search") || startsWith(rel, "corpus")) && $(this).attr("id") == "topMenuSearch") {
         $(".hdrSearch").addClass("on");
         $(".hdrTitle").removeClass("on");
         $("#hdrMenu").removeClass("on");
         $("#subHeader").removeClass("visible");
+        setTimeout(function () {
+          $(".txtSearch").focus();
+        }, 100);
         return false;
       }
       // Navigate

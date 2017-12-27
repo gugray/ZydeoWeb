@@ -25,7 +25,7 @@ namespace ZDO.CHSite.Controllers
         /// </summary>
         private readonly static string[] dynOnlyPrefixes = new string[]
         {
-            "", "search", "corpus", "edit/history", "edit/new", "edit/existing", "user"
+            "search", "corpus", "edit/history", "edit/new", "edit/existing", "user"
         };
 
         private readonly CountryResolver cres;
@@ -45,7 +45,7 @@ namespace ZDO.CHSite.Controllers
         /// That way, functionality is limited to serving static pages.
         /// </remarks>
         public DynpageController(PageProvider pageProvider, IConfiguration config, ILoggerFactory loggerFactory,
-            Auth auth, CountryResolver cres, SqlDict dict, QueryLogger qlog, Sphinx sphinx)
+            Auth auth, SqlDict dict, CountryResolver cres, QueryLogger qlog, Sphinx sphinx)
         {
             this.cres = cres;
             this.pageProvider = pageProvider;
@@ -63,10 +63,10 @@ namespace ZDO.CHSite.Controllers
         public IActionResult GetPage([FromQuery] string rel, [FromQuery] string lang, [FromQuery] bool isMobile = false,
             [FromQuery] string searchScript = null, [FromQuery] string searchTones = null)
         {
-            return new ObjectResult(GetPageResult(lang, rel, true, isMobile, HttpContext, searchScript, searchTones));
+            return new ObjectResult(GetPageResult(lang, rel, true, isMobile, searchScript, searchTones));
         }
 
-        internal PageResult GetPageResult(string lang, string rel, bool dynamic, bool isMobile, HttpContext ctxt,
+        internal PageResult GetPageResult(string lang, string rel, bool dynamic, bool isMobile,
             string searchScript = null, string searchTones = null)
         {
             if (rel == null) rel = "";
@@ -75,14 +75,13 @@ namespace ZDO.CHSite.Controllers
             foreach (var x in dynOnlyPrefixes) if (rel.StartsWith(x)) { isDynOnly = true; break; }
             if (isDynOnly)
             {
-                // Welcome page is special: we always work on it, but return it as static too.
-                if (rel == "" || rel.StartsWith("search/"))
-                    return doSearch(rel, lang, searchScript, searchTones, isMobile, ctxt);
-                if (rel.StartsWith("corpus/"))
-                    return doCorpus(rel, lang, ctxt);
                 if (dynamic)
                 {
-                    if (rel.StartsWith("edit/history")) return doHistory(rel, lang);
+                    if (rel == "search" || rel.StartsWith("search/"))
+                        return doSearch(rel, lang, searchScript, searchTones, isMobile);
+                    else if (rel == "corpus" || rel.StartsWith("corpus/"))
+                        return doCorpus(rel, lang);
+                    else if (rel.StartsWith("edit/history")) return doHistory(rel, lang);
                     else if (rel.StartsWith("edit/new")) return doNewEntry(rel, lang);
                     else if (rel.StartsWith("edit/existing")) return doEditExisting(rel, lang);
                     else if (rel.StartsWith("user/confirm/")) return doUserConfirm(rel, lang);
@@ -96,6 +95,9 @@ namespace ZDO.CHSite.Controllers
                     return xpr;
                 }
             }
+            // Welcome is special: we must infuse dictionary size
+            if (rel == "") return doWelcome(lang);
+            // Just a regular static page
             PageResult pr = pageProvider.GetPage(lang, rel, false);
             if (pr == null) pr = pageProvider.GetPage(lang, "404", false);
             return pr;
@@ -244,13 +246,12 @@ namespace ZDO.CHSite.Controllers
             return pr;
         }
 
-        private PageResult doSearch(string rel, string lang, string searchScript, string searchTones, bool isMobile,
-            HttpContext ctxt)
+        private PageResult doSearch(string rel, string lang, string searchScript, string searchTones, bool isMobile)
         {
             string query = "";
             try
             {
-                var res = doSearchInner(rel, lang, searchScript, searchTones, isMobile, ctxt, out query);
+                var res = doSearchInner(rel, lang, searchScript, searchTones, isMobile, out query);
                 if (query == "Gasherd")
                 {
                     GC.AddMemoryPressure(256000000);
@@ -268,23 +269,28 @@ namespace ZDO.CHSite.Controllers
             }
         }
 
+        private PageResult doWelcome(string lang)
+        {
+            PageResult pr;
+            // Welcome screen has placeholder for entry count
+            pr = pageProvider.GetPage(lang, "", false);
+            string entryCountStr = "{0:#,0}";
+            entryCountStr = string.Format(entryCountStr, dict.EntryCount);
+            pr.Html = pr.Html.Replace("{entryCount}", entryCountStr);
+            pr.Description = pr.Description.Replace("{entryCount}", entryCountStr);
+            return pr;
+        }
+
         private PageResult doSearchInner(string rel, string lang, string searchScript, string searchTones, 
-            bool isMobile, HttpContext ctxt, out string query)
+            bool isMobile, out string query)
         {
             query = "";
-            PageResult pr;
-            if (rel == "" || rel == "search/")
-            {
-                // Welcome screen has placeholder for entry count
-                pr = pageProvider.GetPage(lang, "", false);
-                string entryCountStr = "{0:#,0}";
-                entryCountStr = string.Format(entryCountStr, dict.EntryCount);
-                pr.Html = pr.Html.Replace("{entryCount}", entryCountStr);
-                pr.Description = pr.Description.Replace("{entryCount}", entryCountStr);
-                return pr;
-            }
+            if (rel == "" || rel == "search" || rel == "search/")
+                return doWelcome(lang);
+
             Stopwatch swatch = new Stopwatch();
             swatch.Restart();
+            PageResult pr;
 
             // Search settings
             UiScript uiScript = UiScript.Both;
@@ -340,9 +346,9 @@ namespace ZDO.CHSite.Controllers
             }
             // Query log
             string country;
-            string xfwd = ctxt.Request.Headers["X-Real-IP"];
+            string xfwd = HttpContext.Request.Headers["X-Real-IP"];
             if (xfwd != null) country = cres.GetContryCode(IPAddress.Parse(xfwd));
-            else country = cres.GetContryCode(ctxt.Connection.RemoteIpAddress);
+            else country = cres.GetContryCode(HttpContext.Connection.RemoteIpAddress);
             int resCount = lr.Results.Count > 0 ? lr.Results.Count : lr.Annotations.Count;
             QueryLogger.SearchMode smode = QueryLogger.SearchMode.Target;
             if (lr.ActualSearchLang == SearchLang.Target) smode = QueryLogger.SearchMode.Target;
@@ -353,8 +359,10 @@ namespace ZDO.CHSite.Controllers
             return pr;
         }
 
-        private PageResult doCorpus(string rel, string lang, HttpContext ctxt)
+        private PageResult doCorpus(string rel, string lang)
         {
+            if (rel == "corpus" || rel == "corpus/")
+                return doWelcome(lang);
             string query = "";
             try
             {
