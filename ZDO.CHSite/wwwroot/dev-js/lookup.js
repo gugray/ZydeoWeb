@@ -234,7 +234,13 @@ var zdLookup = (function () {
     if ($(this).hasClass("loading")) return;
     var query = $(".txtSearch").val();
     var offset = $(this).data("offset");
-    var req = zdAuth.ajax("/api/corpus/more", "GET", { query: query, offset: offset });
+    var params = {
+      query: query,
+      offset: offset,
+      lang: zdPage.getLang(),
+      isMobile: zdPage.isMobile()
+    };
+    var req = zdAuth.ajax("/api/corpus/more", "GET", params);
     req.done(function (data) {
       $(".corpmorebtn").removeClass("loading");
       $(".corpmore").remove();

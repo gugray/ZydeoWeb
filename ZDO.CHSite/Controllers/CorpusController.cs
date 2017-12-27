@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 using System.Text.Encodings.Web;
 using System.Text;
+using System.Net;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
+using Countries;
 using ZD.Common;
 using ZDO.CHSite.Logic;
 
@@ -15,34 +19,43 @@ namespace ZDO.CHSite.Controllers
         private const int pageSize = 100;
         private readonly Sphinx sphinx;
         private readonly QueryLogger qlog;
+        private readonly CountryResolver cres;
 
         /// <summary>
         /// Ctor: init controller within app environment.
         /// </summary>
-        public CorpusController(Sphinx sphinx, QueryLogger qlog)
+        public CorpusController(Sphinx sphinx, QueryLogger qlog, CountryResolver cres)
         {
             this.sphinx = sphinx;
             this.qlog = qlog;
+            this.cres = cres;
         }
 
-        public IActionResult More([FromQuery] string query, [FromQuery] string offset)
+        public IActionResult More([FromQuery] string query, [FromQuery] string offset, 
+            [FromQuery] string lang, [FromQuery] bool isMobile)
         {
             int ofs = int.Parse(offset);
             string qx = query;
             string res;
-            GetRenderedConcordance(ref qx, ofs, out res);
+            GetRenderedConcordance(ref qx, ofs, out res, lang, isMobile, HttpContext);
             return new ObjectResult(res);
         }
 
-        public void GetRenderedConcordance(ref string query, int ofs, out string html)
+        public void GetRenderedConcordance(ref string query, int ofs, out string html,
+            string lang, bool isMobile, HttpContext ctxt)
         {
             StringBuilder sb = new StringBuilder();
             html = "";
             int limit = pageSize;
             query = query.Trim();
+            string queryToLog = query;
             if (query.Length == 0) return;
             bool isZhoSearch = hasHanzi(query);
             if (!isZhoSearch) query = pruneSurf(query, true, null);
+
+            // Lookup timer
+            Stopwatch swatch = new Stopwatch();
+            swatch.Restart();
 
             SphinxResult sres = sphinx.Query(query, isZhoSearch, ofs, limit);
             using (BinReader br = new BinReader(sphinx.CorpusBinFileName))
@@ -91,7 +104,18 @@ namespace ZDO.CHSite.Controllers
                 sb.Append("<i class='fa fa-circle-o-notch fa-fw'></i>");
                 sb.AppendLine("</div></div>");
             }
+            // The response!
             html = sb.ToString();
+
+            // Query log
+            int msecFull = (int)swatch.ElapsedMilliseconds;
+            int msecPerlOuter = (int)(1000.0F * sres.PerlOuterElapsed);
+            string country;
+            string xfwd = ctxt.Request.Headers["X-Real-IP"];
+            if (xfwd != null) country = cres.GetContryCode(IPAddress.Parse(xfwd));
+            else country = cres.GetContryCode(ctxt.Connection.RemoteIpAddress);
+            qlog.LogCorpus(country, isMobile, lang, sres.TotalCount, 
+                msecPerlOuter, msecFull, isZhoSearch, ofs > 0, query);
         }
 
         private static string pruneSurf(string str, bool toLower, List<int> posMap)

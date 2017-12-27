@@ -80,7 +80,7 @@ namespace ZDO.CHSite.Controllers
                     if (rel == "search" || rel.StartsWith("search/"))
                         return doSearch(rel, lang, searchScript, searchTones, isMobile);
                     else if (rel == "corpus" || rel.StartsWith("corpus/"))
-                        return doCorpus(rel, lang);
+                        return doCorpus(rel, lang, isMobile);
                     else if (rel.StartsWith("edit/history")) return doHistory(rel, lang);
                     else if (rel.StartsWith("edit/new")) return doNewEntry(rel, lang);
                     else if (rel.StartsWith("edit/existing")) return doEditExisting(rel, lang);
@@ -360,7 +360,7 @@ namespace ZDO.CHSite.Controllers
             return pr;
         }
 
-        private PageResult doCorpus(string rel, string lang)
+        private PageResult doCorpus(string rel, string lang, bool isMobile)
         {
             if (rel == "corpus" || rel == "corpus/")
                 return doWelcome(lang);
@@ -369,9 +369,9 @@ namespace ZDO.CHSite.Controllers
             {
                 query = rel.Replace("corpus/", "");
                 query = WebUtility.UrlDecode(query);
-                CorpusController cc = new CorpusController(sphinx, qlog);
+                CorpusController cc = new CorpusController(sphinx, qlog, cres);
                 string html;
-                cc.GetRenderedConcordance(ref query, 0, out html);
+                cc.GetRenderedConcordance(ref query, 0, out html, lang, isMobile, HttpContext);
                 PageResult res = new PageResult
                 {
                     RelNorm = rel,

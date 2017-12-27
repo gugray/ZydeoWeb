@@ -65,12 +65,12 @@ namespace ZDO.CHSite.Logic
             }
         }
 
-        private class HandritingItem : IAuditItem
+        private class HandwritingItem : IAuditItem
         {
             private readonly DateTime time;
             private readonly string data;
 
-            public HandritingItem(string data)
+            public HandwritingItem(string data)
             {
                 this.time = DateTime.UtcNow;
                 this.data = data;
@@ -93,7 +93,7 @@ namespace ZDO.CHSite.Logic
             private readonly DateTime time;
             private readonly string countryCode;
             private readonly bool isMobile;
-            private readonly string uiLang;
+            private readonly char langLetter;
             private readonly UiScript script;
             private readonly UiTones tones;
             private readonly int resCount;
@@ -102,7 +102,7 @@ namespace ZDO.CHSite.Logic
             private readonly SearchMode smode;
             private readonly string query;
 
-            public QueryItem(string countryCode, bool isMobile, string uiLang,
+            public QueryItem(string countryCode, bool isMobile, char langLetter,
                 UiScript script, UiTones tones,
                 int resCount, int msecLookup, int msecTotal,
                 SearchMode smode, string query)
@@ -110,7 +110,7 @@ namespace ZDO.CHSite.Logic
                 this.countryCode = countryCode;
                 this.time = DateTime.UtcNow;
                 this.isMobile = isMobile;
-                this.uiLang = uiLang;
+                this.langLetter = langLetter;
                 this.script = script;
                 this.tones = tones;
                 this.resCount = resCount;
@@ -127,12 +127,7 @@ namespace ZDO.CHSite.Logic
                     string country = countryCode + "-";
                     if (isMobile) country += 'M';
                     else country += 'D';
-                    if (uiLang == "en") country += 'E';
-                    else if (uiLang == "de") country += 'D';
-                    else if (uiLang == "hu") country += 'H';
-                    else if (uiLang == "jian") country += 'J';
-                    else if (uiLang == "fan") country += 'F';
-                    else country += 'X';
+                    country += langLetter;
                     if (script == UiScript.Simp) country += 'S';
                     else if (script == UiScript.Trad) country += 'T';
                     else country += 'B';
@@ -149,6 +144,74 @@ namespace ZDO.CHSite.Logic
                     if (smode == SearchMode.Source) sModeStr = "ZHO";
                     else if (smode == SearchMode.Target) sModeStr = "TRG";
                     else sModeStr = "ANN";
+                    sb.Append(sModeStr);
+                    sb.Append('\t');
+                    int sec = msecTotal / 1000;
+                    int ms = msecTotal - sec * 1000;
+                    sb.Append(string.Format("{0:00}.{1:000}", sec, ms));
+                    sb.Append('\t');
+                    sec = msecLookup / 1000;
+                    ms = msecLookup - sec * 1000;
+                    sb.Append(string.Format("{0:00}.{1:000}", sec, ms));
+                    sb.Append('\t');
+                    sb.Append(resCount.ToString());
+                    sb.Append('\t');
+                    sb.Append(query);
+
+                    return sb.ToString();
+                }
+            }
+        }
+
+        private class CorpusItem : IAuditItem
+        {
+            private readonly DateTime time;
+            private readonly string countryCode;
+            private readonly bool isMobile;
+            private readonly char langLetter;
+            private readonly int resCount;
+            private readonly int msecLookup;
+            private readonly int msecTotal;
+            private readonly bool isZho;
+            private readonly bool isLoadMore;
+            private readonly string query;
+
+            public CorpusItem(string countryCode, bool isMobile, char langLetter, int resCount,
+                int msecLookup, int msecTotal, bool isZho, bool isLoadMore,
+                string query)
+            {
+                this.countryCode = countryCode;
+                this.time = DateTime.UtcNow;
+                this.isMobile = isMobile;
+                this.langLetter = langLetter;
+                this.resCount = resCount;
+                this.msecLookup = msecLookup;
+                this.msecTotal = msecTotal;
+                this.isZho = isZho;
+                this.isLoadMore = isLoadMore;
+                this.query = query;
+            }
+
+            public string LogLine
+            {
+                get
+                {
+                    string country = countryCode;
+                    if (isMobile) country += "-M";
+                    else country += "-D";
+                    country += langLetter;
+                    country += "XX";
+
+                    StringBuilder sb = new StringBuilder();
+                    sb.Append(QueryLogger.FormatTime(time));
+                    sb.Append('\t');
+                    sb.Append(country);
+                    sb.Append('\t');
+                    string sModeStr = "C";
+                    if (isZho) sModeStr += "Z";
+                    else sModeStr += "T";
+                    if (isLoadMore) sModeStr += "X";
+                    else sModeStr += "0";
                     sb.Append(sModeStr);
                     sb.Append('\t');
                     int sec = msecTotal / 1000;
@@ -212,8 +275,9 @@ namespace ZDO.CHSite.Logic
                     foreach (IAuditItem itm in myList)
                     {
                         if (itm is QueryItem) swQueryLog.WriteLine(itm.LogLine);
+                        else if (itm is CorpusItem) swQueryLog.WriteLine(itm.LogLine);
                         else if (itm is HanziItem) swQueryLog.WriteLine(itm.LogLine);
-                        else if (itm is HandritingItem) swHwriteLog.WriteLine(itm.LogLine);
+                        else if (itm is HandwritingItem) swHwriteLog.WriteLine(itm.LogLine);
                     }
                     swQueryLog.Flush();
                     swHwriteLog.Flush();
@@ -221,11 +285,33 @@ namespace ZDO.CHSite.Logic
             }
         }
 
+        private static char getLangLetter(string uiLang)
+        {
+            if (uiLang == "en") return 'E';
+            else if (uiLang == "de") return 'D';
+            else if (uiLang == "hu") return 'H';
+            else if (uiLang == "jian") return 'J';
+            else if (uiLang == "fan") return 'F';
+            else return 'X';
+        }
+
         public void LogQuery(string countryCode, bool isMobile, string uiLang, UiScript script, UiTones tones,
             int resCount, int msecLookup, int msecTotal, SearchMode smode, string query)
         {
-            QueryItem itm = new QueryItem(countryCode, isMobile, uiLang, script, tones,
+            QueryItem itm = new QueryItem(countryCode, isMobile, getLangLetter(uiLang), script, tones,
                 resCount, msecLookup, msecTotal, smode, query);
+            lock (ilist)
+            {
+                ilist.Add(itm);
+                evt.Set();
+            }
+        }
+
+        public void LogCorpus(string countryCode, bool isMobile, string uiLang, int resCount, 
+            int msecLookup, int msecTotal, bool isZho, bool isLoadMore, string query)
+        {
+            CorpusItem itm = new CorpusItem(countryCode, isMobile, getLangLetter(uiLang),
+                resCount, msecLookup, msecTotal, isZho, isLoadMore, query);
             lock (ilist)
             {
                 ilist.Add(itm);
@@ -245,7 +331,7 @@ namespace ZDO.CHSite.Logic
 
         public void LogHandwriting(string data)
         {
-            HandritingItem itm = new HandritingItem(data);
+            HandwritingItem itm = new HandwritingItem(data);
             lock (ilist)
             {
                 ilist.Add(itm);
