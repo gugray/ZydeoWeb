@@ -98,9 +98,10 @@ namespace ZDO.CHSite.Controllers
             // "Load more" button
             if (sres.TotalCount > ofs + limit)
             {
+                string strMore = TextProvider.Instance.GetString(lang, "search.corpusLoadMore");
                 sb.Append("<div class='corpmore'>");
                 sb.Append("<div class='corpmorebtn' data-offset='" + (ofs + limit).ToString() + "'>");
-                sb.Append(HtmlEncoder.Default.Encode("Load more")); // TO-DO: localize
+                sb.Append(HtmlEncoder.Default.Encode(strMore));
                 sb.Append("<i class='fa fa-circle-o-notch fa-fw'></i>");
                 sb.AppendLine("</div></div>");
             }

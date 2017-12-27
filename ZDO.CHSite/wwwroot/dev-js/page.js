@@ -301,7 +301,7 @@ var zdPage = (function () {
     // In lookup results, toggle between dictionary and corpus
     $(".searchMode").click(function () {
       if ($(this).hasClass("on")) return;
-      var queryStr = $('.txtSearch').val();
+      var queryStr = $('.txtSearch.active').val();
       // Bugfix for IE: must URL-encode ourselves
       // Like, every browser gets this right by themselves, except the beast
       // https://answers.microsoft.com/en-us/ie/forum/ie11-windows_other/ie11-sends-unencoded-url-referer-header/7420a770-56eb-4317-b00f-3322637dc62b
@@ -417,6 +417,7 @@ var zdPage = (function () {
     else if (startsWith(rel, "edit/history")) $("#smEditHistory").addClass("on");
     else if (startsWith(rel, "edit/existing")) $("#smEditExisting").addClass("on");
     else if (startsWith(rel, "read/search-tips")) $("#smReadSearchTips").addClass("on");
+    else if (startsWith(rel, "read/corpus")) $("#smReadCorpus").addClass("on");
     else if (startsWith(rel, "read/about")) $("#smReadAbout").addClass("on");
     else if (startsWith(rel, "read/faq")) $("#smReadFAQ").addClass("on");
     else if (startsWith(rel, "read/details")) $("#smReadDetails").addClass("on");

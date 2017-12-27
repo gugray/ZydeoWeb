@@ -113,12 +113,18 @@ body {
       width: 100%; position: fixed; left: 0; top: 7rem;
       background-color: @clrDefBg;
       .searchMode {
-        box-sizing: border-box; border-bottom: 1pt solid @clrLight; width: 50%;
+        box-sizing: border-box; border-bottom: 1pt solid @clrLight; width: 45%;
         position: relative; float: left; font-size: 1rem;
         height: 2rem; padding: 0.2rem 0 0 0;
         text-transform: uppercase; text-align: center; color: @clrStrong; cursor: default;
         &.on, &.on:hover { background-color: @clrLight; }
         &:hover { background-color: @clrLightLight; }
+      }
+      .searchModeInfo {
+        box-sizing: border-box; width: 10%; height: 2rem; overflow: hidden;
+        display: block; position: relative; float: left; font-size: 1.3rem;
+        border-bottom: 1pt solid @clrLight; border-left: 1pt solid @clrLight; padding-top: 0.05rem;
+        color: @clrMedium; text-decoration: none; cursor: pointer; text-align: center;
       }
     }
     &.welcome .searchSelect { display: none; }
@@ -216,6 +222,11 @@ body {
         &.on, &.on:hover { background-color: @clrLightLight; }
         &:hover { background-color: @clrLight; }
       }
+    }
+    .searchModeInfo {
+      display: block; position: relative; float: left; border: none; padding: 0.25rem 0.5rem;
+      font-size: 1.5rem; color: @clrMedium; text-decoration: none; cursor: pointer;
+      &:hover { color: @clrStrong; }
     }
   }
   &.welcome {

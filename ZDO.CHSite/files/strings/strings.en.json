@@ -12,6 +12,7 @@
     "subReadDetails": "Details",
     "subReadDetailsCHD": "Etc",
     "subReadAbout": "About",
+    "subReadCorpus": "Corpus",
     "subReadSearchTipsHDD": "Search tips",
     "subReadSearchTipsCHD": "Search tips",
     "subReadVersionHistory": "Version history",
@@ -30,9 +31,12 @@
     "cookieNotice": "This website relies on cookies for some of its functionality. By using the site, you agree to its use of cookies.",
     "cookieOK": "OK",
     "cookieLearnMore": "Learn more",
-    "imprint":  "Imprint"
+    "imprint": "Imprint"
   },
   "search": {
+    "searchModeDict": "Dictionary",
+    "searchModeCorp": "Corpus",
+    "corpusLoadMore": "Load more",
     "annotationNotice": "The search expression is not a word in the dictionary; showing annotations instead."
   },
   "emails": {

@@ -30,9 +30,12 @@
     "cookieNotice": "Az oldal egyes funkciókhoz cookie-kat (sütiket) használ. A böngészés folytatásával elfogadod a sütik használatát.",
     "cookieOK": "OK",
     "cookieLearnMore": "További információk",
-    "imprint":  "Impresszum"
+    "imprint": "Impresszum"
   },
   "search": {
+    "searchModeDict": "Szótár",
+    "searchModeCorp": "Korpusz",
+    "corpusLoadMore": "Mutass többet",
     "annotationNotice": "A keresett kifejezés nem található meg egyben a szótárban. Alább a szövegben felismert különálló szavakat láthatod."
   },
   "emails": {
