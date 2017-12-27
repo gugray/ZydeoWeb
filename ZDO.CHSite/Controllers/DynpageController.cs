@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 
 using Countries;
 using ZD.Common;
+using ZD.LangUtils;
 using ZDO.CHSite.Entities;
 using ZDO.CHSite.Logic;
 using ZDO.CHSite.Renderers;
@@ -32,6 +33,7 @@ namespace ZDO.CHSite.Controllers
         private readonly PageProvider pageProvider;
         private readonly SqlDict dict;
         private readonly Sphinx sphinx;
+        private readonly LangRepo langRepo;
         private readonly IConfiguration config;
         private readonly ILogger logger;
         private readonly QueryLogger qlog;
@@ -45,7 +47,7 @@ namespace ZDO.CHSite.Controllers
         /// That way, functionality is limited to serving static pages.
         /// </remarks>
         public DynpageController(PageProvider pageProvider, IConfiguration config, ILoggerFactory loggerFactory,
-            Auth auth, SqlDict dict, CountryResolver cres, QueryLogger qlog, Sphinx sphinx)
+            Auth auth, SqlDict dict, CountryResolver cres, QueryLogger qlog, Sphinx sphinx, LangRepo langRepo)
         {
             this.cres = cres;
             this.pageProvider = pageProvider;
@@ -55,6 +57,7 @@ namespace ZDO.CHSite.Controllers
             this.config = config;
             this.logger = loggerFactory.CreateLogger("DynpageController");
             this.auth = auth;
+            this.langRepo = langRepo;
         }
 
         /// <summary>
@@ -281,6 +284,22 @@ namespace ZDO.CHSite.Controllers
             return pr;
         }
 
+        private bool canAddWord(string query)
+        {
+            int userId;
+            string userName;
+            auth.CheckSession(HttpContext.Request.Headers, out userId, out userName);
+            if (userId < 0) return false;
+            if (query.Length > 6) return false;
+            UniHanziInfo[] uhis = langRepo.GetUnihanInfo(query);
+            foreach (var uhi in uhis)
+            {
+                if (uhi == null) return false;
+                if (!uhi.CanBeSimp) return false;
+            }
+            return true;
+        }
+
         private PageResult doSearchInner(string rel, string lang, string searchScript, string searchTones, 
             bool isMobile, out string query)
         {
@@ -313,6 +332,9 @@ namespace ZDO.CHSite.Controllers
             {
                 pr = pageProvider.GetPage(lang, "?/noresults", false);
                 pr.Data = query;
+                // Can add word now?
+                if (canAddWord(query)) pr.Html = pr.Html.Replace("{addnowclass}", "visible");
+                else pr.Html = pr.Html.Replace("{addnowclass}", "");
             }
             else
             {
@@ -365,6 +387,7 @@ namespace ZDO.CHSite.Controllers
             if (rel == "corpus" || rel == "corpus/")
                 return doWelcome(lang);
             string query = "";
+            PageResult pr;
             try
             {
                 query = rel.Replace("corpus/", "");
@@ -372,14 +395,24 @@ namespace ZDO.CHSite.Controllers
                 CorpusController cc = new CorpusController(sphinx, qlog, cres);
                 string html;
                 cc.GetRenderedConcordance(ref query, 0, out html, lang, isMobile, HttpContext);
-                PageResult res = new PageResult
+                // No results
+                if (html == "")
+                {
+                    pr = pageProvider.GetPage(lang, "?/nocorpusresults", false);
+                    pr.Data = query;
+                    return pr;
+                }
+                // Got results
+                string title = TextProvider.Instance.GetString(lang, "misc.corpusResultTitleCHD");
+                title = string.Format(title, query);
+                pr = new PageResult
                 {
                     RelNorm = rel,
-                    Title = "Porkusz",
+                    Title = title,
                     Html = html,
                     Data = query,
                 };
-                return res;
+                return pr;
             }
             catch (Exception ex)
             {

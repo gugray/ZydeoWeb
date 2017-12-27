@@ -49,7 +49,12 @@ var zdLookup = (function () {
     //}
     // Search field hint. Depends on mutation.
     if ($("body").hasClass("hdd")) $(".txtSearch").attr("placeholder", zdPage.ui("search-manual", "hint-hdd"));
-    else $(".txtSearch").attr("placeholder", zdPage.ui("search-manual", "hint-chd"));
+    else {
+      if (startsWith(zdPage.getRel(), "search"))
+        $(".txtSearch").attr("placeholder", zdPage.ui("search-manual", "hint-chd"));
+      else
+        $(".txtSearch").attr("placeholder", zdPage.ui("search-manual", "corpushint-chd"));
+    }
     // Add tooltips; disable right away for touch. (Must *add* or enable/disable code crashes on iOS.)
     $(".btnWrite").tooltipster({ content: $("<span>" + zdPage.ui("search-manual", "tooltip-btn-brush") + "</span>") });
     $(".btnSettings").tooltipster({ content: $("<span>" + zdPage.ui("search-manual", "tooltip-btn-settings") + "</span>") });
@@ -112,11 +117,33 @@ var zdLookup = (function () {
     }
     // When corpus results come from in-page navigation: hook up "load more"
     $(".corpmorebtn").click(onCorpusLoadMore);
+    // No results and annotation: optionally enable "add word"
+    setupAddWord(data);
+
     // Hack [?] - but either something steals focus on load, or input field is not yet shown to accept focus.
     setTimeout(function () {
       if (!zdPage.isMobile()) $('.txtSearch.active').focus();
       else $('.txtSearch.active').blur();
     }, 100);
+  }
+
+  function setupAddWord(data) {
+    // Enable "add word now" if conditions are met
+    var canAddWord = true;
+    if (!zdAuth.isLoggedIn()) canAddWord = false;
+    for (var i = 0; i != data.data.length; ++i) {
+      var c = data.data.charCodeAt(i);
+      if ((c >= 0x4E00 && c <= 0x9FFF) || (c >= 0x3400 && c <= 0x4DFF) || (c >= 0xF900 && c <= 0xFAFF))
+        continue;
+      canAddWord = false;
+      break;
+    }
+    if (canAddWord) {
+      $(".addnow").addClass("visible");
+      $(".addnow").click(function () {
+        zdPage.navigate("edit/new/" + encodeURIComponent(data.data));
+      });
+    }
   }
 
   // Invoked when search text changes; starts prefix query, handles result.
@@ -250,7 +277,7 @@ var zdLookup = (function () {
     });
     req.fail(function (jqXHR, textStatus, error) {
       $(".corpmorebtn").removeClass("loading");
-      zdPage.showAlert("Something went wrong", "Couldn't load more corpus hits. Please try again in a few seconds. If the problem persists, let me know: zydeodict-[at]-gmail-[dot]-com.", true);
+      zdPage.showAlert(zdPage.ui("search-manual", "corpus-load-fail-caption"), zdPage.ui("search-manual", "corpus-load-fail-message"), true);
     });
     // We're now loading until request finishes
     $(this).addClass("loading");

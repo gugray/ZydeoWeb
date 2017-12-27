@@ -11,9 +11,12 @@
   "search-manual": {
     "hint-hdd": "Hanzi, pinyin vagy német szó",
     "hint-chd": "Hanzi, pinyin vagy magyar szó",
+    "corpushint-chd": "Kínai vagy magyar kifejezés",
     "tooltip-btn-brush": "Kézírás-felismerés",
     "tooltip-btn-settings": "Keresési beállítások",
-    "tooltip-btn-search": "Keress! (Enter)"
+    "tooltip-btn-search": "Keress! (Enter)",
+    "corpus-load-fail-caption": "Valami félrecsúszott",
+    "corpus-load-fail-message": "Nem sikerült betölteni a további korpusz-találatokat."
   },
   "soa": {
     "no-animation-for-char": "Sajnos ehhez az írásjegyhez nincs vonássorrend-animáció.",

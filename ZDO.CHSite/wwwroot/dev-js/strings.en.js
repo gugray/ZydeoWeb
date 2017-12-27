@@ -11,9 +11,12 @@
   "search-manual": {
     "hint-hdd": "Hanzi, Pinyin or German word",
     "hint-chd": "Hanzi, Pinyin or Hungarian word",
+    "corpushint-chd": "Chinese or Hungarian expression",
     "tooltip-btn-brush": "Handwriting recognition",
     "tooltip-btn-settings": "Search settings",
-    "tooltip-btn-search": "Search (Enter)"
+    "tooltip-btn-search": "Search (Enter)",
+    "corpus-load-fail-caption": "Something went wrong",
+    "corpus-load-fail-message": "Failed to load more corpus hits."
   },
   "soa": {
     "no-animation-for-char": "Sorry; we don't have an animation for this character.",

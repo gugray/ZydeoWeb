@@ -25,8 +25,9 @@
   "misc": {
     "searchResultTitleHDD": "{0} - német fordítás - HanDeDict @ Zydeo kínai-német szótár",
     "searchResultTitleTrgHDD": "{0} - kínai fordítás - HanDeDict @ Zydeo kínai-német szótár",
-    "searchResultTitleCHD": "{0} - magyar fordítás - CHDICT kínai-magyar szótár",
-    "searchResultTitleTrgCHD": "{0} - kínai fordítás - CHDICT kínai-magyar szótár",
+    "searchResultTitleCHD": "{0} - magyar fordítás - CHDICT kínai ⇔ magyar szótár",
+    "searchResultTitleTrgCHD": "{0} - kínai fordítás - CHDICT kínai ⇔ magyar szótár",
+    "corpusResultTitleCHD": "{0} - mondatfordítások - CHDICT kínai ⇔ magyar szövegtár",
     "cookieNotice": "Az oldal egyes funkciókhoz cookie-kat (sütiket) használ. A böngészés folytatásával elfogadod a sütik használatát.",
     "cookieOK": "OK",
     "cookieLearnMore": "További információk",
@@ -36,7 +37,8 @@
     "searchModeDict": "Szótár",
     "searchModeCorp": "Korpusz",
     "corpusLoadMore": "Mutass többet",
-    "annotationNotice": "A keresett kifejezés nem található meg egyben a szótárban. Alább a szövegben felismert különálló szavakat láthatod."
+    "annotationNotice": "A keresett kifejezés nem található meg egyben a szótárban. Alább a szövegben felismert különálló szavakat láthatod.",
+    "annotationAddNow": "Felveszem a szótárba"
   },
   "emails": {
     "senderNameHDD": "HanDeDict @ Zydeo weboldal",

@@ -4,9 +4,13 @@
 
 #welcomeScreen, #noResults { 
   width: 100%; text-align: center; font-size: 1.1rem; padding-bottom: 5rem; height: auto; overflow-y: auto;
+}
+
+#welcomeScreen {
   img { width: 10rem; margin-top: -1.5rem; margin-bottom: -2rem; }
   h1, h2 { font-family: @fntSerif; font-size: 3rem; color: @clrStrong; margin: 0 0 1rem 0; }
   p.prompt { color: @clrStrongRed; text-transform: uppercase; font-size: 1rem; margin-bottom: 1rem; }
+  p.extra { margin-top: 1rem; }
   a { text-decoration: none; color: @clrStrongAccent; }
   a:hover { color: @clrStrongRed; }
   a.fbshare {
@@ -15,9 +19,25 @@
   }
   .diptych {
     width: 100%; margin-top: 3rem; font-size: 1rem;
-    div { position: relative; float: left; width: 50%; box-sizing: border-box; height: 100%; }
+    div { position: relative; float: left; width: 50%; box-sizing: border-box; }
     div:first-child { text-align: right; padding-right: 1rem; }
     div:last-child { text-align: left; padding-left: 1rem; }
+  }
+}
+
+#noResults {
+  text-align: left;
+  .left { width: 11rem; position: relative; float: left; margin: 0; }
+  .right { position: absolute; left: 0; width: 100%; padding-left: 12rem; box-sizing: border-box; }
+  img { width: 13rem; margin: -0.5rem 0 0 -2rem; }
+  h2 { font-family: @fntSerif; font-size: 2rem; color: @clrBodyText; margin: 0 0 1rem 0; }
+  .addnow { 
+    margin-top: 0.5rem; display: none;
+    &.visible { display: block; }
+    span {
+      color: @clrStrongAccent; cursor: default;
+      &:hover { color: @clrStrongRed; }
+    }
   }
 }
 
@@ -31,6 +51,11 @@
   span, i { display: block; position: relative; float: left; }
   i { width: 2rem; font-size: 1.5rem; }
   span { width: calc(100% - 6rem); }
+  .addnow {
+    font-weight: normal; cursor: default; color: @clrStrongAccent; display: none;
+    &.visible { display: inline; }
+    &:hover { color: @clrStrongRed; }
+  }
 }
 
 /* ------------------------------- LOOKUP RESULTS ------------------------------- */

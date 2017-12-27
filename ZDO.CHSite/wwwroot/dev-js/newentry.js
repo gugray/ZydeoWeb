@@ -43,6 +43,19 @@ var zdNewEntry = (function () {
     $("#newEntrySubmit").click(onSubmit);
 
     $("#newEntrySimp").prop("readonly", false);
+
+    // If URL contains info, fill in simplified
+    var rel = zdPage.getRel();
+    if (startsWith(rel, "edit/new/")) {
+      var simp = rel.substring(9);
+      simp = decodeURIComponent(simp).trim();
+      if (simp.length > 0) {
+        $("#newEntrySimp").val(simp);
+        // Trigger change handler so all other fields are filled in
+        onSimpChanged();
+      }
+    }
+    // Focus input field
     $("#newEntrySimp").focus();
 
     simpBefore = $("#newEntrySimp").val();
