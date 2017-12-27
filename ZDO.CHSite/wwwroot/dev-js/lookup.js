@@ -472,7 +472,7 @@ var zdLookup = (function () {
     // Like, every browser gets this right by themselves, except the beast
     // https://answers.microsoft.com/en-us/ie/forum/ie11-windows_other/ie11-sends-unencoded-url-referer-header/7420a770-56eb-4317-b00f-3322637dc62b
     queryStr = encodeURIComponent(queryStr);
-    queryStr = queryStr.replace("%20", "+");
+    queryStr = queryStr.split("%20").join("+");
     killPrefixHints();
     hideStrokeInput();
     hideSettings();

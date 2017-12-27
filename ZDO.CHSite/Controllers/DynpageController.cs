@@ -304,6 +304,7 @@ namespace ZDO.CHSite.Controllers
             query = rel.Replace("search/", "");
             query = query.Trim();
             query = WebUtility.UrlDecode(query);
+            query = query.Trim();
             CedictLookupResult lr = dict.Lookup(query);
             int msecLookup = (int)swatch.ElapsedMilliseconds;
             int msecFull = msecLookup;
