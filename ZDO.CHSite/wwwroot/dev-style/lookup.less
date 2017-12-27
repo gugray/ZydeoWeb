@@ -219,15 +219,15 @@
 .corprow, .corpseg { box-sizing: border-box; }
 .corprow {
   position: relative; float: left; clear: both; width: 100%;
-  border-bottom: 1px dashed @clrGray;
-  padding: 0.3rem 0 0.5rem 0;
+  border-bottom: 0.7pt dotted @clrGray;
+  padding: 0.5rem 0 0.7rem 0;
 }
 .corpseg {
   width: 50%; position: relative; float: left;
   &:nth-child(1) { padding-right: 0.5rem; }
   &:nth-child(2) { padding-left: 0.5rem; }
   &.zho { 
-    font-size: 1.5rem; font-family: @fntZho; line-height: 130%;
+    font-size: 1.3rem; font-family: @fntZhoCorp; line-height: 150%;
     span.hlLo { background-color: lighten(@clrLightAccent, 6%); }
     span.hlMid { background-color: lighten(@clrLightAccent, 2%); }
     span.hlHi { background-color: darken(@clrLightAccent, 6%); }
@@ -240,13 +240,15 @@
   }
 }
 html.resplay-hamburger {
-  .corprow { padding: 0.4rem 0 0.6rem 0; }
-  .corpseg { width: 100%; padding: 0; }
+  .corprow { padding: 0; border: none; }
+  .corpseg { padding: 0; width: 100%; }
+  .corpseg.trg { padding-bottom: 0.8rem; border-bottom: 0.7pt dotted @clrGray; font-size: 1.2rem; }
+  .corpseg.zho { margin: 0.6rem 0 0.3rem 0; font-size: 1.4rem; }
 }
 .corpmore {
   position: relative; width: 100%; float: left; box-sizing: border-box; margin: 2rem 0;
   .corpmorebtn {
-    width: 20rem; font-size: 1.2rem; cursor: default; padding: 0.2rem 1.5rem;
+    width: 100%; font-size: 1.2rem; cursor: default; padding: 0.2rem 1.5rem; box-sizing: border-box;
     position: relative; margin: 0 auto; text-align: center;
     background-color: @clrLightAccent; transition: background-color ease 0.5s;
     &:hover { background-color: @clrMediumAccent; }
