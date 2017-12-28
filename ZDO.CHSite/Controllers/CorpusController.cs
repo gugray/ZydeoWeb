@@ -265,7 +265,7 @@ namespace ZDO.CHSite.Controllers
                 {
                     srcIxs.Add(i);
                     // Mark all these ranges gently
-                    for (int j = ptr.A; j != ptr.A + ptr.B; ++j) shls[j] = (float)0.03;
+                    for (int j = ptr.A; j != ptr.A + ptr.B; ++j) shls[j] = trgScoreMed;
                 }
             }
             // Target tokens with score: token ix -> score
