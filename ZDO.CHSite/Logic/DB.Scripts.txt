@@ -5,7 +5,7 @@ CREATE TABLE sys_params(
 	value			VARCHAR(256)
 ) ENGINE=InnoDB CHARACTER SET=utf8 COLLATE utf8_general_ci;
 CREATE INDEX idx_sys_params_xkey ON sys_params(xkey);
-INSERT INTO sys_params (xkey, value) VALUES ('db_model', '2.1');
+INSERT INTO sys_params (xkey, value) VALUES ('db_model', '2.2');
 
 DROP TABLE IF EXISTS binary_entries;
 CREATE TABLE binary_entries(
