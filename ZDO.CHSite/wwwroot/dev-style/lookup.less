@@ -35,8 +35,8 @@
   .addnow { 
     margin-top: 0.5rem; display: none;
     &.visible { display: block; }
-    span {
-      color: @clrStrongAccent; cursor: default;
+    a {
+      color: @clrStrongAccent; cursor: default; text-decoration: none;
       &:hover { color: @clrStrongRed; }
     }
   }
@@ -53,9 +53,12 @@
   i { width: 2rem; font-size: 1.5rem; }
   span { width: calc(100% - 6rem); }
   .addnow {
-    font-weight: normal; cursor: default; color: @clrStrongAccent; display: none;
+    font-weight: normal; display: none;
     &.visible { display: inline; }
-    &:hover { color: @clrStrongRed; }
+    a {
+      cursor: default; color: @clrStrongAccent; text-decoration: none;  
+      &:hover { color: @clrStrongRed; }
+    }
   }
 }
 

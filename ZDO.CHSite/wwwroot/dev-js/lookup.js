@@ -85,7 +85,10 @@ var zdLookup = (function () {
       onPrefixKeyUpDown(e, false);
     });
     $(".txtSearch").focus(txtSearchFocus);
-    $(".txtSearch").on("input", function () { if (!prefixSuppressTrigger) prefixTrigger(); });
+    $(".txtSearch").on("input", function () {
+      if (!prefixSuppressTrigger) prefixTrigger();
+      fixSearchCorpusToggleLinks();
+    });
     $('.txtSearch').on('compositionstart', function (e) { isComposing = true; });
     $('.txtSearch').on('compositionend', function (e) { isComposing = false; });
 
@@ -119,12 +122,24 @@ var zdLookup = (function () {
     $(".corpmorebtn").click(onCorpusLoadMore);
     // No results and annotation: optionally enable "add word"
     setupAddWord(data);
+    // Fix href in search/corpus menu links
+    fixSearchCorpusToggleLinks();
 
     // Hack [?] - but either something steals focus on load, or input field is not yet shown to accept focus.
     setTimeout(function () {
       if (!zdPage.isMobile()) $('.txtSearch.active').focus();
       else $('.txtSearch.active').blur();
     }, 100);
+  }
+
+  function fixSearchCorpusToggleLinks() {
+    var queryStr = $('.txtSearch.active').val();
+    queryStr = encodeURIComponent(queryStr);
+    queryStr = queryStr.split("%20").join("+");
+    var hrefDict = "/" + zdPage.getLang() + "/search" + "/" + queryStr;
+    var hrefCorp = "/" + zdPage.getLang() + "/corpus" + "/" + queryStr;
+    $(".searchMode.smDict").attr("href", hrefDict);
+    $(".searchMode.smCorp").attr("href", hrefCorp);
   }
 
   function setupAddWord(data) {
@@ -140,9 +155,8 @@ var zdLookup = (function () {
     }
     if (canAddWord) {
       $(".addnow").addClass("visible");
-      $(".addnow").click(function () {
-        zdPage.navigate("edit/new/" + encodeURIComponent(data.data));
-      });
+      var href = "/" + zdPage.getLang() + "/edit/new/" + encodeURIComponent(data.data);
+      $(".addnow a").attr("href", href);
     }
   }
 

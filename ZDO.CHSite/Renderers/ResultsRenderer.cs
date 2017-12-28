@@ -39,7 +39,7 @@ namespace ZDO.CHSite.Renderers
                 sb.Append("<div class='notice'>");
                 sb.Append("<i class='fa fa-umbrella'></i>");
                 sb.Append("<span>" + TextProvider.Instance.GetString(uiLang, "search.annotationNotice"));
-                sb.Append("<b class='addnow'><br/>" + TextProvider.Instance.GetString(uiLang, "search.annotationAddNow") + "</b>");
+                sb.Append("<b class='addnow'><br/><a href='#'>" + TextProvider.Instance.GetString(uiLang, "search.annotationAddNow") + "</a></b>");
                 sb.Append("</span>");
                 sb.AppendLine("</div>");
                 for (int i = 0; i != lr.Annotations.Count; ++i)

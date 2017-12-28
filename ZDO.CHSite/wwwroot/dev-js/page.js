@@ -298,19 +298,6 @@ var zdPage = (function () {
       // Stop propagating, or we'll self-close right away.
       evt.stopPropagation();
     });
-    // In lookup results, toggle between dictionary and corpus
-    $(".searchMode").click(function () {
-      if ($(this).hasClass("on")) return;
-      var queryStr = $('.txtSearch.active').val();
-      // Bugfix for IE: must URL-encode ourselves
-      // Like, every browser gets this right by themselves, except the beast
-      // https://answers.microsoft.com/en-us/ie/forum/ie11-windows_other/ie11-sends-unencoded-url-referer-header/7420a770-56eb-4317-b00f-3322637dc62b
-      queryStr = encodeURIComponent(queryStr);
-      queryStr = queryStr.split("%20").join("+");
-      var trgRel = ($(this).hasClass("smDict") ? "search" : "corpus") + "/" + queryStr;
-      history.pushState(null, null, "/" + lang + "/" + trgRel);
-      dynNavigate();
-    });
   }
 
   // General UI event wireup

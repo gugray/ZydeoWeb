@@ -114,8 +114,8 @@ body {
       background-color: @clrDefBg;
       .searchMode {
         box-sizing: border-box; border-bottom: 1pt solid @clrLight; width: 45%;
-        position: relative; float: left; font-size: 1rem;
-        height: 2rem; padding: 0.2rem 0 0 0;
+        display: block; position: relative; float: left; font-size: 1rem;
+        height: 2rem; padding: 0.2rem 0 0 0; text-decoration: none;
         text-transform: uppercase; text-align: center; color: @clrStrong; cursor: default;
         &.on, &.on:hover { background-color: @clrLight; }
         &:hover { background-color: @clrLightLight; }
@@ -219,6 +219,7 @@ body {
       .searchMode { 
         width: auto; height: 100%; padding: 0.3rem 1rem; font-size: 1rem; box-sizing: border-box;
         text-transform: uppercase; color: @clrStrong; background-color: @clrDefBg;
+        display: block; text-decoration: none; position: relative; float: left; cursor: default;
         &.on, &.on:hover { background-color: @clrLightLight; }
         &:hover { background-color: @clrLight; }
       }
