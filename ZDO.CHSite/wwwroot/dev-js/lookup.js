@@ -47,14 +47,8 @@ var zdLookup = (function () {
     //  elmStrokes.setAttribute("type", "text/javascript");
     //  elmStrokes.setAttribute("src", "/prod-js/xcharacterdata.js");
     //}
-    // Search field hint. Depends on mutation.
-    if ($("body").hasClass("hdd")) $(".txtSearch").attr("placeholder", zdPage.ui("search-manual", "hint-hdd"));
-    else {
-      if (startsWith(zdPage.getRel(), "search"))
-        $(".txtSearch").attr("placeholder", zdPage.ui("search-manual", "hint-chd"));
-      else
-        $(".txtSearch").attr("placeholder", zdPage.ui("search-manual", "corpushint-chd"));
-    }
+    // Search field hint. Depends on mutation, and corpus/dict mode.
+    updateInputHint();
     // Add tooltips; disable right away for touch. (Must *add* or enable/disable code crashes on iOS.)
     $(".btnWrite").tooltipster({ content: $("<span>" + zdPage.ui("search-manual", "tooltip-btn-brush") + "</span>") });
     $(".btnSettings").tooltipster({ content: $("<span>" + zdPage.ui("search-manual", "tooltip-btn-settings") + "</span>") });
@@ -122,6 +116,8 @@ var zdLookup = (function () {
     $(".corpmorebtn").click(onCorpusLoadMore);
     // No results and annotation: optionally enable "add word"
     setupAddWord(data);
+    // Input hint
+    updateInputHint();
     // Fix href in search/corpus menu links
     fixSearchCorpusToggleLinks();
 
@@ -130,6 +126,16 @@ var zdLookup = (function () {
       if (!zdPage.isMobile()) $('.txtSearch.active').focus();
       else $('.txtSearch.active').blur();
     }, 100);
+  }
+
+  function updateInputHint() {
+    if ($("body").hasClass("hdd")) $(".txtSearch").attr("placeholder", zdPage.ui("search-manual", "hint-hdd"));
+    else {
+      if (startsWith(zdPage.getRel(), "search"))
+        $(".txtSearch").attr("placeholder", zdPage.ui("search-manual", "hint-chd"));
+      else
+        $(".txtSearch").attr("placeholder", zdPage.ui("search-manual", "corpushint-chd"));
+    }
   }
 
   function fixSearchCorpusToggleLinks() {
@@ -144,6 +150,7 @@ var zdLookup = (function () {
 
   function setupAddWord(data) {
     // Enable "add word now" if conditions are met
+    if (!data || !data.data) return false;
     var canAddWord = true;
     if (!zdAuth.isLoggedIn()) canAddWord = false;
     for (var i = 0; i != data.data.length; ++i) {
