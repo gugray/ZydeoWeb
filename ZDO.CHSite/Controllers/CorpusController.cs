@@ -15,8 +15,15 @@ namespace ZDO.CHSite.Controllers
 {
     public class CorpusController : Controller
     {
+        private const float zhoScoreMin = 0.00075F;
+        private const float zhoScoreMed = 0.0075F;
+        private const float zhoScoreTop = 0.015F;
+        private const float trgScoreMin = 0.001F;
+        private const float trgScoreMed = 0.01F;
+        private const float trgScoreTop = 0.03F;
         private static string[] trgStops = new string[] { "a", "az", "és" };
         private const int pageSize = 100;
+
         private readonly Sphinx sphinx;
         private readonly QueryLogger qlog;
         private readonly CountryResolver cres;
@@ -56,8 +63,16 @@ namespace ZDO.CHSite.Controllers
             // Lookup timer
             Stopwatch swatch = new Stopwatch();
             swatch.Restart();
-
+            // Lookup
             SphinxResult sres = sphinx.Query(query, isZhoSearch, ofs, limit);
+            // If first page, show result count on top
+            if (ofs == 0 && sres.TotalCount > 0)
+            {
+                sb.Append("<p class='corpresultcount'><span>");
+                sb.Append(HtmlEncoder.Default.Encode(getResultCountStr(lang, sres.TotalCount)));
+                sb.AppendLine("</span></p>");
+            }
+
             using (BinReader br = new BinReader(sphinx.CorpusBinFileName))
             {
                 List<float> trgHilites = new List<float>();
@@ -119,6 +134,19 @@ namespace ZDO.CHSite.Controllers
                 msecPerlOuter, msecFull, isZhoSearch, ofs > 0, query);
         }
 
+        private static string getResultCountStr(string lang, int count)
+        {
+            string val;
+            if (count <= 500) val = count.ToString();
+            else if (count <= 2000) val = string.Format("{0:#,0}+", ((count / 100) * 100));
+            else if (count <= 5000) val = string.Format("{0:#,0}+", ((count / 500) * 500));
+            else val = string.Format("{0:#,0}+", ((count / 1000) * 1000));
+            if (lang == "hu" || lang == "de") val = val.Replace(',', '.');
+            string msg = TextProvider.Instance.GetString(lang, "search.corpusResultCount");
+            msg = string.Format(msg, val);
+            return msg;
+        }
+
         private static string pruneSurf(string str, bool toLower, List<int> posMap)
         {
             StringBuilder sb = new StringBuilder();
@@ -169,12 +197,22 @@ namespace ZDO.CHSite.Controllers
             else return c.ToString();
         }
 
-        private static string getHlSpan(float val)
+        private static string getHlSpan(float val, bool zho)
         {
-            if (val >= 0.001 && val < 0.01) return "<span class='hlLo'>";
-            else if (val >= 0.01 && val < 0.03) return "<span class='hlMid'>";
-            else if (val >= 0.03) return "<span class='hlHi'>";
-            else return "<span>";
+            if (zho)
+            {
+                if (val >= zhoScoreMin && val < zhoScoreMed) return "<span class='hlLo'>";
+                else if (val >= zhoScoreMed && val < zhoScoreTop) return "<span class='hlMid'>";
+                else if (val >= zhoScoreTop) return "<span class='hlHi'>";
+                else return "<span>";
+            }
+            else
+            {
+                if (val >= trgScoreMin && val < trgScoreMed) return "<span class='hlLo'>";
+                else if (val >= trgScoreMed && val < trgScoreTop) return "<span class='hlMid'>";
+                else if (val >= trgScoreTop) return "<span class='hlHi'>";
+                else return "<span>";
+            }
         }
 
         private string renderSegment(string surf, List<float> hls, bool isZhoSearch)
@@ -186,7 +224,7 @@ namespace ZDO.CHSite.Controllers
                 if (hls[i] != curr)
                 {
                     if (curr != 0) sb.Append("</span>");
-                    if (hls[i] != 0) sb.Append(getHlSpan(hls[i]));
+                    if (hls[i] != 0) sb.Append(getHlSpan(hls[i], !isZhoSearch));
                 }
                 curr = hls[i];
                 if (!needsEnc(surf[i])) sb.Append(surf[i]);

@@ -38,6 +38,7 @@
     "searchModeDict": "Dictionary",
     "searchModeCorp": "Corpus",
     "corpusLoadMore": "Load more",
+    "corpusResultCount": "{0} results",
     "annotationNotice": "The search expression is not a word in the dictionary; showing annotations instead.",
     "annotationAddNow": "I'll add the word now"
   },

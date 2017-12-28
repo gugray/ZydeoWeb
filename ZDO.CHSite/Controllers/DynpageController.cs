@@ -279,6 +279,7 @@ namespace ZDO.CHSite.Controllers
             pr = pageProvider.GetPage(lang, "", false);
             string entryCountStr = "{0:#,0}";
             entryCountStr = string.Format(entryCountStr, dict.EntryCount);
+            if (lang == "hu" || lang == "de") entryCountStr = entryCountStr.Replace(',', '.');
             pr.Html = pr.Html.Replace("{entryCount}", entryCountStr);
             pr.Description = pr.Description.Replace("{entryCount}", entryCountStr);
             return pr;

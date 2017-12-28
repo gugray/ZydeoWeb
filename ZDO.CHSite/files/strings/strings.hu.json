@@ -37,6 +37,7 @@
     "searchModeDict": "Szótár",
     "searchModeCorp": "Korpusz",
     "corpusLoadMore": "Mutass többet",
+    "corpusResultCount": "{0} találat",
     "annotationNotice": "A keresett kifejezés nem található meg egyben a szótárban. Alább a szövegben felismert különálló szavakat láthatod.",
     "annotationAddNow": "Felveszem a szótárba"
   },

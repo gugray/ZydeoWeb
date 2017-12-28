@@ -243,13 +243,18 @@
   }
 }
 
-/* ------------------------------- SEARCH OPTIONS POPUP ------------------------------- */
+/* ------------------------------- CORPUS LOOKUP ------------------------------- */
 
+.corpresultcount { 
+  margin-bottom: 1rem;
+  span { border-bottom: 3pt solid @clrLight; }
+}
 .corprow, .corpseg { box-sizing: border-box; }
 .corprow {
   position: relative; float: left; clear: both; width: 100%;
   border-bottom: 0.7pt dotted @clrGray;
   padding: 0.5rem 0 0.7rem 0;
+  &:last-child { margin-bottom: 5rem; }
 }
 .corpseg {
   width: 50%; position: relative; float: left;
@@ -275,7 +280,7 @@ html.resplay-hamburger {
   .corpseg.zho { margin: 0.6rem 0 0.3rem 0; font-size: 1.4rem; }
 }
 .corpmore {
-  position: relative; width: 100%; float: left; box-sizing: border-box; margin: 2rem 0;
+  position: relative; width: 100%; float: left; box-sizing: border-box; margin: 2rem 0 4rem 0;
   .corpmorebtn {
     width: 100%; font-size: 1.2rem; cursor: default; padding: 0.2rem 1.5rem; box-sizing: border-box;
     position: relative; margin: 0 auto; text-align: center;
@@ -287,6 +292,5 @@ html.resplay-hamburger {
       animation: fa-spin 1s infinite linear;
     }
     &.loading i { display: block; }
-
   }
 }
