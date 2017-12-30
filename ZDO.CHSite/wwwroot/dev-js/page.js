@@ -360,11 +360,13 @@ var zdPage = (function () {
         $(".searchMode.smDict").removeClass("on");
         $(".searchMode.smCorp").addClass("on");
         $(".hdrSearch").addClass("corpus");
+        $(".searchModeInfo").attr("href", "/" + lang + "/read/corpus");
       }
       else {
         $(".searchMode.smCorp").removeClass("on");
         $(".searchMode.smDict").addClass("on");
         $(".hdrSearch").removeClass("corpus");
+        $(".searchModeInfo").attr("href", "/" + lang + "/read/search-tips");
       }
       $("#dynPage").addClass(dpClassYes);
       $("#dynPage").removeClass(dpClassNo);
