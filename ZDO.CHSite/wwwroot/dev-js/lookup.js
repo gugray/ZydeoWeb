@@ -280,7 +280,7 @@ var zdLookup = (function () {
 
   function onCorpusLoadMore() {
     if ($(this).hasClass("loading")) return;
-    var query = $(".txtSearch").val();
+    var query = $(this).data("query");
     var offset = $(this).data("offset");
     var params = {
       query: query,

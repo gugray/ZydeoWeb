@@ -115,7 +115,8 @@ namespace ZDO.CHSite.Controllers
             {
                 string strMore = TextProvider.Instance.GetString(lang, "search.corpusLoadMore");
                 sb.Append("<div class='corpmore'>");
-                sb.Append("<div class='corpmorebtn' data-offset='" + (ofs + limit).ToString() + "'>");
+                sb.Append("<div class='corpmorebtn' data-offset='" + (ofs + limit).ToString() + "' ");
+                sb.Append("data-query='" + HtmlEncoder.Default.Encode(query) + "'>");
                 sb.Append(HtmlEncoder.Default.Encode(strMore));
                 sb.Append("<i class='fa fa-circle-o-notch fa-fw'></i>");
                 sb.AppendLine("</div></div>");
