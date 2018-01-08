@@ -56,7 +56,7 @@ var zdStrokeAnim = (function () {
 
   // Gets an SVG path from a stroke's median points.
   function soaGetMedianPath(median) {
-    const result = [];
+    var result = [];
     for (var i = 0; i != median.length; i++) {
       var point = median[i];
       result.push(result.length === 0 ? 'M' : 'L');
