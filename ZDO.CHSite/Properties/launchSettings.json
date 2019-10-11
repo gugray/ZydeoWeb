@@ -20,7 +20,6 @@
     },
     "Dev-CHD": {
       "commandName": "Project",
-      "commandLineArgs": "x--task bulkadd D:/dict2.txt D:/",
       "launchBrowser": true,
       "launchUrl": "http://localhost:5004/en",
       "environmentVariables": {
