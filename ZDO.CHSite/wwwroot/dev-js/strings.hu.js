@@ -115,7 +115,7 @@
     "invalidemail": "Hibás e-mail cím.",
     "emailtaken": "Ez az e-mail cím már használatban van.",
     "passcaptcha": "Oldd meg a feladványt, majd kattints az OK gombra. A rendszer ezután e-mailben elküld neked egy titkos linket, amivel megadhatsz egy új jelszót.",
-    "emailsent": "A e-mailt elküldtük",
+    "emailsent": "Az e-mailt elküldtük",
     "emailsent-msg1": "A rendszer e-mailben elküldte neked a jelszó-helyreállító linket. A link egy órán keresztül él.",
     "emailsent-msg2": "Ha pár percen belül nem érkezik meg az üzenet, ellenőrizd a levélszemét-mappát is.",
     "terms-raw": "A regisztrációval elfogadod a {0}felhasználási feltételeket{1}.",
