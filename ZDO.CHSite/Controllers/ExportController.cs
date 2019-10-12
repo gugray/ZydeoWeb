@@ -92,6 +92,8 @@ namespace ZDO.CHSite.Controllers
             using (StreamWriter sw = new StreamWriter(fs, Encoding.UTF8))
             using (SqlDict.Exporter exporter = new SqlDict.Exporter())
             {
+                // #20 Dictionary export mixes \r\n and \n
+                sw.NewLine = "\n";
                 writePrologue(sw);
                 EntryBlockWriter ebw = new EntryBlockWriter(sw);
                 while (true)
@@ -122,6 +124,9 @@ namespace ZDO.CHSite.Controllers
             string strDate = dt.Year + "-" + dt.Month.ToString("00") + "-" + dt.Day.ToString("00") + "T";
             strDate += dt.Hour.ToString("00") + ":" + dt.Minute.ToString("00") + ":" + dt.Second.ToString("00") + "Z";
             strPrologue = string.Format(strPrologue, strDate);
+            // Extra sanity check: we want this export to have only \n as line breaks
+            // #20 Dictionary export mixes \r\n and \n
+            strPrologue = strPrologue.Replace("\r\n", "\n");
             sw.WriteLine(strPrologue);
         }
 
