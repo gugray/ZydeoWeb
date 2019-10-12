@@ -1,4 +1,4 @@
-/// <reference path="../lib/jquery-2.1.4.min.js" />
+/// <reference path="../lib/jquery-3.4.1.min.js" />
 /// <reference path="auth.js" />
 /// <reference path="page.js" />
 
