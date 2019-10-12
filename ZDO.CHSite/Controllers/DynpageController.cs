@@ -109,7 +109,7 @@ namespace ZDO.CHSite.Controllers
             res.Html = string.Format(res.Html,
                 HtmlEncoder.Default.Encode(userName),
                 HtmlEncoder.Default.Encode(registered),
-                HtmlEncoder.Default.Encode("0"),
+                HtmlEncoder.Default.Encode(UserListRenderer.GetContribCountStr(ui.ContribScore, lang)),
                 HtmlEncoder.Default.Encode(ui.Email),
                 HtmlEncoder.Default.Encode(ui.Location),
                 HtmlEncoder.Default.Encode(ui.About)

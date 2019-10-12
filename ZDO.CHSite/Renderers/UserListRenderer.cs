@@ -53,7 +53,7 @@ namespace ZDO.CHSite.Renderers
             if (user.ContribScore > 0)
             {
                 sb.Append(" &bull; ");
-                sb.Append(getContribCountStr(user.ContribScore, lang));
+                sb.Append(GetContribCountStr(user.ContribScore, lang));
                 sb.Append(" <i class='fa fa-trophy'></i>");
             }
             sb.AppendLine("</div>"); // <div class='line1'>
@@ -93,7 +93,7 @@ namespace ZDO.CHSite.Renderers
             sb.AppendLine("</div>"); // <div class='user...
         }
 
-        private static string getContribCountStr(int count, string lang)
+        public static string GetContribCountStr(int count, string lang)
         {
             if (count < 10000) return count.ToString();
             int k = count / 1000;
