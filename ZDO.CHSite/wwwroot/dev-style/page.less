@@ -2,10 +2,7 @@
 
 // Page basics; including provisions for sticky footer.
 * { margin: 0; }
-html { 
-  height: 100%; font-size: 12pt;
-  &.respfont-small { font-size: 10pt; }
-}
+html { height: 100%; font-size: 12pt; }
 
 body {
   position: relative; width: 100%; height: 100%; overflow-y: scroll; margin: 0; padding: 0;
@@ -21,12 +18,6 @@ body {
   body.chd &.search { padding-top: 8.5rem; padding-left: 0.45rem; }
   body.hdd &.search { padding-top: 7rem; padding-left: 0.45rem; }
   &.fading { opacity: 0.2; }
-  html.resplay-stickleft & { margin: 0 0 0 7.5rem; }
-  html.resplay-hamburger & {
-    margin: 0; width: 100%; padding: 8.5rem 1rem 0 1rem;
-  }
-  html.resplay-hamburger body.chd &.search { padding-top: 10.5rem; }
-  html.resplay-hamburger &.search { padding-left: 1rem; }
 }
 #push { height: @footerHeight }
 #footer {
@@ -47,12 +38,6 @@ body {
 // FIXED: Optional on-screen debug area
 #debug { position: fixed; top: 0; left: 0; z-index: 20; background: @clrDefBg; }
 
-// FIXED: Width test for script-driven responsive layout
-#emMeasure {
-  margin-left: -16000px; font-size: 10pt;
-  position: fixed; top: 0; left: 0; border: 0; padding: 0;
-}
-
 // FIXED: Header stuff: logo, menu, search input
 #headerStickFull {
   position: fixed; top: 0; width: 100%; padding-top: 0.5rem; height: 5rem; background-color: @clrDefBg;
@@ -61,22 +46,18 @@ body {
   #headerFull {
     margin: 0 auto 0 auto; width: @contentWidth; height: 6.6rem;
     body.hdd & { height: 4.6rem; }
-    html.resplay-stickleft & { margin: 0 0 0 7.5rem; }
   }
   #subHeader {
     display: none; margin: 0 auto 0 auto; width: @contentWidth; padding-top: 0.4rem; height: 2.6rem;
     body.chd & { margin-top: -2rem; }
-    html.resplay-stickleft & { margin: 0 0 0 7.5rem; }
     &.visible { display: block; }
   }
-  html.resplay-hamburger & { display: none; }
 }
 
 // FIXED: Header stuff in hamburger mode
 #headerStickHamburger {
   position: fixed; top: 0; width: 100%; box-sizing: border-box; padding: 0.3rem 0.5rem 0.5rem 0.5rem; height: 7rem;
   z-index: 11; background-color: @clrLight; display: none;
-  html.resplay-hamburger & { display: block; }
   // Top half of header
   #hdrBurgerTop {
     height: 50%; width: 100%; box-sizing: border-box; position: relative; float: left;
@@ -177,7 +158,6 @@ body {
     width: 2.5rem; line-height: 2.5rem;
     font-family: @fntZho;
   }
-  html.resplay-hamburger & { display: none; }
 }
 
 // Top header alternatives: search or menu
@@ -245,7 +225,6 @@ body {
 #searchSuggestions {
   display: none; position: fixed; box-sizing: border-box; z-index: 12; top: 5rem; width: 40rem; font-size: 150%;
   height: auto; background-color: white; border: 1pt solid @clrLight;
-  html.resplay-hamburger & { top: 6.3rem; left: 0.4rem; width: calc(100% - 2.4rem); }
   &.visible { display: block; }
   &.pending { color: #aaa; }
   div {
@@ -320,9 +299,6 @@ body {
   &.nosubmenu { top: 5rem; }
   body.hdd &.search { top: 5rem; }
   body.chd &.search { top: 6.8rem; }
-  html.resplay-hamburger &, html.resplay-hamburger &.nosubmenu { top: 6.5rem; }
-  html.resplay-hamburger body.hdd &.search { top: 6.5rem; }
-  html.resplay-hamburger body.chd &.search { top: 8.5rem; }
 }
 
 // === COOKIE WARNING =============================
@@ -342,7 +318,6 @@ body {
   }
   div { box-sizing: border-box; position: relative; }
   & div:nth-child(1) { width: 150pt; float: right; padding: 0 10pt 0 0; text-align: left; line-height: 22pt; }
-  html.resplay-hamburger & div:nth-child(1) { width: 90pt; }
   & div:nth-child(2) { float: none; width: auto; overflow: hidden; padding: 0 10pt 0 10pt; text-align: right; }
 }
 
@@ -498,3 +473,43 @@ textarea, input { outline: none; border: none; background-color: @clrLightLight;
     &.modalPopupButtonOK.disabled { background-color: @clrGray; color: @clrDefBg; }
   }
 }
+
+
+// =====================================================================
+// === RESPONSIVE LAYOUT VIA MEDIA QUERIES =============================
+// Default is full-width desktop; we're adjusting downwards from there
+
+@media only screen and (max-width: 975px) and (min-width: 725px) {
+  #dynPage { margin: 0 0 0 7.5rem; }
+  #headerStickFull {
+    #headerFull { margin: 0 0 0 7.5rem; }
+    #subHeader { margin: 0 0 0 7.5rem; }
+  }
+}
+
+@media only screen and (max-width: 870px) {
+  html { font-size: 10pt; }
+}
+
+@media only screen and (max-width: 725px){
+  #dynPage {
+    margin: 0; width: 100%; padding: 8.5rem 1rem 0 1rem;
+    body.chd &.search { padding-top: 10.5rem; }
+    &.search { padding-left: 1rem; }
+  }
+  #headerStickFull { display: none; }
+  #headerStickHamburger { display: block; }
+  #headerHome { display: none; }
+  #searchSuggestions { top: 6.3rem; left: 0.4rem; width: calc(100% - 2.4rem); }
+  #headermask {
+    top: 6.5rem;
+    &.nosubmenu { top: 6.5rem; }
+    body.hdd &.search { top: 6.5rem; }
+    body.chd &.search { top: 8.5rem; }
+  }
+  #bittercookie {
+    div:nth-child(1) { width: 90pt; }
+  }
+
+}
+

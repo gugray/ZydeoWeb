@@ -73,7 +73,7 @@ var zdPage = (function () {
   $(document).ready(function () {
     // Make sense of location
     parseLocation();
-    // Adapt font size to window width
+    // Detect layout, adapt (e.g., which textbox is active)
     $(window).resize(onResize);
     onResize();
     // Update menu to show where I am (will soon end up being)
@@ -120,30 +120,11 @@ var zdPage = (function () {
     for (var fld in params) data[fld] = params[fld];
   }
 
-  // Measure m width against viewport; adapt font size
+  // Measure m width against viewport; adapt what needs adapting
   function onResize() {
-    var ww = window.innerWidth;
-    var w10em = $("#emMeasure")[0].clientWidth;
-    var ratio = ww / w10em;
-    // For diagnostics
-    //var dynWidth = $("#dynPage").width();
-    //$("#debug").text("Win: " + ww + " MM: " + w10em + " DP: " + dynWidth + " R: " + ratio);
-
-    // Clear previous styles
-    $("html").removeClass("resplay-stickleft");
-    $("html").removeClass("resplay-hamburger");
-    $("html").removeClass("respfont-small");
     $(".txtSearch").removeClass("active");
-    // Layout: stick left (not center) if small-ish; hamburger + full-width if real small
-    if (ratio <= 7.8 && ratio > 5.8) $("html").addClass("resplay-stickleft");
-    if (ratio <= 5.8) {
-      $("html").addClass("resplay-hamburger");
-      $("#headerStickHamburger .txtSearch").addClass("active");
-      $('.tooltipstered').tooltipster("disable");
-    }
+    if (zdPage.isMobile()) $("#headerStickHamburger .txtSearch").addClass("active");
     else $("#headerStickFull .txtSearch").addClass("active");
-    // Font size: decrease a little within small-ish
-    if (ratio < 7) $("html").addClass("respfont-small");
   }
 
   // Navigate within single-page app (invoked from link click handler)
@@ -454,7 +435,9 @@ var zdPage = (function () {
 
     getRel: function () { return rel; },
 
-    isMobile: function() { return $("html").hasClass("resplay-hamburger"); },
+    isMobile: function () {
+      return $("#headerStickHamburger").css("display") == "block";
+    },
 
     reload: function() {
       history.pushState(null, null, path);

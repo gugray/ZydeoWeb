@@ -9,7 +9,7 @@
   .notice {
     position: relative; width: 100%; overflow-y: auto; height: auto; margin: 0 0 1rem 0; box-sizing: border-box;
     padding: 0.5rem; font-size: 1rem;
-    display: none; html.resplay-hamburger & { display: block; }
+    display: none;
     background-color: #fae7e3; border-left: 0.4rem solid @clrStrongRed;
     span, i { display: block; box-sizing: border-box; overflow-y: auto; height: auto; }
     i { position: absolute; top: 0.5rem; left: 0.5rem; width: 2rem; font-size: 1.5rem; }
@@ -21,7 +21,6 @@
   .commands {
     width: 100%; padding: 0.4rem 0 0.4rem 0; margin: 0 0 1rem 0;
     border-top: 1px dashed @clrBodyText; border-bottom: 1px dashed @clrBodyText;
-    html.resplay-hamburger & { display: none; }
   }
   .cmdpanel { display: none; &.visible { display: block; } }
   .command {
@@ -76,3 +75,16 @@
     width: 25rem;
   }
 }
+
+
+// =====================================================================
+// === RESPONSIVE LAYOUT VIA MEDIA QUERIES =============================
+// Default is full-width desktop; we're adjusting downwards from there
+
+@media only screen and (max-width: 725px){
+  .editexisting {
+    .notice { display: block; }
+    .commands { display: none; }
+  }
+}
+

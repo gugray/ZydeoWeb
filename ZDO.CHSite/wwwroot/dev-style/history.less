@@ -121,11 +121,6 @@ a.pageLink:hover, a.pageLink.selected { background-color: @clrLight; }
     &.opHistEdit { left: 0.5rem; top: 1.5rem; }
     &.opHistFlag { left: 0.5rem; top: 3.1rem; }
   }
-  html.resplay-hamburger & i {
-     &.opHistComment { display: none; }
-     &.opHistFlag { display: none; }
-     &.opHistEdit { top: -0.1rem; }
-  }
 }
 
 
@@ -144,3 +139,19 @@ a.pageLink:hover, a.pageLink.selected { background-color: @clrLight; }
     background-color: @clrLightLight; color: @clrBodyText; font-family: @fntBase; font-size: 100%;
   }
 }
+
+
+// =====================================================================
+// === RESPONSIVE LAYOUT VIA MEDIA QUERIES =============================
+// Default is full-width desktop; we're adjusting downwards from there
+
+@media only screen and (max-width: 725px){
+  .histEntryOps {
+    i {
+       &.opHistComment { display: none; }
+       &.opHistFlag { display: none; }
+       &.opHistEdit { top: -0.1rem; }
+    }
+  }
+}
+
