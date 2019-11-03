@@ -79,7 +79,6 @@
 #soaBox {
   display: none; position: absolute; width: 19rem; height: 22rem; background-color: #fafafa;
   border: 0.1rem solid @clrMedium; box-shadow: 0 0 0.3rem rgba(0, 0, 0, .7); cursor: default;
-  html.resplay-hamburger & { position: fixed; left: 50%; margin-left: -9.5rem; top: 10rem; }
 }
 
 #soaBoxTail {
@@ -87,7 +86,6 @@
   border-color: @clrMedium; border-width: 0.1rem; border-style: none none solid solid;
   background-color: #fafafa; transform: rotate(45deg);
   .soaBoxLeft & { left: 18.25rem; border-style: solid solid none none; }
-  html.resplay-hamburger & { display: none; }
 }
 
 #soaHead {
@@ -139,17 +137,14 @@
   display: none; position: fixed; z-index: 12; background: @clrDefBg; top: 5.5rem; left: 0; width: 35em;
   border: 1pt solid @clrMedium; box-shadow: 0 0 0.3em rgba(0, 0, 0, .7);
   &.visible { display: block; }
-  html.resplay-hamburger & { left: 100%; margin-left: -37em; font-size: 60%; top: 7rem; }
   #optionsTail {
     display: block; position: absolute; top: -0.8em; left: 26.36em; width: 1.6em; height: 1.6em;
     border-color: @clrMedium; border-width: 0.1em; border-style: none none solid solid;
     background-color: @clrMedium; transform: rotate(45deg);
-    html.resplay-hamburger & { display: none; }
   }
   #optionsHeader {
     position: relative; width: 100%; box-sizing: border-box; background-color: @clrMedium; padding: 0; height: 1.6em;
     font-size: 150%; font-family: @fntSansAlt; color: @clrDefBg;
-    html.resplay-hamburger & { font-size: 1rem; }
     #optionsTitle {
       display: inline-block; position: absolute; margin-left: 0.5em; margin-top: 0.15em; left: 0;
     }
@@ -186,17 +181,14 @@
   display: none; position: fixed; z-index: 12; background: @clrDefBg; top: 5.5em; left: 0; width: 15em;
   border: 1pt solid @clrMedium; box-shadow: 0 0 0.3rem rgba(0, 0, 0, .7);
   &.visible { display: block; }
-  html.resplay-hamburger & { top: 7rem; left: 50%; width: 80%; margin-left: -35%; font-size: 1.5rem; }
   #hwTail {
     display: block; position: absolute; top: -0.8em; left: 6.36em; width: 1.6em; height: 1.6em;
     border-color: @clrMedium; border-width: 0.1em; border-style: none none solid solid;
     background-color: @clrMedium; transform: rotate(45deg);
-    html.resplay-hamburger & { display: none; }
   }
   #hwHeader {
     position: relative; width: 100%; box-sizing: border-box; background-color: @clrMedium; padding: 0; height: 1.6em;
     font-size: 150%; font-family: @fntSansAlt; color: @clrDefBg;
-    html.resplay-hamburger & { font-size: 1rem; height: 1.6rem; }
     #hwTitle {
       display: inline-block; position: absolute; margin-left: 0.5em; margin-top: 0.15em; left: 0;
     }
@@ -273,12 +265,6 @@
     span.hlHi { background-color: darken(@clrLightAccent, 6%); }
   }
 }
-html.resplay-hamburger {
-  .corprow { padding: 0; border: none; }
-  .corpseg { padding: 0; width: 100%; }
-  .corpseg.trg { padding-bottom: 0.8rem; border-bottom: 0.7pt dotted @clrGray; font-size: 1.2rem; }
-  .corpseg.zho { margin: 0.6rem 0 0.3rem 0; font-size: 1.4rem; }
-}
 .corpmore {
   position: relative; width: 100%; float: left; box-sizing: border-box; margin: 2rem 0 4rem 0;
   .corpmorebtn {
@@ -292,5 +278,31 @@ html.resplay-hamburger {
       animation: fa-spin 1s infinite linear;
     }
     &.loading i { display: block; }
+  }
+}
+
+
+// =====================================================================
+// === RESPONSIVE LAYOUT VIA MEDIA QUERIES =============================
+// Default is full-width desktop; we're adjusting downwards from there
+
+@media only screen and (max-width: 725px) {
+  body.chd {
+    #soaBox { position: fixed; left: 50%; margin-left: -9.5rem; top: 10rem; }
+    #soaBoxTail { display: none; }
+    #searchOptionsBox {
+      left: 100%; margin-left: -37em; font-size: 60%; top: 7rem;
+      #optionsTail { display: none; }
+      #optionsHeader { font-size: 1rem; }
+    }
+    #handwritingBox {
+      top: 7rem; left: 50%; width: 80%; margin-left: -35%; font-size: 1.5rem;
+      #hwTail { display: none; }
+      #hwHeader { font-size: 1rem; height: 1.6rem; }
+    }
+    .corprow { padding: 0; border: none; }
+    .corpseg { padding: 0; width: 100%; }
+    .corpseg.trg { padding-bottom: 0.8rem; border-bottom: 0.7pt dotted @clrGray; font-size: 1.2rem; }
+    .corpseg.zho { margin: 0.6rem 0 0.3rem 0; font-size: 1.4rem; }
   }
 }
