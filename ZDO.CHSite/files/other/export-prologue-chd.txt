@@ -1,0 +1,20 @@
+﻿# CHDICT
+# Nyílt forráskódú, közösségileg szerkesztett kínai-magyar szótár
+# Open-source, community-edited Chinese-Hungarian dictionary
+# Időbélyeg / Timestamp: {0}
+#
+# (c) Gábor L Ugray
+# Licenc / License: CC-BY-SA 4.0
+# https://creativecommons.org/licenses/by-sa/4.0/deed.hu
+#
+# A szótár interaktív kereső- és szerkesztőfelülete az alábbi címen érhető el:
+# To search and edit the dictionary online, visit the URL below:
+# https://chdict.zydeo.net/
+#
+# Az adatfájl az eredeti CEDICT-formátum visszafelé kompatibilis kiterjesztése.
+# Kiegészítésként, megjegyzésnek jelölt sorokban, minden szócikkről további metainformációkat
+# tartalmaz, valamint feltünteti az egyes szócikkek teljes változástörténetét.
+# 
+# This data file is a backward compatible extension of the original CEDICT format.
+# Additionally, in commented rows, CHDICT includes further metainformation about each
+# entry, as well as the entry's full change history.

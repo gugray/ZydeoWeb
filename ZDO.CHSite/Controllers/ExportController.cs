@@ -21,12 +21,14 @@ namespace ZDO.CHSite.Controllers
         private readonly IConfiguration config;
         private readonly ILogger logger;
         private readonly SqlDict dict;
+        private readonly Mutation mut;
         private static Thread thread = null;
         private static object lockObj = new object();
 
         public ExportController(IConfiguration config, ILoggerFactory loggerFactory, SqlDict dict)
         {
             this.config = config;
+            mut = config["MUTATION"] == "HDD" ? Mutation.HDD : Mutation.CHD;
             logger = loggerFactory.CreateLogger("ExportController");
             this.dict = dict;
         }
@@ -114,7 +116,9 @@ namespace ZDO.CHSite.Controllers
         {
             string strPrologue;
             Assembly a = typeof(ExportController).GetTypeInfo().Assembly;
-            string fileName = "ZDO.CHSite.files.other.export-prologue.txt";
+            string fileName = "ZDO.CHSite.files.other.export-prologue-{mut}.txt";
+            if (mut == Mutation.CHD) fileName = fileName.Replace("{mut}", "chd");
+            else fileName = fileName.Replace("{mut}", "hdd");
             using (Stream s = a.GetManifestResourceStream(fileName))
             using (StreamReader sr = new StreamReader(s))
             {

@@ -12,7 +12,20 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Logic\DB.Scripts.txt;files\other\std-pinyin.txt;files\other\syllabary-pinyin.txt;files\other\export-prologue.txt;files\other\chd-trg-stops.txt" Exclude="bin\**;obj\**;**\*.xproj;packages\**;@(EmbeddedResource)" />
+    <None Remove="files\other\chd-trg-stops.txt" />
+    <None Remove="files\other\export-prologue-chd.txt" />
+    <None Remove="files\other\std-pinyin.txt" />
+    <None Remove="files\other\syllabary-pinyin.txt" />
+    <None Remove="Logic\DB.Scripts.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="files\other\chd-trg-stops.txt" />
+    <EmbeddedResource Include="files\other\export-prologue-chd.txt" />
+    <EmbeddedResource Include="files\other\export-prologue-hdd.txt" Exclude="bin\**;obj\**;**\*.xproj;packages\**;@(EmbeddedResource)" />
+    <EmbeddedResource Include="files\other\std-pinyin.txt" />
+    <EmbeddedResource Include="files\other\syllabary-pinyin.txt" />
+    <EmbeddedResource Include="Logic\DB.Scripts.txt" />
     <None Update="Index.cshtml;wwwroot\**\*;files\html\**\*;files\strings\**\*">
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
