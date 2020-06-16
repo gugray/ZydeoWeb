@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
+using Countries;
 using ZDO.CHSite.Logic;
 
 namespace ZDO.CHSite.Controllers
@@ -37,11 +38,11 @@ namespace ZDO.CHSite.Controllers
         /// Ctor: infuse dependencies.
         /// </summary>
         public IndexController(PageProvider pageProvider, IConfiguration config, 
-            ILoggerFactory loggerFactory, Auth auth, SqlDict dict)
+            ILoggerFactory loggerFactory, Auth auth, CountryResolver cres, SqlDict dict, QueryLogger qlog)
         {
             mut = config["MUTATION"] == "HDD" ? Mutation.HDD : Mutation.CHD;
             baseUrl = config["baseUrl"];
-            dpc = new DynpageController(pageProvider, config, loggerFactory, auth, null, dict);
+            dpc = new DynpageController(pageProvider, config, loggerFactory, auth, cres, dict, qlog);
             gaCode = config["gaCode"];
             captchaSiteKey = config["captchaSiteKey"];
         }
@@ -79,7 +80,7 @@ namespace ZDO.CHSite.Controllers
                 return RedirectPermanent("/" + redirTo);
             }
             // Infuse requested page right away
-            var pr = dpc.GetPageResult(lang, rel, false, false);
+            var pr = dpc.GetPageResult(lang, rel, false, false, HttpContext);
             IndexModel model = new IndexModel(mut, baseUrl, lang, pr.RelNorm, pr, gaCode, AppVersion.VerStr, captchaSiteKey);
             return View("/Index.cshtml", model);
         }
