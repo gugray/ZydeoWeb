@@ -1,13 +1,13 @@
-﻿/// <binding BeforeBuild='default' Clean='clean' ProjectOpened='watch' />
-var gulp = require('gulp');
-var less = require('gulp-less');
-var path = require('path');
-var concat = require('gulp-concat');
-var plumber = require('gulp-plumber');
-var uglify = require('gulp-uglify');
-var minifyCSS = require('gulp-minify-css');
-var del = require('del');
-var htmltojson = require('gulp-html-to-json');
+/// <binding Clean='clean' ProjectOpened='watch' />
+const gulp = require('gulp');
+const less = require('gulp-less');
+const path = require('path');
+const concat = require('gulp-concat');
+const plumber = require('gulp-plumber');
+const uglify = require('gulp-uglify');
+const minifyCSS = require('gulp-minify-css');
+const del = require('del');
+const htmltojson = require('gulp-html-to-json');
 
 // Compile all .less files to .css
 gulp.task('less', function () {
@@ -18,6 +18,15 @@ gulp.task('less', function () {
     }))
     .pipe(gulp.dest('./wwwroot/dev-style/'));
 });
+
+// Minify and bundle CSS files
+gulp.task('styles', gulp.series('less', function () {
+  return gulp.src(['./wwwroot/dev-style/*.css', '!./wwwroot/dev-style/*.min.css'])
+    .pipe(minifyCSS())
+    .pipe(concat('app.min.css'))
+    .pipe(gulp.dest('./wwwroot/prod-style/'));
+}));
+
 
 // Delete all compiled and bundled files
 gulp.task('clean', function () {
@@ -39,7 +48,7 @@ gulp.task('scriptcopy', function () {
 });
 
 // Minify and bundle JS files
-gulp.task('scripts', ['snippets', 'scriptcopy'], function () {
+gulp.task('scripts', gulp.series('snippets', 'scriptcopy', function () {
   return gulp.src([
     './wwwroot/lib/*.js',
     './wwwroot/dev-js/zdSnippets.js',
@@ -59,18 +68,10 @@ gulp.task('scripts', ['snippets', 'scriptcopy'], function () {
     .pipe(uglify().on('error', function (e) { console.log(e); }))
     .pipe(concat('app.min.js'))
     .pipe(gulp.dest('./wwwroot/prod-js/'));
-});
-
-// Minify and bundle CSS files
-gulp.task('styles', ['less'], function () {
-  return gulp.src(['./wwwroot/dev-style/*.css', '!./wwwroot/dev-style/*.min.css'])
-    .pipe(minifyCSS())
-    .pipe(concat('app.min.css'))
-    .pipe(gulp.dest('./wwwroot/prod-style/'));
-});
+}));
 
 // Default task: full clean+build.
-gulp.task('default', ['clean', 'scripts', 'styles'], function () { });
+gulp.task('default', gulp.series('clean', 'scripts', 'styles', function (done) { done(); }));
 
 // Watch: recompile less on changes
 gulp.task('watch', function () {

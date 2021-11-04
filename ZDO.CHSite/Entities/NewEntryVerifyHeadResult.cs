@@ -7,9 +7,9 @@ namespace ZDO.CHSite.Entities
 {
     public class NewEntryVerifyHeadResult
     {
-        public bool Duplicate;
-        public string RefEntries = null;
-        public string ExistingEntry = null;
-        public string ExistingEntryId = null;
+        public bool Duplicate { get; set; }
+        public string RefEntries { get; set; } = null;
+        public string ExistingEntry { get; set; } = null;
+        public string ExistingEntryId { get; set; } = null;
     }
 }

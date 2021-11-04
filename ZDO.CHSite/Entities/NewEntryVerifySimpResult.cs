@@ -7,7 +7,7 @@ namespace ZDO.CHSite.Entities
 {
     public class NewEntryVerifySimpResult
     {
-        public bool Passed;
-        public List<string> Errors = null;
+        public bool Passed { get; set; }
+        public List<string> Errors { get; set; } = null;
     }
 }

@@ -7,8 +7,8 @@ namespace ZDO.CHSite.Entities
 {
     public class CreateUserResult
     {
-        public bool Success;
-        public bool EmailExists;
-        public bool UserNameExists;
+        public bool Success { get; set; }
+        public bool EmailExists { get; set; }
+        public bool UserNameExists { get; set; }
     }
 }

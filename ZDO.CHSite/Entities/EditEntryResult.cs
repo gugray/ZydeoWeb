@@ -7,7 +7,7 @@ namespace ZDO.CHSite.Entities
 {
     public class EditEntryResult
     {
-        public bool Success = false;
-        public string Error = null;
+        public bool Success { get; set; } = false;
+        public string Error { get; set; } = null;
     }
 }

@@ -8,10 +8,10 @@
         /// <summary>
         /// The search suggestion.
         /// </summary>
-        public string Suggestion;
+        public string Suggestion { get; set; }
         /// <summary>
         /// Length of query prefix in suggestion (for highliht in UI).
         /// </summary>
-        public int PrefixLength;
+        public int PrefixLength { get; set; }
     }
 }

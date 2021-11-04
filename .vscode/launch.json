@@ -1,0 +1,28 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": ".NET Core Launch (web)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "Build-CHSite",
+            "program": "${workspaceFolder}/ZDO.CHSite/bin/Debug/netcoreapp3.1/ZDO.CHSite.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/ZDO.CHSite",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "uriFormat": "http://localhost:%s/hu",
+                "pattern": "https?://[^:]+:([\\d]+)"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "MUTATION": "CHD"
+            }
+        }
+    ]
+}

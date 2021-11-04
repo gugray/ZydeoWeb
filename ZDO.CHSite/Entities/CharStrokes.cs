@@ -7,7 +7,7 @@ namespace ZDO.CHSite.Entities
 {
     public class CharStrokes
     {
-        public string[] Strokes;
-        public short[][][] Medians;
+        public string[] Strokes { get; set; }
+        public short[][][] Medians { get; set; }
     }
 }
