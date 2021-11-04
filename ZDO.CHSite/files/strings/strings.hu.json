@@ -25,12 +25,10 @@
   "misc": {
     "searchResultTitleHDD": "{0} - német fordítás - HanDeDict @ Zydeo kínai-német szótár",
     "searchResultTitleTrgHDD": "{0} - kínai fordítás - HanDeDict @ Zydeo kínai-német szótár",
-    "searchResultTitleCHD": "{0} - magyar fordítás - CHDICT kínai-magyar szótár",
-    "searchResultTitleTrgCHD": "{0} - kínai fordítás - CHDICT kínai-magyar szótár",
-    "cookieNotice": "Az oldal egyes funkciókhoz cookie-kat (sütiket) használ. A böngészés folytatásával elfogadod a sütik használatát.",
-    "cookieOK": "OK",
-    "cookieLearnMore": "További információk",
-    "imprint":  "Impresszum"
+    "searchResultTitleCHD": "{0} - magyar fordítás - CHDICT kínai ⇔ magyar szótár",
+    "searchResultTitleTrgCHD": "{0} - kínai fordítás - CHDICT kínai ⇔ magyar szótár",
+    "corpusResultTitleCHD": "{0} - mondatfordítások - CHDICT kínai ⇔ magyar szövegtár",
+    "imprint": "Impresszum"
   },
   "search": {
     "annotationNotice": "A keresett kifejezés nem található meg egyben a szótárban. Alább a szövegben felismert különálló szavakat láthatod."

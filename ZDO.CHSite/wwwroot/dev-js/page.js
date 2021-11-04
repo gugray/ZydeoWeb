@@ -232,13 +232,15 @@ var zdPage = (function () {
     applyDynContent(data);
     // Fix title in hamburger mode
     fixHamTitle();
+
     // GA single-page navigation
-    ga('set', 'page', path);
-    ga('send', {
-      hitType: 'pageview',
-      page: path,
-      title: data.title
-    });
+    // Removed 2021-11-04: switching to plausible.io, not needed.
+    // ga('set', 'page', path);
+    // ga('send', {
+    //   hitType: 'pageview',
+    //   page: path,
+    //   title: data.title
+    // });
   }
 
   // Dynamic data received after initial page load (not within single-page navigation)
@@ -299,14 +301,6 @@ var zdPage = (function () {
 
   // General UI event wireup
   function initGui() {
-    // Cookie warning / opt-in pest
-    var cookies = localStorage.getItem("cookies");
-    if (cookies != "go") $("#bittercookie").css("display", "block");
-    $("#swallowbitterpill").click(function (evt) {
-      $("#bittercookie").css("display", "none");
-      localStorage.setItem("cookies", "go");
-      evt.preventDefault();
-    });
     // Link to imprint
     $("#imprint").click(function () {
       window.open("/" + zdPage.getLang() + "/read/details/imprint");
