@@ -7,8 +7,8 @@ namespace ZDO.CHSite.Entities
 {
     public class NewEntryVerifyFullResult
     {
-        public bool Passed;
-        public List<string> Errors;
-        public string Preview = null;
+        public bool Passed { get; set; }
+        public List<string> Errors { get; set; }
+        public string Preview { get; set; } = null;
     }
 }

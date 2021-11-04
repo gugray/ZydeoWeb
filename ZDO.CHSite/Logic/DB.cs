@@ -56,7 +56,6 @@ namespace ZDO.CHSite.Logic
             csb.UserID = user;
             csb.Password = pass;
             csb.Pooling = true;
-            csb.IgnorePrepare = false;
             csb.CharacterSet = "utf8";
             //csb.SslMode = MySqlSslMode.None; // SSL currently not supported in .NET Core library
             csb.SslMode = MySqlSslMode.Required;

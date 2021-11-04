@@ -7,7 +7,7 @@ namespace ZDO.CHSite.Entities
 {
     public class NewEntryProcessSimpTradResult
     {
-        public List<List<string>> Pinyin = new List<List<string>>();
-        public bool IsKnownHeadword = false;
+        public List<List<string>> Pinyin { get; set; } = new List<List<string>>();
+        public bool IsKnownHeadword { get; set; } = false;
     }
 }

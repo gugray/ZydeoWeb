@@ -69,6 +69,16 @@ namespace ZDO.CHSite.Controllers
             return new ObjectResult(GetPageResult(lang, rel, true, isMobile, searchScript, searchTones));
         }
 
+        /// <summary>
+        /// Prepares page content in response to a query.
+        /// </summary>
+        /// <param name="lang">Language the site is being shown in</param>
+        /// <param name="rel">Relative path (the part after the language code in the URL)</param>
+        /// <param name="dynamic">If true, this is a dynamic request from the SPA. If false, this is from the index controller.</param>
+        /// <param name="isMobile">Page is being shown in the mobile version.</param>
+        /// <param name="searchScript">User's search script preference for lookups.</param>
+        /// <param name="searchTones">User's tones display preference for lookups.</param>
+        /// <returns></returns>
         internal PageResult GetPageResult(string lang, string rel, bool dynamic, bool isMobile,
             string searchScript = null, string searchTones = null)
         {

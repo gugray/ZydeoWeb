@@ -47,7 +47,6 @@ namespace ZDO.Console.Logic
             csb.UserID = config["dbUserID"];
             csb.Password = config["dbPass"];
             csb.Pooling = true;
-            csb.IgnorePrepare = false;
             csb.CharacterSet = "utf8";
             csb.SslMode = MySqlSslMode.None; // SSL currently not supported in .NET Core library
             string connectionString = csb.GetConnectionString(true);

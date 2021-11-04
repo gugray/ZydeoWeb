@@ -4,8 +4,8 @@ namespace ZDO.CHSite.Entities
 {
     public class HeadwordProblem
     {
-        public bool Error;
-        public string Message;
+        public bool Error { get; set; }
+        public string Message { get; set; }
         public HeadwordProblem() { }
         public HeadwordProblem(bool error, string message)
         {
@@ -16,9 +16,9 @@ namespace ZDO.CHSite.Entities
 
     public class EditEntryPreviewResult
     {
-        public List<HeadwordProblem> ErrorsSimp = new List<HeadwordProblem>();
-        public List<HeadwordProblem> ErrorsTrad = new List<HeadwordProblem>();
-        public List<HeadwordProblem> ErrorsPinyin = new List<HeadwordProblem>();
-        public string PreviewHtml = null;
+        public List<HeadwordProblem> ErrorsSimp { get; set; } = new List<HeadwordProblem>();
+        public List<HeadwordProblem> ErrorsTrad { get; set; } = new List<HeadwordProblem>();
+        public List<HeadwordProblem> ErrorsPinyin { get; set; } = new List<HeadwordProblem>();
+        public string PreviewHtml { get; set; } = null;
     }
 }

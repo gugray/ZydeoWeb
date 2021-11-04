@@ -7,8 +7,8 @@ namespace ZDO.CHSite.Entities
 {
     public class DownloadInfo
     {
-        public string FileName;
-        public string Timestamp;
-        public string Size;
+        public string FileName { get; set; }
+        public string Timestamp { get; set; }
+        public string Size { get; set; }
     }
 }

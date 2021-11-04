@@ -1,10 +1,11 @@
 ﻿using System;
 using System.IO;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Hosting;
 using Serilog;
 
 using Countries;
@@ -15,14 +16,14 @@ namespace ZDO.CHSite
 {
     public class Startup
     {
-        private readonly IHostingEnvironment env;
+        private readonly IHostEnvironment env;
         private readonly Mutation mut;
         private readonly ILoggerFactory loggerFactory;
         private readonly IConfigurationRoot config;
         private QueryLogger qlog;
         private Auth auth;
 
-        public Startup(IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public Startup(IHostEnvironment env, ILoggerFactory loggerFactory)
         {
             this.env = env;
             this.loggerFactory = loggerFactory;
@@ -62,17 +63,7 @@ namespace ZDO.CHSite
                 else seriConf.MinimumLevel.Fatal();
                 Log.Logger = seriConf.CreateLogger();
             }
-
-            // Log to console (debug) or file (otherwise).
-            // Must do here, so log capture errors if singleton services throw at startup.
-            LogLevel ll = LogLevel.Critical;
-            if (config["logLevel"] == "Trace") ll = LogLevel.Trace;
-            else if (config["logLevel"] == "Debug") ll = LogLevel.Debug;
-            else if (config["logLevel"] == "Information") ll = LogLevel.Information;
-            else if (config["logLevel"] == "Warning") ll = LogLevel.Warning;
-            else if (config["logLevel"] == "Error") ll = LogLevel.Error;
-            if (env.IsDevelopment()) loggerFactory.AddConsole(ll);
-            else loggerFactory.AddSerilog();
+            if (!env.IsDevelopment()) loggerFactory.AddSerilog();
         }
 
         public static void InitDB(IConfiguration config, ILoggerFactory loggerFactory, bool checkVersion)
@@ -81,7 +72,7 @@ namespace ZDO.CHSite
             if (loggerFactory != null) dbLogger = loggerFactory.CreateLogger("DB");
             try
             {
-                DB.Init(config["dbServer"], uint.Parse(config["dbPort"]), config["dbDatabase"], 
+                DB.Init(config["dbServer"], uint.Parse(config["dbPort"]), config["dbDatabase"],
                     config["dbUserID"], config["dbPass"], dbLogger);
                 if (checkVersion) DB.VerifyVersion(AppVersion.VerStr);
             }
@@ -94,6 +85,10 @@ namespace ZDO.CHSite
 
         public void ConfigureServices(IServiceCollection services)
         {
+            if (env.IsDevelopment())
+            {
+                services.AddLogging(loggingBuilder => loggingBuilder.AddConsole());
+            }
             // Init low-level DB singleton
             InitDB(config, loggerFactory, true);
             // Application-specific singletons.
@@ -116,12 +111,12 @@ namespace ZDO.CHSite
             qlog = new QueryLogger(config["queryLogFileName"], config["hwriteLogFileName"]);
             services.AddSingleton(qlog);
             // MVC for serving pages and REST
-            services.AddMvc();
+            services.AddMvc(options => options.EnableEndpointRouting = false).AddRazorRuntimeCompilation();
             // Configuration singleton
             services.AddSingleton<IConfiguration>(sp => { return config; });
         }
 
-        public void Configure(IApplicationBuilder app, IApplicationLifetime appLife)
+        public void Configure(IApplicationBuilder app, IHostApplicationLifetime appLife)
         {
             // Sign up to application shutdown so we can do proper cleanup
             appLife.ApplicationStopping.Register(onApplicationStopping);

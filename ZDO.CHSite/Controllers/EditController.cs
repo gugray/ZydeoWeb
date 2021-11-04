@@ -357,7 +357,7 @@ namespace ZDO.CHSite.Controllers
                 auth.RefreshUserInfo(userId);
                 success = true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // TO-DO: Log
                 //DiagLogger.LogError(ex);
@@ -393,7 +393,7 @@ namespace ZDO.CHSite.Controllers
                 // Refresh cached contrib score
                 auth.RefreshUserInfo(userId);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // TO-DO: Log
                 //DiagLogger.LogError(ex);

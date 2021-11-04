@@ -1,10 +1,10 @@
 ﻿using System;
 using System.IO;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Hosting;
 using Serilog;
 
 using ZDO.Console.Logic;
@@ -13,11 +13,11 @@ namespace ZDO.CHSite
 {
     public class Startup
     {
-        private readonly IHostingEnvironment env;
+        private readonly IHostEnvironment env;
         private readonly ILoggerFactory loggerFactory;
         private readonly IConfigurationRoot config;
 
-        public Startup(IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public Startup(IHostEnvironment env, ILoggerFactory loggerFactory)
         {
             this.env = env;
             this.loggerFactory = loggerFactory;
@@ -39,19 +39,18 @@ namespace ZDO.CHSite
                 Log.Logger = seriConf.CreateLogger();
             }
             // Log to console (debug) or file (otherwise).
-            if (env.IsDevelopment()) loggerFactory.AddConsole(LogLevel.Information);
-            else loggerFactory.AddSerilog();
+            if (!env.IsDevelopment()) loggerFactory.AddSerilog();
         }
 
         public void ConfigureServices(IServiceCollection services)
         {
             // MVC for serving pages and REST
-            services.AddMvc();
+            services.AddMvc(opt => opt.EnableEndpointRouting = false);
             // Configuration singleton
             services.Configure<Options>(opt => config.Bind(opt));
         }
 
-        public void Configure(IApplicationBuilder app, IApplicationLifetime appLife)
+        public void Configure(IApplicationBuilder app, IHostApplicationLifetime appLife)
         {
             // Static file options: inject caching info for all static files.
             StaticFileOptions sfo = new StaticFileOptions

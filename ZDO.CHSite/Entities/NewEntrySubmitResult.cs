@@ -7,6 +7,6 @@ namespace ZDO.CHSite.Entities
 {
     public class NewEntrySubmitResult
     {
-        public bool Success;
+        public bool Success { get; set; }
     }
 }
