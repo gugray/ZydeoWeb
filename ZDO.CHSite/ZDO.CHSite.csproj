@@ -6,6 +6,7 @@
     <AssemblyName>ZDO.CHSite</AssemblyName>
     <OutputType>Exe</OutputType>
     <PackageId>ZDO.CHSite</PackageId>
+    <SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>
     <EnableDefaultContentItems>false</EnableDefaultContentItems>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
@@ -36,7 +37,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Index.cshtml;wwwroot/*;wwwroot/prod*/**/*;wwwroot/static/**/*">
+    <Content Include="Index.cshtml;appsettings.json;wwwroot/*;wwwroot/prod*/**/*;wwwroot/static/**/*">
       <CopyToPublishDirectory>Always</CopyToPublishDirectory>
     </Content>
     <Content Include="files/html/**/*;files/strings/**/*">
