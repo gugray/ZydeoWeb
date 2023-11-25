@@ -9,7 +9,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "Build-CHSite",
-            "program": "${workspaceFolder}/ZDO.CHSite/bin/Debug/netcoreapp3.1/ZDO.CHSite.dll",
+            "program": "${workspaceFolder}/ZDO.CHSite/bin/Debug/ZDO.CHSite.dll",
             "args": [],
             "cwd": "${workspaceFolder}/ZDO.CHSite",
             "console": "integratedTerminal",

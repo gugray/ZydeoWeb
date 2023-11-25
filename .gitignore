@@ -1,4 +1,5 @@
 # Special folders (deployment, runtime data etc.)
+etc-zdo
 _localization
 _locback
 _dev_site_data
@@ -10,6 +11,9 @@ _private_content
 # Data and content
 **/files/data
 **/files/content
+
+# Mac OS...
+.DS_Store
 
 # Visual Studio / .NET Core generic
 node_modules/
