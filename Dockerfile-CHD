@@ -1,0 +1,7 @@
+FROM mcr.microsoft.com/dotnet/sdk:6.0
+WORKDIR /app
+COPY ./_deploy_chsite /app/
+ENV MUTATION=CHD
+ENV ASPNETCORE_ENVIRONMENT=Production
+
+ENTRYPOINT ["dotnet", "ZDO.CHSite.dll"]
