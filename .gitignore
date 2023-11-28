@@ -12,6 +12,9 @@ _private_content
 **/files/data
 **/files/content
 
+# Temporarily needed; will get from archive in Dockerfile
+Sphinx-2.2.11
+
 # Mac OS...
 .DS_Store
 
