@@ -121,10 +121,9 @@ namespace ZDO.CHSite.Logic
         private readonly Thread busyThread;
         private readonly Dictionary<string, SessionInfo> sessions = new Dictionary<string, SessionInfo>();
 
-        public Auth(Mutation mut, ILoggerFactory lf, IConfiguration config, Emailer emailer, PageProvider pageProvider)
+        public Auth(Mutation mut, ILogger<Auth> logger, IConfiguration config, Emailer emailer, PageProvider pageProvider)
         {
-            if (lf != null) logger = lf.CreateLogger(GetType().FullName);
-            else logger = new DummyLogger();
+            this.logger = logger;
             this.mut = mut;
             this.emailer = emailer;
             this.pageProvider = pageProvider;

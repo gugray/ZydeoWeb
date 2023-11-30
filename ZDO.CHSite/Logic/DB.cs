@@ -57,7 +57,7 @@ namespace ZDO.CHSite.Logic
             csb.Password = pass;
             csb.Pooling = true;
             csb.CharacterSet = "utf8";
-            csb.SslMode = MySqlSslMode.None; // SSL currently not supported in .NET Core library
+            csb.SslMode = MySqlSslMode.Disabled; // SSL currently not supported in .NET Core library
             connectionString = csb.GetConnectionString(true);
 
             // Parse embedded resource with scipts.

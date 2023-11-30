@@ -24,10 +24,10 @@ namespace ZDO.CHSite.Controllers
         private static Thread thread = null;
         private static object lockObj = new object();
 
-        public ExportController(IConfiguration config, ILoggerFactory loggerFactory, SqlDict dict)
+        public ExportController(IConfiguration config, ILogger<ExportController> logger, SqlDict dict)
         {
             this.config = config;
-            logger = loggerFactory.CreateLogger("ExportController");
+            this.logger = logger;
             this.dict = dict;
         }
 

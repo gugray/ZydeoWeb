@@ -1,12 +1,12 @@
 ﻿using System;
-using System.IO;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using Serilog.Events;
+
 
 using Countries;
 using ZD.LangUtils;
@@ -40,30 +40,40 @@ namespace ZDO.CHSite
                 .AddJsonFile("appsettings.json", optional: true)
                 .AddJsonFile("appsettings.devenv.json", optional: true)
                 .AddEnvironmentVariables();
-            // Config specific to mutation and hostong environment
+            
+            // Config specific to mutation
             string cfgFileName = null;
-            if (env.IsProduction() && mut == Mutation.HDD) cfgFileName = "/etc/zdo/zdo-hdd-live/appsettings.json";
-            if (env.IsStaging() && mut == Mutation.HDD) cfgFileName = "/etc/zdo/zdo-hdd-stage/appsettings.json";
-            if (env.IsProduction() && mut == Mutation.CHD) cfgFileName = "/etc/zdo/zdo-chd-live/appsettings.json";
-            if (env.IsStaging() && mut == Mutation.CHD) cfgFileName = "/etc/zdo/zdo-chd-stage/appsettings.json";
-            if (cfgFileName != null && File.Exists(cfgFileName)) builder.AddJsonFile(cfgFileName, optional: false);
+            string secretsFileName = null;
+            if (env.IsProduction() && mut == Mutation.HDD)
+            {
+                secretsFileName = "/etc/zdo/zdo-hdd-live/secrets.json";
+                cfgFileName = "/etc/zdo-hdd-live-appsettings.json";
+            }
+            if (env.IsProduction() && mut == Mutation.CHD)
+            {
+                secretsFileName = "/etc/zdo/zdo-chd-live/secrets.json";
+                cfgFileName = "/etc/zdo-chd-live-appsettings.json";
+            }
+            if (cfgFileName != null) builder.AddJsonFile(cfgFileName, optional: false);
+            if (secretsFileName != null) builder.AddJsonFile(secretsFileName, optional: false);
+            
             config = builder.Build();
 
-            // If running in production or staging, will log to file. Initialize Serilog here.
-            if (!env.IsDevelopment())
-            {
-                var seriConf = new LoggerConfiguration()
-                    .MinimumLevel.Information()
-                    .WriteTo.File(config["logFileName"]);
-                if (config["logLevel"] == "Trace") seriConf.MinimumLevel.Verbose();
-                else if (config["logLevel"] == "Debug") seriConf.MinimumLevel.Debug();
-                else if (config["logLevel"] == "Information") seriConf.MinimumLevel.Information();
-                else if (config["logLevel"] == "Warning") seriConf.MinimumLevel.Warning();
-                else if (config["logLevel"] == "Error") seriConf.MinimumLevel.Error();
-                else seriConf.MinimumLevel.Fatal();
-                Log.Logger = seriConf.CreateLogger();
-            }
-            if (!env.IsDevelopment()) loggerFactory.AddSerilog();
+            // Initialize file logger
+            var seriConf = new LoggerConfiguration()
+                .MinimumLevel.Information()
+                .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+                .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+                .MinimumLevel.Override("System", LogEventLevel.Warning)
+                .WriteTo.File(config["logFileName"]);
+            if (config["logLevel"] == "Trace") seriConf.MinimumLevel.Verbose();
+            else if (config["logLevel"] == "Debug") seriConf.MinimumLevel.Debug();
+            else if (config["logLevel"] == "Information") seriConf.MinimumLevel.Information();
+            else if (config["logLevel"] == "Warning") seriConf.MinimumLevel.Warning();
+            else if (config["logLevel"] == "Error") seriConf.MinimumLevel.Error();
+            else seriConf.MinimumLevel.Fatal();
+            Log.Logger = seriConf.CreateLogger();
+            loggerFactory.AddSerilog();
         }
 
         public static void InitDB(IConfiguration config, ILoggerFactory loggerFactory, bool checkVersion)
@@ -86,9 +96,9 @@ namespace ZDO.CHSite
         public void ConfigureServices(IServiceCollection services)
         {
             if (env.IsDevelopment())
-            {
-                services.AddLogging(loggingBuilder => loggingBuilder.AddConsole());
-            }
+                services.AddLogging(builder => builder.AddConsole());
+            services.AddLogging(builder => builder.AddSerilog());
+
             // Init low-level DB singleton
             InitDB(config, loggerFactory, true);
             // Application-specific singletons.
@@ -101,7 +111,8 @@ namespace ZDO.CHSite
             Emailer emailer = new Emailer(config);
             services.AddSingleton(emailer);
             // These below have a shutdown action, so we store them in a member too.
-            auth = new Auth(mut, loggerFactory, config, emailer, pageProvider);
+            var authLogger = loggerFactory.CreateLogger<Auth>();
+            auth = new Auth(mut, authLogger, config, emailer, pageProvider);
             services.AddSingleton(auth);
             qlog = new QueryLogger(config["queryLogFileName"], config["hwriteLogFileName"]);
             services.AddSingleton(qlog);
