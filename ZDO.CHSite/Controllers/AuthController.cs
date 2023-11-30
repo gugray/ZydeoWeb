@@ -38,21 +38,27 @@ namespace ZDO.CHSite.Controllers
             bool captchaOk = false;
             try
             {
+                logger.LogDebug("Verifying captcha");
                 Dictionary<string, string> postParams = new Dictionary<string, string>();
                 postParams["secret"] = config["captchaSecretKey"];
                 postParams["response"] = captcha;
                 var cres = hcl.PostAsync("https://www.google.com/recaptcha/api/siteverify", new FormUrlEncodedContent(postParams)).Result;
+                string ccont = "<empty>";
+                try { ccont = cres.Content.ReadAsStringAsync().Result; }
+                catch {}
+                logger.LogDebug("Siteverify response: {0}", ccont);
                 if (cres.IsSuccessStatusCode)
                 {
-                    string ccont = cres.Content.ReadAsStringAsync().Result;
                     Regex reCheck = new Regex("\"success\": +([^,]+)");
                     Match m = reCheck.Match(ccont);
                     if (m.Success && m.Groups[1].Value == "true") captchaOk = true;
+                    else logger.LogWarning("Captcha failed to verify; Siteverify response: {0}", ccont);
                 }
+                else logger.LogError("Siteverify returned status {0}; response: {1}", (int)cres.StatusCode, ccont);
             }
             catch (Exception ex)
             {
-                logger.LogWarning(new EventId(), ex, "Failed to verify frontend's captcha response with Google service.");
+                logger.LogWarning(new EventId(), ex, "Siteverify API call failed.");
             }
             return captchaOk;
         }
