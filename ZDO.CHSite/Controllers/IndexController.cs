@@ -42,7 +42,8 @@ namespace ZDO.CHSite.Controllers
         {
             mut = config["MUTATION"] == "HDD" ? Mutation.HDD : Mutation.CHD;
             baseUrl = config["baseUrl"];
-            dpc = new DynpageController(pageProvider, config, loggerFactory, auth, dict, null, null, null, null);
+            var dpcLogger = loggerFactory.CreateLogger<DynpageController>();
+            dpc = new DynpageController(pageProvider, config, dpcLogger, auth, dict, null, null, null, null);
             gaCode = config["gaCode"];
             captchaSiteKey = config["captchaSiteKey"];
         }

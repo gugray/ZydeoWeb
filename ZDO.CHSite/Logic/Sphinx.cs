@@ -24,11 +24,9 @@ namespace ZDO.CHSite.Logic
         private readonly string sphinxScript;
         private readonly string corpusBinFileName;
 
-        public Sphinx(ILoggerFactory lf, string perlBin, string sphinxScript, string corpusBinFileName)
+        public Sphinx(ILogger<Sphinx> logger, string perlBin, string sphinxScript, string corpusBinFileName)
         {
-            if (lf != null) logger = lf.CreateLogger(GetType().FullName);
-            else logger = new DummyLogger();
-
+            this.logger = logger;
             this.perlBin = perlBin;
             this.sphinxScript = sphinxScript;
             this.corpusBinFileName = corpusBinFileName;

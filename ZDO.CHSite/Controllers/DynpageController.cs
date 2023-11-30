@@ -46,7 +46,7 @@ namespace ZDO.CHSite.Controllers
         /// Default null values make controller accessible to <see cref="IndexController"/>.
         /// That way, functionality is limited to serving static pages.
         /// </remarks>
-        public DynpageController(PageProvider pageProvider, IConfiguration config, ILoggerFactory loggerFactory,
+        public DynpageController(PageProvider pageProvider, IConfiguration config, ILogger<DynpageController> logger,
             Auth auth, SqlDict dict, CountryResolver cres, QueryLogger qlog, Sphinx sphinx, LangRepo langRepo)
         {
             this.cres = cres;
@@ -55,7 +55,7 @@ namespace ZDO.CHSite.Controllers
             this.sphinx = sphinx;
             this.qlog = qlog;
             this.config = config;
-            this.logger = loggerFactory.CreateLogger("DynpageController");
+            this.logger = logger;
             this.auth = auth;
             this.langRepo = langRepo;
         }
