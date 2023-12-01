@@ -1,12 +1,14 @@
-FROM ubuntu:23.04 as sphinx_build
+FROM ubuntu:23.04
 
 RUN apt-get update
 RUN apt-get install -y default-libmysqlclient-dev
 RUN apt-get install -y default-mysql-client unixodbc libpq5
 RUN apt-get install -y build-essential
 
+COPY ./targetapp/sphinx-2.2.11-release.tar.gz /sphinx/
 WORKDIR /sphinx
-COPY ./Sphinx-2.2.11 /sphinx/
+RUN tar -xvzf sphinx-2.2.11-release.tar.gz
+WORKDIR /sphinx/sphinx-2.2.11-release
 RUN ./configure
 RUN make
 RUN make install
