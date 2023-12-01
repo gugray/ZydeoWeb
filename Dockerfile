@@ -16,14 +16,19 @@ RUN apt-get install -y libdbi-perl
 RUN cpan URI::Escape
 RUN cpan Time::HiRes
 RUN apt-get install -y libdbd-mysql-perl
+RUN apt-get install -y git
+RUN apt-get install -y curl
 
 WORKDIR /app
 COPY ./targetapp/sphinx.pl /app/sphinx.pl
 COPY ./targetapp/zhhu.conf /app/zhhu.conf
+COPY ./targetapp/dropbox_uploader.sh /app/dropbox_uploader.sh
+RUN ["chmod", "+x", "/app/dropbox_uploader.sh"]
+COPY ./targetapp/startup.sh /app/startup.sh
+RUN ["chmod", "+x", "/app/startup.sh"]
 COPY ./_deploy_chsite /app/chsite/
+
 ENV MUTATION=CHD
 ENV ASPNETCORE_ENVIRONMENT=Production
 
-COPY ./targetapp/startup.sh /app/startup.sh
-RUN ["chmod", "+x", "/app/startup.sh"]
 ENTRYPOINT [ "bash", "-c", "/app/startup.sh" ]
