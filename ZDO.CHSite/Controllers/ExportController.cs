@@ -144,7 +144,9 @@ namespace ZDO.CHSite.Controllers
             err = ShellHelper.Exec("gzip", "-k -f " + exportFileName, out stdout, out stderr);
             if (err != null)
             {
-                logger.LogError("Failed to gzip export: " + err);
+                string msg = "Failed to gzip export: {0}\nSTDOUT: {1}\nSTDERR: {2}";
+                msg = string.Format(msg, err, stdout, stderr);
+                logger.LogError(msg);
                 return;
             }
             // If we have Dropbox uploader specified, upload
@@ -152,8 +154,14 @@ namespace ZDO.CHSite.Controllers
             if (!string.IsNullOrEmpty(dbuploader))
             {
                 string dropName = config["dropboxFolder"] + "/" + config["exportFileNameRaw"] + ".gz";
-                err = ShellHelper.Exec(dbuploader, "upload " + exportFileName + ".gz " + dropName, out stdout, out stderr);
-                if (err != null) logger.LogError("Failed to upload to Dropbox: " + err);
+                err = ShellHelper.Exec(dbuploader, "-f /etc/zdo/zdo-chd-live/.dropbox-uploader upload " +
+                    exportFileName + ".gz " + dropName, out stdout, out stderr);
+                if (err != null)
+                {
+                    string msg = "Failed to upload to Dropbox: {0}\nSTDOUT: {1}\nSTDERR: {2}";
+                    msg = string.Format(msg, err, stdout, stderr);
+                    logger.LogError(msg);
+                }
             }
             // If we have a Git folder specified, copy export there; stage-commit-push
             string gitCloneFolder = config["gitCloneFolder"];
