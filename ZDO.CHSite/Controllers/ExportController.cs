@@ -154,7 +154,8 @@ namespace ZDO.CHSite.Controllers
             if (!string.IsNullOrEmpty(dbuploader))
             {
                 string dropName = config["dropboxFolder"] + "/" + config["exportFileNameRaw"] + ".gz";
-                err = ShellHelper.Exec(dbuploader, "-f /etc/zdo/zdo-chd-live/.dropbox-uploader upload " +
+                string uploaderConfig = config["dropboxUploaderConfig"];
+                err = ShellHelper.Exec(dbuploader, "-f " + uploaderConfig + " upload " +
                     exportFileName + ".gz " + dropName, out stdout, out stderr);
                 if (err != null)
                 {
@@ -176,14 +177,32 @@ namespace ZDO.CHSite.Controllers
                     ShellHelper.ExecWorkingDir = gitCloneFolder;
                     // Stage
                     err = ShellHelper.Exec("git", "add .", out stdout, out stderr);
-                    if (err != null) { logger.LogError("Git add failed: " + err); break; }
+                    if (err != null)
+                    {
+                        string msg = "Git add failed: {0}\nSTDOUT: {1}\nSTDERR: {2}";
+                        msg = string.Format(msg, err, stdout, stderr);
+                        logger.LogError(msg);
+                        break;
+                    }
                     // Commit with message
                     string commitMessage = config["gitCommitMessage"];
                     err = ShellHelper.Exec("git", "commit -m \"" + commitMessage + "\"", out stdout, out stderr);
-                    if (err != null) { logger.LogError("Git commit failed: " + err); break; }
+                    if (err != null)
+                    {
+                        string msg = "Git commit failed: {0}\nSTDOUT: {1}\nSTDERR: {2}";
+                        msg = string.Format(msg, err, stdout, stderr);
+                        logger.LogError(msg);
+                        break;
+                    }
                     // Push
                     err = ShellHelper.Exec("git", "push", out stdout, out stderr);
-                    if (err != null) { logger.LogError("Git push failed: " + err); break; }
+                    if (err != null)
+                    {
+                        string msg = "Git push failed: {0}\nSTDOUT: {1}\nSTDERR: {2}";
+                        msg = string.Format(msg, err, stdout, stderr);
+                        logger.LogError(msg);
+                        break;
+                    }
                     // Done.
                     break;
                 }
