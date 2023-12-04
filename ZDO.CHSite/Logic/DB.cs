@@ -57,7 +57,6 @@ namespace ZDO.CHSite.Logic
             csb.Password = pass;
             csb.Pooling = true;
             csb.CharacterSet = "utf8";
-            //csb.SslMode = MySqlSslMode.None; // SSL currently not supported in .NET Core library
             csb.SslMode = MySqlSslMode.Required;
             connectionString = csb.GetConnectionString(true);
 
@@ -108,12 +107,30 @@ namespace ZDO.CHSite.Logic
         /// Opens a DB connection.
         /// </summary>
         /// <returns></returns>
-        public static MySqlConnection GetConn()
+        public static MySqlConnection GetConn(bool retry = false)
         {
-            MySqlConnection conn = new MySqlConnection(connectionString);
-            try { conn.Open(); }
-            catch { conn.Dispose(); throw; }
-            return conn;
+            Exception caught = null;
+            for (int count = retry ? 7 : 1; count > 0; --count)
+            {
+                MySqlConnection conn = new MySqlConnection(connectionString);
+                try { conn.Open(); }
+                catch (Exception ex)
+                {
+                    conn.Dispose();
+                    caught = ex;
+                    bool worthRetrying = false;
+                    if (ex is MySqlException)
+                        worthRetrying = true;
+                    if (worthRetrying)
+                    {
+                        if (count > 1) System.Threading.Thread.Sleep(5000);
+                        continue;
+                    }
+                    else throw;
+                }
+                return conn;
+            }
+            throw caught;
         }
 
         /// <summary>
@@ -138,7 +155,7 @@ namespace ZDO.CHSite.Logic
         public static void VerifyVersion(string appVersion)
         {
             string dbModel = "n/a";
-            using (var conn = GetConn())
+            using (var conn = GetConn(true))
             using (var cmd = new MySqlCommand("SELECT value FROM sys_params WHERE xkey='db_model';", conn))
             using (var rdr = cmd.ExecuteReader())
             {
