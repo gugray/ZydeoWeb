@@ -21,7 +21,7 @@
             },
             "env": {
                 "ASPNETCORE_ENVIRONMENT": "Development",
-                "MUTATION": "CHD"
+                "MUTATION": "HDD"
             }
         }
     ]
